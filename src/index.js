@@ -1,0 +1,1 @@
+require('./renderer/index.tsx');
