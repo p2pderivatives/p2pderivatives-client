@@ -12,6 +12,9 @@
 /build
 /dist
 
+# generated files
+gen/
+
 # misc
 .DS_Store
 .env.local

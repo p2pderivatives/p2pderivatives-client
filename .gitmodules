@@ -1,0 +1,3 @@
+[submodule "p2pderivatives-proto"]
+	path = p2pderivatives-proto
+	url = git@github.com:cryptogarageinc/p2pderivatives-proto.git
