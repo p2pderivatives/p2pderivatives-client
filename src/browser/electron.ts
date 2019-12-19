@@ -9,18 +9,6 @@ let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
   console.log('isDev: ', isDev)
-  const client = new AuthenticationClient(
-    'localhost:8080',
-    grpc.credentials.createInsecure()
-  )
-  const loginRequest = new LoginRequest()
-  loginRequest.setAccount('test')
-  loginRequest.setPassword('p@ssw0rd')
-  client.login(loginRequest, (error, response) => {
-    console.log('error: ', error)
-    console.log('res: ', response)
-  })
-
   mainWindow = new BrowserWindow({ width: 900, height: 680 })
   mainWindow.loadURL(
     isDev

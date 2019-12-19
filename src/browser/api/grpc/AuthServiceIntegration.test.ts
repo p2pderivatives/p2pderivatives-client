@@ -3,6 +3,7 @@ import { GrpcClient } from './GrpcClient'
 import { GrpcConfig } from './GrpcConfig'
 import { Empty } from './gen/authentication_pb.js'
 import { GrpcAuth } from './GrpcAuth'
+import { GrpcError } from './GrpcError'
 
 const mockServer = getMockServer()
 const config = new GrpcConfig('127.0.0.1:50051', false)
@@ -46,5 +47,5 @@ test('grpc-client-logout', async () => {
 test('grpc-client-login-fail', async () => {
   await expect(
     client.getAuthenticationService().login('error', 'test')
-  ).rejects.toHaveProperty('code', 17)
+  ).rejects.toBeInstanceOf(GrpcError)
 })

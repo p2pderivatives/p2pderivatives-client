@@ -1,4 +1,4 @@
-import { GrpcError } from "./GrpcError"
+import { GrpcError } from './GrpcError'
 import fs from 'fs'
 
 export class GrpcConfig {
@@ -13,7 +13,10 @@ export class GrpcConfig {
       if (certificatePath && fs.existsSync(certificatePath)) {
         this.certificatePath = certificatePath
       } else {
-        throw new GrpcError('Bad config!', 'Did not provide valid certificate path for a secure connection!')
+        throw new GrpcError(
+          'Bad config!',
+          'Did not provide valid certificate path for a secure connection!'
+        )
       }
     }
   }

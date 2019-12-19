@@ -23,6 +23,12 @@ Builds the app for Electron and creates a platform specific executable ( .exe on
 Launches the test runner in the interactive watch mode.<br />
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
+### `npm run mocha`
+
+This will run integration tests on a full electron instance. Since it is being run on electron and the current libraries are built for the local OS, you will need to rebuild them for electron, in specifically the `grpc` library.
+
+`npm install grpc --runtime=electron --target=7.0.0`
+
 ### `npm run eject`
 
 **Note: this is a one-way operation. Once you `eject`, you can’t go back!**
