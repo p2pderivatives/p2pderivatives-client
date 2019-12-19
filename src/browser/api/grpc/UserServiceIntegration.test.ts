@@ -1,4 +1,4 @@
-import getMockServer from './grpcUserMockServer'
+import getMockServer from '../../../../__mocks__/grpcUserMockServer'
 import { GrpcClient } from './GrpcClient'
 import { GrpcConfig } from './GrpcConfig'
 import { UserInfo, UserStatus, UserNotice, Empty } from './gen/user_pb'

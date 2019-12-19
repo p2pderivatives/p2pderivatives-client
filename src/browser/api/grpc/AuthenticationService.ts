@@ -39,7 +39,10 @@ export class AuthenticationService {
         )
         return response
       } else {
-        throw new GrpcError("Unexpected error", "Did not receive a token from successful login request!")
+        throw new GrpcError(
+          'Unexpected error',
+          'Did not receive a token from successful login request!'
+        )
       }
     })
   }
@@ -89,7 +92,10 @@ export class AuthenticationService {
         )
         return response
       } else {
-        throw new GrpcError("Unexpected error", "Did not receive a token from successful refresh request!")      
+        throw new GrpcError(
+          'Unexpected error',
+          'Did not receive a token from successful refresh request!'
+        )
       }
     })
   }
