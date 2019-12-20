@@ -1,4 +1,4 @@
-import getMockServer from './grpcAuthMockServer'
+import getMockServer from '../../../../__mocks__/grpcAuthMockServer'
 import { GrpcClient } from './GrpcClient'
 import { GrpcConfig } from './GrpcConfig'
 import { Empty } from './gen/authentication_pb.js'
