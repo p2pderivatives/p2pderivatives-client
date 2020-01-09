@@ -25,7 +25,7 @@ import { LoginCall } from '../src/common/models/ipc/LoginCall'
 class Main {
 
   @test async ipcCanRegisterUser() {
-    const registerCall = new RegisterUserCall('test', 'test', 'test')
+    const registerCall = new RegisterUserCall('test', 'test')
     const result = (await ipc.callMain(
       REGISTER_USER,
       registerCall
@@ -34,7 +34,6 @@ class Main {
 
     expect(answer.isSuccess()).eq(true)
     expect(answer.getId()).eq('1')
-    expect(answer.getAccount()).eq('test')
     expect(answer.getName()).eq('test')
   }
 

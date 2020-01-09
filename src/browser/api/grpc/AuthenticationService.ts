@@ -23,7 +23,7 @@ export class AuthenticationService {
 
   public login(username: string, password: string): Promise<LoginResponse> {
     const loginRequest: LoginRequest = new LoginRequest()
-    loginRequest.setAccount(username)
+    loginRequest.setName(username)
     loginRequest.setPassword(password)
 
     const loginAsync = promisify<LoginRequest, LoginResponse>(

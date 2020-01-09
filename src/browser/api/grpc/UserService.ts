@@ -21,12 +21,10 @@ export class UserService {
   }
 
   public registerUser(
-    account: string,
     name: string,
     password: string
   ): Promise<UserRegisterResponse> {
     const registerRequest = new UserRegisterRequest()
-    registerRequest.setAccount(account)
     registerRequest.setPassword(password)
     registerRequest.setName(name)
 

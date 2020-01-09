@@ -22,7 +22,7 @@ test('grpc-client-login', async () => {
   const loginResponse = await client
     .getAuthenticationService()
     .login('test', 'test')
-  expect(loginResponse.getAccount()).toBe('test')
+  expect(loginResponse.getName()).toBe('test')
   expect(loginResponse.getRequireChangePassword()).toBe(false)
   const token = loginResponse.getToken()
   if (token) {

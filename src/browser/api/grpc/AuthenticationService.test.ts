@@ -22,7 +22,6 @@ const loginFn = (
   callback: (error: ServiceError | null, res: LoginResponse) => void
 ): any => {
   const res = new LoginResponse()
-  res.setAccount('test')
   res.setName('testName')
   res.setRequireChangePassword(false)
 
@@ -137,7 +136,7 @@ const authService = new AuthenticationService(authClient, auth)
 
 test('returns-login-response', () => {
   return authService.login('test', 'test').then(response => {
-    expect(response.getAccount()).toBe('test')
+    expect(response.getName()).toBe('testName')
     expect(response.getToken()).toBeDefined()
     const token = response.getToken()
     if (token) {

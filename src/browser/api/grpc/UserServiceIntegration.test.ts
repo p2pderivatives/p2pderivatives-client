@@ -20,8 +20,8 @@ afterAll(() => {
 test('grpc-client-register-user', async () => {
   const registerResponse = await client
     .getUserService()
-    .registerUser('test', 'test', 'test')
-  expect(registerResponse.getAccount()).toBe('test')
+    .registerUser('test', 'test')
+  expect(registerResponse.getName()).toBe('test')
   expect(registerResponse.getId()).toBe('1')
 })
 

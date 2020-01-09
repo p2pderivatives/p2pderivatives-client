@@ -32,16 +32,15 @@ export class UserEvents implements IPCEvents {
       try {
         const response = await this._client
           .getUserService()
-          .registerUser(request.account, request.name, request.password)
+          .registerUser(request.name, request.password)
         const answer = new RegisterUserAnswer(
           true,
           response.getId(),
-          response.getAccount(),
           response.getName()
         )
         return answer
       } catch (e) {
-        return new RegisterUserAnswer(false, '', '', '', e)
+        return new RegisterUserAnswer(false, '', '', e)
       }
     })
 
