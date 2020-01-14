@@ -1,13 +1,14 @@
 import { ServiceError, Metadata } from 'grpc'
+import { GrpcError } from './GrpcError'
 
 export function promisify<T1, TResult>(
   fn: (
     arg1: T1,
     arg2: Metadata,
     callback: (err: ServiceError | null, result: TResult) => void
-  ) => any
+  ) => void
 ): (arg1: T1, arg2?: Metadata) => Promise<TResult> {
-  return (arg1, arg2) =>
+  return (arg1, arg2): Promise<TResult> =>
     new Promise((resolve, reject) => {
       try {
         const callback: (err: ServiceError | null, result: TResult) => void = (
@@ -15,7 +16,7 @@ export function promisify<T1, TResult>(
           d: TResult
         ) => {
           if (err) {
-            reject(err)
+            reject(GrpcError.fromServiceError(err))
           }
           resolve(d)
         }

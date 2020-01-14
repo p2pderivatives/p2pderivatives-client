@@ -1,0 +1,10 @@
+export const LOGIN = 'login'
+export const LOGOUT = 'logout'
+
+export const REGISTER_USER = 'register-user'
+export const UNREGISTER_USER = 'unregister-user'
+export const GET_USERLIST = 'get-userlist'
+export const GET_USERSTATUSES = 'get-user-statuses'
+export const SEND_USER = 'send-user'
+export const SEND_USER_END = 'send-user-end'
+export const SEND_USERSTATUS = 'send-user-status'
