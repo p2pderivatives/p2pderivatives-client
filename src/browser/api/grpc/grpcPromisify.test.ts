@@ -23,9 +23,8 @@ const loginFn = (
   meta: Metadata,
   callback: (error: ServiceError | null, res: LoginResponse) => void
 ): void => {
-  if (request.getAccount() === 'test') {
+  if (request.getName() === 'test') {
     const res = new LoginResponse()
-    res.setAccount('test')
     res.setName('testName')
     res.setRequireChangePassword(false)
 
@@ -42,12 +41,12 @@ const loginFn = (
 
 test('can-promisify-callback-fn', () => {
   const request = new LoginRequest()
-  request.setAccount('test')
+  request.setName('test')
   request.setPassword('test')
 
   const loginAsync = promisify(loginFn)
   return loginAsync(request).then(res => {
-    expect(res.getAccount()).toBe('test')
+    expect(res.getName()).toBe('testName')
     const token = res.getToken()
     if (token) {
       expect(token.getAccessToken()).toBe('accessToken')
@@ -57,7 +56,7 @@ test('can-promisify-callback-fn', () => {
 
 test('promisify-wraps-service-error', () => {
   const request = new LoginRequest()
-  request.setAccount('error')
+  request.setName('error')
 
   const loginAsync = promisify(loginFn)
   return loginAsync(request).catch(err => {

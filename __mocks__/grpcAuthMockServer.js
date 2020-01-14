@@ -8,10 +8,9 @@ module.exports = function getMockServer() {
     rules: [
       {
         method: 'login',
-        input: { account: 'test', password: 'test' },
+        input: { name: 'test', password: 'test' },
         output: {
           name: 'test',
-          account: 'test',
           requirePasswordChange: false,
           token: {
             accessToken: 'testToken',
@@ -22,7 +21,7 @@ module.exports = function getMockServer() {
       },
       {
         method: 'login',
-        input: { account: 'error', password: 'test' },
+        input: { name: 'error', password: 'test' },
         error: { code: 17, message: 'Authentication failed!' },
       },
       {

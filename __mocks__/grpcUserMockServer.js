@@ -3,13 +3,13 @@ const { createMockServer } = require('grpc-mock')
 module.exports = function getMockServer() {
   return createMockServer({
     protoPath: './src/browser/api/grpc/gen/user.proto',
-    packageName: 'user',
+    packageName: 'usercontroller',
     serviceName: 'User',
     rules: [
       {
         method: 'registerUser',
-        input: { account: 'test', name: 'test', password: 'test' },
-        output: { id: 1, name: 'test', account: 'test' },
+        input: { name: 'test', password: 'test' },
+        output: { id: 1, name: 'test' },
       },
       {
         method: 'unregisterUser',
