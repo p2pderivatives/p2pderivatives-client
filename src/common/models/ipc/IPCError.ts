@@ -7,12 +7,12 @@ export interface IPCErrorProps {
 
 export class IPCError {
   private readonly _code: number
-  private readonly _details: string
+  private readonly _message: string
   private readonly _name: string
 
-  constructor(code: number, details: string, name: string) {
+  constructor(code: number, message: string, name: string) {
     this._code = code
-    this._details = details
+    this._message = message
     this._name = name
   }
 
@@ -20,8 +20,8 @@ export class IPCError {
     return this._code
   }
 
-  public getDetails(): string {
-    return this._details
+  public getMessage(): string {
+    return this._message
   }
 
   public getName(): string {
