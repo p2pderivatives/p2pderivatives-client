@@ -1,1 +1,1 @@
-require('./renderer/index.tsx');
+require('./renderer/index.tsx')
