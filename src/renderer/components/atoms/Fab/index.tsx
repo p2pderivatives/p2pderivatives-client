@@ -23,13 +23,16 @@ const theme = createMuiTheme({
 
 const useStyles = makeStyles({
   root: {
+    padding: '0 1.5rem',
     '&$disabled': {
       backgroundColor: '#686E82',
       color: '#A2A6B4',
     },
   },
   label: {
+    fontSize: '1rem',
     fontWeight: 'bold',
+    textTransform: 'none',
   },
   disabled: {},
 })

@@ -22,6 +22,16 @@ export const fab = () => (
     color={select('Color', buttonColorValues, 'primary')}
   >
     <AddIcon />
-    {text('Label', 'Label goes here')}
+    {text('Label', 'New contract')}
+  </Fab>
+)
+
+export const justTextFab = () => (
+  <Fab
+    variant="extended"
+    disabled={boolean('Disabled', false)}
+    color={select('Color', buttonColorValues, 'primary')}
+  >
+    {text('Label', 'New contract')}
   </Fab>
 )
