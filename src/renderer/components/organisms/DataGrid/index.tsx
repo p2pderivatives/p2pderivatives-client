@@ -1,6 +1,10 @@
 import React, { useState, FC } from 'react'
 import MUIDataTable, { MUIDataTableProps } from 'mui-datatables'
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import {
+  MuiThemeProvider,
+  createMuiTheme,
+  makeStyles,
+} from '@material-ui/core/styles'
 import Toolbar from './DatePickerToolbar'
 
 export type DataGridProps = Omit<MUIDataTableProps, 'options' | 'columns'>
@@ -47,6 +51,14 @@ const theme = createMuiTheme({
         },
       },
     },
+    // MUIDataTable: {
+    //   paper: {
+    //     height: '100%',
+    //   },
+    //   responsiveScroll: {
+    //     maxHeight: '100%',
+    //   },
+    // },
     MUIDataTableSelectCell: {
       root: {
         display: 'none',

@@ -12,6 +12,7 @@ export type TabItem = {
 export type TabsProps = {
   items: TabItem[]
   initialIndex?: number
+  onTabChange: (tabIndex: number) => void
 }
 
 const useStyles = makeStyles({
@@ -31,6 +32,7 @@ const Tabs: FC<TabsProps> = (props: TabsProps) => {
 
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setTabValue(newValue)
+    props.onTabChange(newValue)
   }
 
   return (

@@ -35,6 +35,12 @@ const useStyles = (
       '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
         borderBottomColor: hover,
       },
+      '& .MuiFormHelperText-root': {
+        color: color,
+      },
+      '& .Mui-disabled': {
+        color: color,
+      }
     },
   })()
 

@@ -19,5 +19,6 @@ export const textInput = () => (
     color={color('Default color', '#A2A6B4')}
     hoverColor={color('Hover color', 'white')}
     focusColor={color('Focus color', 'white')}
+    helperText={text('Helper text', 'Some help')}
   />
 )

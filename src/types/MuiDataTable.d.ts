@@ -2,6 +2,14 @@ import { ComponentNameToClassKey } from '@material-ui/core/styles/overrides'
 
 declare module '@material-ui/core/styles/overrides' {
   interface ComponentNameToClassKey {
+    MUIDataTable: {
+      root: {
+        height: React.CSSProperties.height
+      }
+      responsiveScroll: {
+        maxHeight: React.CSSProperties.height
+      }
+    }
     MUIDataTableToolbar: {
       root: {
         background: React.CSSProperties.background
