@@ -1,7 +1,6 @@
 import React, { FC } from 'react'
 
 import { makeStyles } from '@material-ui/core'
-import Grid from '@material-ui/core/Grid'
 import AddIcon from '@material-ui/icons/Add'
 
 import StatusBar from '../../molecules/StatusBar'
@@ -29,12 +28,15 @@ const useStyles = makeStyles({
     flexGrow: 2,
     display: 'flex',
     flexDirection: 'row',
+    overflow: 'auto',
   },
   sidebar: {
     flexBasis: '20%',
   },
   content: {
     flexGrow: 2,
+    display: 'flex',
+    flexDirection: 'column',
   },
 })
 

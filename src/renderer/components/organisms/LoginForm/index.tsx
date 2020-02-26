@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
-import { Grid, Typography, makeStyles } from '@material-ui/core'
+import { Grid, Typography } from '@material-ui/core'
 import TextInput from '../../atoms/TextInput'
+import PasswordInput from '../../atoms/PasswordInput'
 import Button from '../../atoms/Button'
 
 export interface LoginFormProps {
@@ -8,22 +9,14 @@ export interface LoginFormProps {
   error?: string
 }
 
-const useStyles = makeStyles({
-  title: {
-    color: '#E4E7EF',
-  },
-})
-
 const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
-  const classes = useStyles()
-
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   return (
     <Grid container spacing={5} direction="column">
       <Grid item xs={12}>
-        <Typography className={classes.title} variant="h5" align="center">
+        <Typography color="textPrimary" variant="h5" align="center">
           Login
         </Typography>
       </Grid>
@@ -40,7 +33,7 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
         />
       </Grid>
       <Grid item xs={12}>
-        <TextInput
+        <PasswordInput
           fullWidth
           id="password"
           label="Password"

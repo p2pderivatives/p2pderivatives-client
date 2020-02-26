@@ -1,6 +1,8 @@
 import React from 'react'
 import LoginForm from './'
 import { Container } from '@material-ui/core'
+import { MuiThemeProvider } from '@material-ui/core'
+import theme from '../../theme'
 
 export default {
   title: 'Components/Organisms/LoginForm',
@@ -10,7 +12,9 @@ export default {
 }
 
 export const loginForm = () => (
-  <Container maxWidth="xs">
-    <LoginForm onSubmit={(username, password): void => {}} />
-  </Container>
+  <MuiThemeProvider theme={theme}>
+    <Container maxWidth="xs">
+      <LoginForm onSubmit={(username, password): void => {}} />
+    </Container>
+  </MuiThemeProvider>
 )

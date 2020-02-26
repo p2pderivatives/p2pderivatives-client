@@ -1,6 +1,8 @@
 import React from 'react'
 import StoryRouter from 'storybook-react-router'
 import ContractListTemplate from './'
+import { MuiThemeProvider } from '@material-ui/core'
+import theme from '../../theme'
 
 export default {
   title: 'Components/Templates/ContractListTemplate',
@@ -8,7 +10,9 @@ export default {
 }
 
 export const contractList = () => (
-  <div style={{ width: 1366, height: 768 }}>
-    <ContractListTemplate />
-  </div>
+  <MuiThemeProvider theme={theme}>
+    <div style={{ width: 1366, height: 768 }}>
+      <ContractListTemplate />
+    </div>
+  </MuiThemeProvider>
 )

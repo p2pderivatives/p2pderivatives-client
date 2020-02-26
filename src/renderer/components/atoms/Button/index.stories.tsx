@@ -1,5 +1,7 @@
 import React from 'react'
 import Button from './'
+import { MuiThemeProvider } from '@material-ui/core'
+import theme from '../../theme'
 
 import { withKnobs, text, boolean, select } from '@storybook/addon-knobs'
 
@@ -15,21 +17,25 @@ type buttonColorType = 'primary' | 'secondary' | 'inherit' | 'default'
 const buttonColorValues: buttonColorType[] = ['primary', 'secondary']
 
 export const button = () => (
-  <Button
-    variant="contained"
-    disabled={boolean('Disabled', false)}
-    color={select('Color', buttonColorValues, 'primary')}
-  >
-    {text('Label', 'Label goes here')}
-  </Button>
+  <MuiThemeProvider theme={theme}>
+    <Button
+      variant="contained"
+      disabled={boolean('Disabled', false)}
+      color={select('Color', buttonColorValues, 'primary')}
+    >
+      {text('Label', 'Label goes here')}
+    </Button>
+  </MuiThemeProvider>
 )
 
 export const outlinedButton = () => (
-  <Button
-    variant="outlined"
-    disabled={boolean('Disabled', false)}
-    color={select('Color', buttonColorValues, 'primary')}
-  >
-    {text('Label', 'Label goes here')}
-  </Button>
+  <MuiThemeProvider theme={theme}>
+    <Button
+      variant="outlined"
+      disabled={boolean('Disabled', false)}
+      color={select('Color', buttonColorValues, 'primary')}
+    >
+      {text('Label', 'Label goes here')}
+    </Button>
+  </MuiThemeProvider>
 )

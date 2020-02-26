@@ -1,21 +1,21 @@
 import React from 'react'
-import TextInput from './'
+import BitcoinInput from '.'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
 
 import { withKnobs, text, boolean } from '@storybook/addon-knobs'
 
 export default {
-  title: 'Components/Atoms/TextInput',
+  title: 'Components/Atoms/BitcoinInput',
   decorators: [withKnobs],
   parameters: {
     backgrounds: [{ name: 'p2pd', value: '#303855' }],
   },
 }
 
-export const textInput = () => (
+export const bitcoinInput = () => (
   <MuiThemeProvider theme={theme}>
-    <TextInput
+    <BitcoinInput
       label={text('Label', 'Label goes here')}
       disabled={boolean('Disabled', false)}
       helperText={text('Helper text', 'Some help')}

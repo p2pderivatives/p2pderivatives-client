@@ -46,14 +46,6 @@ const theme = createMuiTheme({
         },
       },
     },
-    // MUIDataTable: {
-    //   paper: {
-    //     height: '100%',
-    //   },
-    //   responsiveScroll: {
-    //     maxHeight: '100%',
-    //   },
-    // },
     MUIDataTableSelectCell: {
       root: {
         display: 'none',

@@ -6,14 +6,14 @@ import theme from '../../theme'
 import { withKnobs, text, boolean } from '@storybook/addon-knobs'
 
 export default {
-  title: 'Components/Atoms/TextInput',
+  title: 'Components/Atoms/PasswordInput',
   decorators: [withKnobs],
   parameters: {
     backgrounds: [{ name: 'p2pd', value: '#303855' }],
   },
 }
 
-export const textInput = () => (
+export const passwordInput = () => (
   <MuiThemeProvider theme={theme}>
     <TextInput
       label={text('Label', 'Label goes here')}

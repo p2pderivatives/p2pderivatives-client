@@ -1,6 +1,8 @@
 import React from 'react'
 import RegisterForm from '.'
 import { Container } from '@material-ui/core'
+import { MuiThemeProvider } from '@material-ui/core'
+import theme from '../../theme'
 
 export default {
   title: 'Components/Organisms/RegisterForm',
@@ -10,7 +12,9 @@ export default {
 }
 
 export const registerForm = () => (
-  <Container maxWidth="xs">
-    <RegisterForm onSubmit={(username, password): void => {}} />
-  </Container>
+  <MuiThemeProvider theme={theme}>
+    <Container maxWidth="xs">
+      <RegisterForm onSubmit={(username, password): void => {}} />
+    </Container>
+  </MuiThemeProvider>
 )

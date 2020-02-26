@@ -2,13 +2,10 @@ import React, { FC } from 'react'
 import { DateTime } from 'luxon'
 
 import { makeStyles } from '@material-ui/core'
-import Grid from '@material-ui/core/Grid'
-import AddIcon from '@material-ui/icons/Add'
 
 import Tabs, { TabItem } from '../../molecules/Tabs'
 import DataGrid from '../../organisms/DataGrid'
-import StatusBar from '../../molecules/StatusBar'
-import Fab from '../../atoms/Fab'
+import MainLayout from '../../organisms/MainLayout'
 
 const data = [
   {
@@ -126,8 +123,11 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     marginTop: '1rem',
   },
-  contentGrid: {
+  contentDiv: {
     height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
 })
 
@@ -143,25 +143,12 @@ const ContractListTemplate: FC = () => {
 
   return (
     <div className={classes.rootContainer}>
-      <StatusBar />
-      <Grid container className={classes.contentGrid}>
-        <Grid item xs={2} alignItems="flex-start">
-          <div className={classes.buttonContainer}>
-            <Fab variant="extended" color="primary">
-              <AddIcon />
-              {'New contract'}
-            </Fab>
-          </div>
-        </Grid>
-        <Grid container item xs={10} direction="column">
-          <Grid item xs>
-            <Tabs items={tabItems} />
-          </Grid>
-          <Grid item xs>
-            <DataGrid title={'All'} data={data} />
-          </Grid>
-        </Grid>
-      </Grid>
+      <MainLayout>
+        <div className={classes.contentDiv}>
+          <Tabs items={tabItems} onTabChange={tabIdx => {}} />
+          <DataGrid title={'All'} data={data} />
+        </div>
+      </MainLayout>
     </div>
   )
 }

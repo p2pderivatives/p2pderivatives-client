@@ -2,6 +2,8 @@ import React from 'react'
 import { Container } from '@material-ui/core'
 import { DateTime } from 'luxon'
 import DataGrid from './'
+import { MuiThemeProvider } from '@material-ui/core'
+import theme from '../../theme'
 
 export default {
   title: 'Components/Organisms/DataGrid',
@@ -11,9 +13,11 @@ export default {
 }
 
 export const sampleTable = () => (
-  <Container maxWidth="lg">
-    <DataGrid title={'Contracts'} data={data} />
-  </Container>
+  <MuiThemeProvider theme={theme}>
+    <Container maxWidth="lg">
+      <DataGrid title={'Contracts'} data={data} />
+    </Container>
+  </MuiThemeProvider>
 )
 
 const data = [

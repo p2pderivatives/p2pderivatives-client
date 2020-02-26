@@ -1,5 +1,7 @@
 import React from 'react'
 import Tabs, { TabItem } from '.'
+import { MuiThemeProvider } from '@material-ui/core'
+import theme from '../../theme'
 
 export default {
   title: 'Components/Molecules/Tabs',
@@ -15,4 +17,8 @@ const items: TabItem[] = [
   { label: 'Requested' },
 ]
 
-export const tabs = () => <Tabs items={items} initialIndex={1} />
+export const tabs = () => (
+  <MuiThemeProvider theme={theme}>
+    <Tabs items={items} initialIndex={1} />
+  </MuiThemeProvider>
+)

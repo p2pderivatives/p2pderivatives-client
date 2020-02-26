@@ -15,16 +15,17 @@ export type TabsProps = {
   onTabChange: (tabIndex: number) => void
 }
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
   root: {
     backgroundColor: '#303855',
-    color: '#E4E7EF',
-    borderBottom: '1px solid #B3B6C1',
+    color: theme.palette.text.primary,
+    borderBottom: '1px solid',
+    borderBottomColor: theme.palette.secondary.dark,
   },
   indicator: {
-    backgroundColor: '#3AF3B1',
+    backgroundColor: theme.palette.primary.main,
   },
-})
+}))
 
 const Tabs: FC<TabsProps> = (props: TabsProps) => {
   const classes = useStyles()
