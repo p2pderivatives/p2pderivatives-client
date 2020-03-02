@@ -1,18 +1,21 @@
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
 import * as isDev from 'electron-is-dev'
-import { AuthenticationClient } from './api/grpc/gen/authentication_grpc_pb'
-import * as grpc from 'grpc'
-import { LoginRequest } from './api/grpc/gen/authentication_pb'
+import initialize from './initialize'
 
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
   console.log('isDev: ', isDev)
-  mainWindow = new BrowserWindow({ width: 900, height: 680 })
+  mainWindow = new BrowserWindow({
+    width: 1366,
+    height: 768,
+    webPreferences: { nodeIntegration: true },
+  })
+  initialize()
   mainWindow.loadURL(
     isDev
-      ? 'http://localhost:3000'
+      ? 'http://localhost:9000'
       : `file://${path.join(__dirname, '../build/index.html')}`
   )
   mainWindow.webContents.toggleDevTools()
