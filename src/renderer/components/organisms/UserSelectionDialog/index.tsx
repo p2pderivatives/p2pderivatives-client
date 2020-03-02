@@ -4,7 +4,7 @@ import { createMuiTheme, MuiThemeProvider, makeStyles } from '@material-ui/core'
 import Dialog from '@material-ui/core/Dialog'
 import DialogContent from '@material-ui/core/DialogContent'
 
-import MUIDataTable from 'mui-datatables'
+import MUIDataTable, { SelectableRows } from 'mui-datatables'
 
 import Button from '../../atoms/Button'
 
@@ -103,7 +103,8 @@ const options = {
   download: false,
   elevation: 0,
   rowsPerPage: 5,
-  response: 'scrollFullHeightFullWidth',
+  selectableRows: 'single' as SelectableRows,
+  customToolbarSelect: () => <div />,
 }
 
 const UserSelectionDialog: FC<UserSelectionDialogProps> = (
@@ -137,7 +138,7 @@ const UserSelectionDialog: FC<UserSelectionDialogProps> = (
         </MuiThemeProvider>
         <div className={classes.buttons}>
           <Button variant="outlined" color="primary">
-            {'Add'}
+            {'Select'}
           </Button>
           <Button variant="outlined" color="secondary" onClick={props.onClose}>
             {'Cancel'}

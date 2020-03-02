@@ -19,6 +19,6 @@ const items: TabItem[] = [
 
 export const tabs = () => (
   <MuiThemeProvider theme={theme}>
-    <Tabs items={items} initialIndex={1} />
+    <Tabs items={items} initialIndex={1} onTabChange={() => {}} />
   </MuiThemeProvider>
 )

@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react'
-import { Grid, Typography } from '@material-ui/core'
+import { Grid, Typography, makeStyles } from '@material-ui/core'
 import TextInput from '../../atoms/TextInput'
 import PasswordInput from '../../atoms/PasswordInput'
 import Button from '../../atoms/Button'
@@ -9,16 +9,30 @@ export interface LoginFormProps {
   error?: string
 }
 
+const useStyles = makeStyles({
+  titleContainer: {
+    height: '3.5rem',
+  },
+})
+
 const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
+  const classes = useStyles()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   return (
     <Grid container spacing={5} direction="column">
       <Grid item xs={12}>
-        <Typography color="textPrimary" variant="h5" align="center">
-          Login
-        </Typography>
+        <div className={classes.titleContainer}>
+          <Typography color="textPrimary" variant="h5" align="center">
+            Login
+          </Typography>
+          {props.error && (
+            <Typography color="error" variant="subtitle2" align="center">
+              {props.error}
+            </Typography>
+          )}
+        </div>
       </Grid>
       <Grid item xs={12}>
         <TextInput
@@ -38,7 +52,6 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
           id="password"
           label="Password"
           name="password"
-          type="password"
           autoComplete="password"
           value={password}
           onChange={e => setPassword(e.target.value)}

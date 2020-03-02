@@ -75,7 +75,7 @@ const RegisterTemplate: FC<RegisterTemplateProps> = (
             <Link
               className={classes.loginLink}
               component={RouterLink}
-              to="/login"
+              to="/"
               variant="body2"
             >
               Login

@@ -5,15 +5,18 @@ import LoginTemplate from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
 
+import { withKnobs, text } from '@storybook/addon-knobs'
+
+
 export default {
   title: 'Components/Templates/LoginTemplate',
-  decorators: [StoryRouter()],
+  decorators: [withKnobs, StoryRouter()],
 }
 
 export const loginTemplate = () => (
   <MuiThemeProvider theme={theme}>
     <div style={{ width: 1366, height: 768 }}>
-      <LoginTemplate onSubmit={action('onSubmit')} />
+      <LoginTemplate onSubmit={action('onSubmit')} error={text('Error', '')}/>
     </div>
   </MuiThemeProvider>
 )

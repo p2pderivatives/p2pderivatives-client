@@ -18,7 +18,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
     <Grid container spacing={5} direction="column">
       <Grid item xs={12}>
         <Typography color="textPrimary" variant="h5" align="center">
-          Login
+          Register
         </Typography>
       </Grid>
       <Grid item xs={12}>
@@ -62,7 +62,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           }
           onClick={() => props.onSubmit(username, password)}
         >
-          Login
+          Register
         </Button>
       </Grid>
     </Grid>

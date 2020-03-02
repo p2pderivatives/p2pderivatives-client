@@ -79,7 +79,7 @@ const ChangePasswordDialog: FC<ChangePasswordDialogProps> = (
           />
           <div className={classes.buttons}>
             <Button variant="contained" color="primary">
-              {'Add'}
+              {'Update'}
             </Button>
             <Button
               variant="outlined"

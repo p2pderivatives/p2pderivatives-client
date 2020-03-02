@@ -67,7 +67,7 @@ const LoginTemplate: FC<LoginTemplateProps> = (props: LoginTemplateProps) => {
       </div>
       <div className={classes.loginSide}>
         <div className={classes.loginForm}>
-          <LoginForm onSubmit={props.onSubmit} />
+          <LoginForm onSubmit={props.onSubmit} error={props.error} />
           <Typography className={classes.registerText}>
             {"Don't have an account? "}
             <Link

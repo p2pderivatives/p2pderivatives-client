@@ -1,6 +1,6 @@
 import React, { useState, FC } from 'react'
-import MUIDataTable, { MUIDataTableProps } from 'mui-datatables'
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import MUIDataTable, { MUIDataTableProps, Responsive } from 'mui-datatables'
+import { MuiThemeProvider, createMuiTheme, responsiveFontSizes } from '@material-ui/core/styles'
 import Toolbar from './DatePickerToolbar'
 
 export type DataGridProps = Omit<MUIDataTableProps, 'options' | 'columns'>
@@ -93,7 +93,7 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
 
   const options = {
     selectableRowsOnClick: true,
-    responsive: 'scrollMaxHeight',
+    responsive: 'scrollMaxHeight' as Responsive,
     // eslint-disable-next-line react/display-name
     customToolbar: () => {
       return (
