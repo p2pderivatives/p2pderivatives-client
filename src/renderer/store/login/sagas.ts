@@ -6,6 +6,8 @@ import {
   logoutError,
   logoutSuccess,
   loginRequest,
+  refreshSuccess,
+  refreshError,
 } from './actions'
 import { AuthenticationAPI } from '../../ipc/AuthenticationAPI'
 
@@ -37,9 +39,24 @@ export function* handleLogout() {
   }
 }
 
+export function* handleRefresh() {
+  try {
+    const authAPI: AuthenticationAPI = yield getContext('authAPI')
+    yield call(authAPI.refresh)
+    yield put(refreshSuccess())
+  } catch (err) {
+    if (err instanceof Error && err.message) {
+      yield put(refreshError(err.message))
+    } else {
+      yield put(refreshError('An unknown error occured.'))
+    }
+  }
+}
+
 function* watchRequests() {
   yield takeEvery(LoginActionTypes.LOGIN_REQUEST, handleLogin)
   yield takeEvery(LoginActionTypes.LOGOUT_REQUEST, handleLogout)
+  yield takeEvery(LoginActionTypes.REFRESH_REQUEST, handleRefresh)
 }
 
 function* loginSagas() {

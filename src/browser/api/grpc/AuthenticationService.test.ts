@@ -150,13 +150,7 @@ test('returns-login-response', () => {
 
 test('returns-refresh-response', () => {
   return authService.refresh().then(response => {
-    expect(response.getToken()).toBeDefined()
-    const token = response.getToken()
-    if (token) {
-      expect(token.getAccessToken()).toBe('newAccessToken')
-    }
-
-    expect(auth.getAuthToken()).toBe('newAccessToken')
+    expect(auth.getAuthToken()).toBe('accessToken')
     expect(auth.isExpired()).toBe(false)
   })
 })

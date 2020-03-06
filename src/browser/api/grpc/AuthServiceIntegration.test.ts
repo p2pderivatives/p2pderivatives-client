@@ -30,13 +30,19 @@ test('grpc-client-login', async () => {
   }
 })
 
-test('grpc-client-refresh', async () => {
-  const refreshResponse = await client.getAuthenticationService().refresh()
-  const token = refreshResponse.getToken()
-  if (token) {
-    expect(token.getAccessToken()).toBe('testToken')
-    expect(token.getExpiresIn()).toBe(3600)
-  }
+test('grpc-client-refresh', async done => {
+  const loginResponse = await client
+    .getAuthenticationService()
+    .login('test', 'test')
+  expect(auth.isExpired()).toBeFalsy()
+
+  setTimeout(async () => {
+    expect(auth.isExpired()).toBeTruthy()
+    await client.getAuthenticationService().refresh()
+    expect(auth.getAuthToken()).toBe('refreshToken')
+    expect(auth.getRefreshToken()).toBe('testRefresh')
+    done()
+  }, 2000)
 })
 
 test('grpc-client-logout', async () => {
