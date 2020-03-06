@@ -1,14 +1,14 @@
-import { AuthenticationService } from './AuthenticationService'
 import { GrpcConfig } from './GrpcConfig'
 import * as grpc from 'grpc'
 import {
   IAuthenticationClient,
   AuthenticationClient,
 } from './gen/authentication_grpc_pb'
-import { UserService } from './UserService'
 import { UserClient, IUserClient } from './gen/user_grpc_pb'
 import * as fs from 'fs'
 import { GrpcAuth } from './GrpcAuth'
+import { AuthenticationService } from './AuthenticationService'
+import { UserService } from './UserService'
 
 export class GrpcClient {
   private _authService: AuthenticationService

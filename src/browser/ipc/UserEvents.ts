@@ -46,6 +46,7 @@ export class UserEvents implements IPCEvents {
 
     ipc.answerRenderer(UNREGISTER_USER, async data => {
       try {
+        await this._client.getAuthenticationService().refresh()
         await this._client.getUserService().unregisterUser()
         return new GeneralAnswer(true)
       } catch (e) {
@@ -55,6 +56,7 @@ export class UserEvents implements IPCEvents {
 
     ipc.answerRenderer(GET_USERLIST, async data => {
       try {
+        await this._client.getAuthenticationService().refresh()
         this._listStream = this._client.getUserService().getUserListStream()
         this._listStream.on('data', (data: UserInfo) => {
           ipc.callFocusedRenderer(SEND_USER, new User(data.getName()))
@@ -73,6 +75,7 @@ export class UserEvents implements IPCEvents {
     })
 
     ipc.answerRenderer(GET_USERSTATUSES, async data => {
+      await this._client.getAuthenticationService().refresh()
       this._statusStream = this._client.getUserService().getUserStatusesStream()
       this._statusStream.on('data', (data: UserStatus) => {
         ipc.callFocusedRenderer(SEND_USERSTATUS, data)

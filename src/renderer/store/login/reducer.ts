@@ -47,6 +47,19 @@ const reducer: Reducer<LoginState> = (
         loggedIn: false,
       }
     }
+    case LoginActionTypes.REFRESH_ERROR: {
+      return {
+        ...state,
+        loggedIn: false,
+        error: action.payload,
+      }
+    }
+    case LoginActionTypes.REFRESH_SUCCESS: {
+      return {
+        ...state,
+        loggedIn: true,
+      }
+    }
     default: {
       return state
     }

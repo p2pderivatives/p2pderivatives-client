@@ -3,7 +3,7 @@ import { GrpcClient } from '../api/grpc/GrpcClient'
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
 import { IPCEvents } from './IPCEvents'
-import { LOGIN, LOGOUT } from '../../common/constants/IPC'
+import { LOGIN, LOGOUT, REFRESH } from '../../common/constants/IPC'
 
 export class AuthenticationEvents implements IPCEvents {
   private _client: GrpcClient
@@ -29,6 +29,15 @@ export class AuthenticationEvents implements IPCEvents {
     ipc.answerRenderer(LOGOUT, async data => {
       try {
         await this._client.getAuthenticationService().logout()
+        return new GeneralAnswer(true)
+      } catch (e) {
+        return new GeneralAnswer(false, e)
+      }
+    })
+
+    ipc.answerRenderer(REFRESH, async data => {
+      try {
+        await this._client.getAuthenticationService().refresh()
         return new GeneralAnswer(true)
       } catch (e) {
         return new GeneralAnswer(false, e)

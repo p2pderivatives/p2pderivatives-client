@@ -9,6 +9,9 @@ import {
   unregisterError,
 } from './actions'
 import { UserAPI } from '../../ipc/UserAPI'
+import { IPCError } from '../../../common/models/ipc/IPCError'
+import { AUTH_ERROR } from '../../../common/constants/Errors'
+import { push } from 'connected-react-router'
 
 function* handleRegistration(action: ReturnType<typeof registerRequest>) {
   try {
@@ -36,7 +39,9 @@ function* handleUnregistration(action: ReturnType<typeof unregisterRequest>) {
     yield call(userAPI.unregisterUser)
     yield put(unregisterSuccess())
   } catch (err) {
-    if (err instanceof Error && err.message) {
+    if (err instanceof IPCError && (err as IPCError).getType() === AUTH_ERROR) {
+      yield put(push('/'))
+    } else if (err instanceof Error && err.message) {
       yield put(unregisterError(err.message))
     } else {
       yield put(unregisterError('An unknown error occured.'))

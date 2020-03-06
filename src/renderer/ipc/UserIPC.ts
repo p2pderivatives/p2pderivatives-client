@@ -38,11 +38,7 @@ export class UserIPC implements UserAPI {
       return answer.getId()
     } else {
       const error = answer.getError()
-      if (error) {
-        throw new Error(error.getMessage())
-      } else {
-        throw new Error('Unknown error ocurred.')
-      }
+      throw error
     }
   }
 
@@ -53,13 +49,8 @@ export class UserIPC implements UserAPI {
     const answer = GeneralAnswer.parse(answerProps)
 
     if (!answer.isSuccess()) {
-      // TODO: transform exceptions if needed into more front-end friendly messages
       const error = answer.getError()
-      if (error) {
-        throw new Error(error.getMessage())
-      } else {
-        throw new Error('Unknown error ocurred.')
-      }
+      throw error
     }
   }
 
@@ -92,11 +83,7 @@ export class UserIPC implements UserAPI {
       return this._userListObservable
     } else {
       const error = answer.getError()
-      if (error) {
-        throw new Error(error.getMessage())
-      } else {
-        throw new Error('Unknown error ocurred.')
-      }
+      throw error
     }
   }
 }

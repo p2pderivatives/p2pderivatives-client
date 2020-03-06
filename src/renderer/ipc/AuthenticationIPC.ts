@@ -1,4 +1,4 @@
-import { LOGIN, LOGOUT } from '../../common/constants/IPC'
+import { LOGIN, LOGOUT, REFRESH } from '../../common/constants/IPC'
 import { LoginCall } from '../../common/models/ipc/LoginCall'
 import {
   GeneralAnswer,
@@ -18,11 +18,7 @@ export class AuthenticationIPC implements AuthenticationAPI {
     if (!answer.isSuccess()) {
       // TODO: transform exceptions if needed into more front-end friendly messages
       const error = answer.getError()
-      if (error) {
-        throw new Error(error.getMessage())
-      } else {
-        throw new Error('Unknown error ocurred.')
-      }
+      throw error
     }
   }
 
@@ -32,11 +28,17 @@ export class AuthenticationIPC implements AuthenticationAPI {
 
     if (!answer.isSuccess()) {
       const error = answer.getError()
-      if (error) {
-        throw new Error(error.getMessage())
-      } else {
-        throw new Error('Unknown error ocurred.')
-      }
+      throw error
+    }
+  }
+
+  public async refresh(): Promise<void> {
+    const answerProps = (await ipc.callMain(REFRESH)) as GeneralAnswerProps
+    const answer = GeneralAnswer.parse(answerProps)
+
+    if (!answer.isSuccess()) {
+      const error = answer.getError()
+      throw error
     }
   }
 }
