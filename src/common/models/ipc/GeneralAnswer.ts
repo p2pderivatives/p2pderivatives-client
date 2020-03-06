@@ -11,6 +11,9 @@ export class GeneralAnswer {
   public constructor(success: boolean, error: IPCError | null = null) {
     this._success = success
     this._error = error
+    if (!this._success && !this._error) {
+      throw Error('This should not be possible.')
+    }
   }
 
   public isSuccess(): boolean {

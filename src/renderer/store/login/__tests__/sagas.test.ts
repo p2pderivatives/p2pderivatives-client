@@ -34,6 +34,12 @@ class MockAuthAPI implements AuthenticationAPI {
       }
     })
   }
+
+  refresh(): Promise<void> {
+    return new Promise(resolve => {
+      resolve()
+    })
+  }
 }
 
 describe('login saga', () => {

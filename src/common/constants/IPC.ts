@@ -1,5 +1,6 @@
 export const LOGIN = 'login'
 export const LOGOUT = 'logout'
+export const REFRESH = 'refresh'
 
 export const REGISTER_USER = 'register-user'
 export const UNREGISTER_USER = 'unregister-user'

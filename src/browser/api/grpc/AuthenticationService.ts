@@ -11,6 +11,7 @@ import { Metadata } from 'grpc'
 import { promisify } from './grpcPromisify'
 import { GrpcAuth } from './GrpcAuth'
 import { GrpcError } from './GrpcError'
+import AuthenticationError from './AuthenticationError'
 
 export class AuthenticationService {
   private _client: IAuthenticationClient
@@ -69,11 +70,15 @@ export class AuthenticationService {
     })
   }
 
-  public refresh(): Promise<RefreshResponse> {
+  public refresh(): Promise<void> {
+    if (!this._auth.isExpired()) {
+      return new Promise(resolve => resolve())
+    }
+
     const refreshToken = this._auth.getRefreshToken()
     // throw when not filled
     if (!refreshToken) {
-      throw new GrpcError('Refresh failed!', 'Refresh token has not been set!')
+      throw new AuthenticationError('Refresh failed!')
     }
 
     const refreshRequest = new RefreshRequest()
@@ -82,21 +87,21 @@ export class AuthenticationService {
     const refreshAsync = promisify<RefreshRequest, RefreshResponse>(
       this._client.refresh.bind(this._client)
     )
-    return refreshAsync(refreshRequest).then(response => {
-      const token = response.getToken()
-      if (token) {
-        this._auth.authorize(
-          token.getAccessToken(),
-          token.getExpiresIn(),
-          token.getRefreshToken()
-        )
-        return response
-      } else {
-        throw new GrpcError(
-          'Unexpected error',
-          'Did not receive a token from successful refresh request!'
-        )
-      }
-    })
+    return refreshAsync(refreshRequest)
+      .then(response => {
+        const token = response.getToken()
+        if (token) {
+          this._auth.authorize(
+            token.getAccessToken(),
+            token.getExpiresIn(),
+            token.getRefreshToken()
+          )
+        } else {
+          throw new AuthenticationError('Unexpected error')
+        }
+      })
+      .catch((e: GrpcError) => {
+        throw new AuthenticationError(e.getName())
+      })
   }
 }

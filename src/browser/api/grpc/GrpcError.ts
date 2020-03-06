@@ -1,14 +1,20 @@
 import { ServiceError } from 'grpc'
+import { GENERAL_ERROR } from '../../../common/constants/Errors'
 
 export class GrpcError {
-  private readonly _code: number
-  private readonly _name: string
-  private readonly _message: string
+  protected _type = GENERAL_ERROR
+  protected readonly _code: number
+  protected readonly _name: string
+  protected readonly _message: string
 
   public constructor(name: string, message = '', code = -1) {
     this._name = name
     this._message = message
     this._code = code
+  }
+
+  public getType(): string {
+    return this._type
   }
 
   public getCode(): number {
