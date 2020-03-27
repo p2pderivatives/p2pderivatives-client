@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
 
 import { makeStyles, createMuiTheme, MuiThemeProvider } from '@material-ui/core'
 import AppBar from '@material-ui/core/AppBar'
@@ -36,6 +37,9 @@ const useStyles = makeStyles({
   loginButton: {
     color: '#E4E7EF',
   },
+  menuLink: {
+    color: 'inherit',
+  },
 })
 
 const StatusBar: FC = () => {
@@ -63,6 +67,13 @@ const StatusBar: FC = () => {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
+      <MenuItem
+        onClick={handleMenuClose}
+        component={RouterLink}
+        to="/wallet-settings"
+      >
+        BitcoinD Settings
+      </MenuItem>
       <MenuItem onClick={handleMenuClose}>Change Password</MenuItem>
       <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
     </Menu>

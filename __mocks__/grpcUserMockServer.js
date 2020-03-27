@@ -17,13 +17,13 @@ module.exports = function getMockServer() {
         output: {},
       },
       {
-        method: 'getUserStatuses',
+        method: 'getConnectedUsers',
         streamType: 'server',
         input: {},
         stream: [
-          { output: { name: 'user1', status: 0 } },
-          { output: { name: 'user2', status: 0 } },
-          { output: { name: 'user1', status: 1 } },
+          { output: { name: 'user1' } },
+          { output: { name: 'user2' } },
+          { output: { name: 'user1' } },
         ],
       },
       {
@@ -36,6 +36,19 @@ module.exports = function getMockServer() {
           { output: { name: 'user3' } },
           { output: { name: 'user4' } },
         ],
+      },
+      {
+        method: 'receiveDlcMessages',
+        streamType: 'server',
+        input: {},
+        stream: [
+          { output: { destName: 'test', orgName: 'test', payload: 0x1 } },
+        ],
+      },
+      {
+        method: 'sendDlcMessage',
+        input: { destName: 'test', orgName: 'test', payload: 0x1 },
+        output: {},
       },
     ],
   })

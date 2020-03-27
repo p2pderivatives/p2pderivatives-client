@@ -6,8 +6,15 @@ import AddIcon from '@material-ui/icons/Add'
 import StatusBar from '../../molecules/StatusBar'
 import Fab from '../../atoms/Fab'
 
+import Paper from '@material-ui/core/Paper'
+import MenuItem from '@material-ui/core/MenuItem'
+import MenuList from '@material-ui/core/MenuList'
+
 type LayoutProps = {
+  onBack?: () => void
   children?: React.ReactNode
+  showSidebar?: boolean
+  settingsConfig?: boolean
 }
 
 const useStyles = makeStyles({
@@ -16,6 +23,10 @@ const useStyles = makeStyles({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
+    backgroundColor: '#303855',
+  },
+  paper: {
+    height: '100%',
     backgroundColor: '#303855',
   },
   buttonContainer: {
@@ -46,18 +57,41 @@ const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
     <div className={classes.rootContainer}>
       <StatusBar />
       <div className={classes.contentRoot}>
-        <div className={classes.sidebar}>
-          <div className={classes.buttonContainer}>
-            <Fab variant="extended" color="primary">
-              <AddIcon />
-              {'New contract'}
-            </Fab>
+        {props.showSidebar && (
+          <div className={classes.sidebar}>
+            {props.settingsConfig ? (
+              <Paper className={classes.paper} elevation={4} variant="outlined">
+                <MenuList>
+                  <MenuItem
+                    onClick={() =>
+                      props.onBack !== undefined ? props.onBack() : void 0
+                    }
+                  >
+                    🠐 Back
+                  </MenuItem>
+                  <MenuItem>BitcoinD</MenuItem>
+                  <MenuItem>Change Password</MenuItem>
+                </MenuList>
+              </Paper>
+            ) : (
+              <div className={classes.buttonContainer}>
+                <Fab variant="extended" color="primary">
+                  <AddIcon />
+                  {'New contract'}
+                </Fab>
+              </div>
+            )}
           </div>
-        </div>
+        )}
         <div className={classes.content}>{props.children}</div>
       </div>
     </div>
   )
+}
+
+MainLayout.defaultProps = {
+  showSidebar: true,
+  settingsConfig: false,
 }
 
 export default MainLayout

@@ -10,6 +10,7 @@ import {
   LogoutRequest,
   RefreshResponse,
   Empty,
+  UpdatePasswordRequest,
 } from './gen/authentication_pb'
 import grpc, { Metadata, ServiceError } from 'grpc'
 import { GrpcAuth } from './GrpcAuth'
@@ -57,6 +58,15 @@ const refreshFn = (
 
 const logoutFn = (
   request: LogoutRequest,
+  meta: Metadata,
+  callback: (error: grpc.ServiceError | null, response: Empty) => void
+): any => {
+  callback(null, new Empty())
+  return null
+}
+
+const changePasswordFn = (
+  request: UpdatePasswordRequest,
   meta: Metadata,
   callback: (error: grpc.ServiceError | null, response: Empty) => void
 ): any => {
@@ -128,6 +138,24 @@ class AuthMock implements IAuthenticationClient {
   ): grpc.ClientUnaryCall
   logout(request: any, metadata: any, options?: any, callback?: any) {
     return logoutFn(request, callback, options)
+  }
+  updatePassword(
+    request: UpdatePasswordRequest,
+    callback: (error: grpc.ServiceError | null, response: Empty) => void
+  ): grpc.ClientUnaryCall
+  updatePassword(
+    request: UpdatePasswordRequest,
+    metadata: grpc.Metadata,
+    callback: (error: grpc.ServiceError | null, response: Empty) => void
+  ): grpc.ClientUnaryCall
+  updatePassword(
+    request: UpdatePasswordRequest,
+    metadata: grpc.Metadata,
+    options: Partial<grpc.CallOptions>,
+    callback: (error: grpc.ServiceError | null, response: Empty) => void
+  ): grpc.ClientUnaryCall
+  updatePassword(request: any, metadata: any, options?: any, callback?: any) {
+    return changePasswordFn(request, callback, options)
   }
 }
 

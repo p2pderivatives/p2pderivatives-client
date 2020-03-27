@@ -41,6 +41,7 @@ test('grpc-client-refresh', async done => {
     await client.getAuthenticationService().refresh()
     expect(auth.getAuthToken()).toBe('refreshToken')
     expect(auth.getRefreshToken()).toBe('testRefresh')
+    expect(auth.isExpired()).toBeFalsy()
     done()
   }, 2000)
 })

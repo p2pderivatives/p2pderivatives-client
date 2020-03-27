@@ -6,7 +6,6 @@ import {
   UnregisterUserRequest,
   Empty,
   UserInfo,
-  UserStatus,
 } from './gen/user_pb'
 import { promisify } from './grpcPromisify'
 import { GrpcAuth } from './GrpcAuth'
@@ -50,12 +49,5 @@ export class UserService {
     metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
 
     return this._client.getUserList(new Empty(), metaData)
-  }
-
-  public getUserStatusesStream(): ClientReadableStream<UserStatus> {
-    const metaData = new Metadata()
-    metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
-
-    return this._client.getUserStatuses(new Empty(), metaData)
   }
 }

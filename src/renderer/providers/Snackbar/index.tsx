@@ -5,7 +5,7 @@ import Alert from '@material-ui/lab/Alert'
 type Severity = 'error' | 'warning' | 'success'
 
 interface SnackbarProviderType {
-  createSnack: (message: string, severity: string, onClose: () => void) => void
+  createSnack: (message: string, severity: string, onClose?: () => void) => void
 }
 
 const SnackbarContext = React.createContext({} as SnackbarProviderType)
@@ -15,7 +15,7 @@ interface SnackType {
   open: boolean
   message: string
   severity: Severity
-  onClose: () => void
+  onClose?: () => void
 }
 
 type LayoutProps = {
@@ -30,7 +30,7 @@ export const SnackbarProvider: FC<LayoutProps> = (props: LayoutProps) => {
   const createSnack = (
     message: string,
     severityString: string,
-    onClose: () => void
+    onClose?: () => void
   ): void => {
     const id = uniqueId++
     const open = true
@@ -38,7 +38,8 @@ export const SnackbarProvider: FC<LayoutProps> = (props: LayoutProps) => {
     const snack: SnackType = { id, message, open, severity, onClose }
 
     if (current) {
-      setQueue(queue.concat(snack))
+      queue.push(snack)
+      setQueue(queue)
     } else {
       setCurrent(snack)
     }
@@ -46,7 +47,7 @@ export const SnackbarProvider: FC<LayoutProps> = (props: LayoutProps) => {
 
   const handleClose = () => {
     if (current) {
-      current.onClose()
+      if (current.onClose) current.onClose()
       setCurrent({ ...current, open: false })
     }
     setTimeout(openNext, 1000)

@@ -3,11 +3,12 @@ import { UserEvents } from '../../src/browser/ipc/UserEvents'
 import { GrpcClient } from '../../src/browser/api/grpc/GrpcClient'
 import { GrpcConfig } from '../../src/browser/api/grpc/GrpcConfig'
 import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
+import { BitcoinDEvents } from './ipc/BitcoinDEvents'
+import FileStorage from './storage/fileStorage'
 
-const initialize = (): void => {
+const initialize = async (): Promise<void> => {
   const auth = new GrpcAuth()
   const config = GrpcConfig.fromConfigOrDefault('./settings.yaml')
-  console.log('config: ', config)
 
   const client = new GrpcClient(config, auth)
 
@@ -16,6 +17,9 @@ const initialize = (): void => {
 
   const userEvents = new UserEvents(client)
   userEvents.registerReplies()
+
+  const bitcoinEvents = new BitcoinDEvents(new FileStorage())
+  bitcoinEvents.registerReplies()
 }
 
 export default initialize
