@@ -15,7 +15,7 @@ module.exports = function getMockServer() {
           token: {
             accessToken: 'testToken',
             refreshToken: 'testRefresh',
-            expiresIn: 3600,
+            expiresIn: 1,
           },
         },
       },
@@ -34,11 +34,16 @@ module.exports = function getMockServer() {
         input: { refreshToken: 'testRefresh' },
         output: {
           token: {
-            accessToken: 'testToken',
+            accessToken: 'refreshToken',
             refreshToken: 'testRefresh',
-            expiresIn: 3600,
+            expiresIn: 1,
           },
         },
+      },
+      {
+        method: 'updatePassword',
+        input: { oldPassword: 'old', newPassword: 'new' },
+        output: {},
       },
     ],
   })

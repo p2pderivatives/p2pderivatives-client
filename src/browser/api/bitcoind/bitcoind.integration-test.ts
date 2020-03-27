@@ -11,7 +11,7 @@ const client = new BitcoinDClient()
 
 test('can-load-default-wallet', async done => {
   await client.configure({
-    rpcUser: RPC_USER,
+    rpcUsername: RPC_USER,
     rpcPassword: RPC_PASSWORD,
     network: NETWORK,
     port: PORT,
@@ -20,21 +20,36 @@ test('can-load-default-wallet', async done => {
   // no assertion needed, as long as no exception is thrown
 })
 
-test('can-get-default-balance', async done => {
+test('can-get-default-balance', async () => {
   await client.configure({
-    rpcUser: RPC_USER,
+    rpcUsername: RPC_USER,
     rpcPassword: RPC_PASSWORD,
     network: NETWORK,
     port: PORT,
   })
   const balance = await client.getBalance()
-  expect(balance).toBe(0)
-  done()
+  expect(balance).toBeGreaterThanOrEqual(0)
 })
 
-test('can-load-other-wallet', async done => {
+test('loading-non-existing-wallet-fails', async () => {
+  let error
+  try {
+    await client.configure({
+      rpcUsername: RPC_USER,
+      rpcPassword: RPC_PASSWORD,
+      network: NETWORK,
+      port: PORT,
+      wallet: 'does-not-exist',
+    })
+  } catch (e) {
+    error = e
+  }
+  expect(error.code).toEqual(-18)
+})
+
+test('can-load-other-wallet', async () => {
   await client.configure({
-    rpcUser: RPC_USER,
+    rpcUsername: RPC_USER,
     rpcPassword: RPC_PASSWORD,
     network: NETWORK,
     port: PORT,
@@ -42,13 +57,12 @@ test('can-load-other-wallet', async done => {
     walletPassphrase: WALLETPASSPHRASE,
   })
   const balance = await client.getBalance()
-  expect(balance).toBeGreaterThan(47) // arbitrary local value
-  done()
+  expect(balance).toBeGreaterThanOrEqual(0)
 })
 
-test('can-get-raw-transaction', async done => {
+test('can-get-raw-transaction', async () => {
   await client.configure({
-    rpcUser: RPC_USER,
+    rpcUsername: RPC_USER,
     rpcPassword: RPC_PASSWORD,
     network: NETWORK,
     port: PORT,
@@ -58,13 +72,13 @@ test('can-get-raw-transaction', async done => {
   const tx = await client.getTransaction(
     '4c361a02cdcc257f44dbfb24b93f19c7b3c21cba3d1b15dab8e3f70a832c191e'
   )
-  expect(tx.confirmations).toBe(0)
+  expect(tx.confirmations).toBeGreaterThanOrEqual(0)
   expect(tx.amount).toBe(-1)
-}, 200000)
+})
 
-test('can-generate-new-address', async done => {
+test('can-generate-new-address', async () => {
   await client.configure({
-    rpcUser: RPC_USER,
+    rpcUsername: RPC_USER,
     rpcPassword: RPC_PASSWORD,
     network: NETWORK,
     port: PORT,
@@ -73,11 +87,11 @@ test('can-generate-new-address', async done => {
   })
   const address = await client.getNewAddress()
   expect(address).toBeDefined()
-}, 20000)
+})
 
-test('can-get-privkey', async done => {
+test('can-get-privkey', async () => {
   await client.configure({
-    rpcUser: RPC_USER,
+    rpcUsername: RPC_USER,
     rpcPassword: RPC_PASSWORD,
     network: NETWORK,
     port: PORT,
@@ -88,4 +102,4 @@ test('can-get-privkey', async done => {
   const privKey = await client.dumpPrivKey(address)
   console.log('privkey:', privKey)
   expect(privKey).toBeDefined()
-}, 20000)
+})

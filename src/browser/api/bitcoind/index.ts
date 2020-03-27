@@ -5,22 +5,14 @@ import Client, {
   UnspentTxInfo,
 } from 'bitcoin-core'
 
-interface BitcoinDConfiguration {
-  rpcUser: string
-  rpcPassword: string
-  host?: string
-  port?: number
-  network?: 'mainnet' | 'regtest' | 'testnet'
-  wallet?: string
-  walletPassphrase?: string
-}
+import { BitcoinDConfig } from '../../../common/models/ipc/BitcoinDConfig'
 
 export default class BitcoinDClient {
   private rpcUser = ''
   private rpcPassword = ''
   private host = ''
   private port = 8332
-  private network: 'mainnet' | 'regtest' | 'testnet' = 'mainnet'
+  private network: 'mainnet' | 'regtest' | 'testnet' = 'regtest'
   private wallet = ''
   private walletPassphrase = ''
 
@@ -33,15 +25,19 @@ export default class BitcoinDClient {
     }
   }
 
-  public async configure(options: BitcoinDConfiguration): Promise<void> {
+  public async configure(options: BitcoinDConfig): Promise<void> {
     const clientConfig: ClientConstructorOption = {}
-    if (options.rpcUser) {
-      this.rpcUser = options.rpcUser
+    if (options.rpcUsername) {
+      this.rpcUser = options.rpcUsername
       clientConfig['username'] = this.rpcUser
     }
     if (options.rpcPassword) {
       this.rpcPassword = options.rpcPassword
       clientConfig['password'] = this.rpcPassword
+    }
+    if (options.network) {
+      this.network = options.network
+      clientConfig['network'] = this.network
     }
     if (options.host) {
       this.host = options.host
@@ -49,33 +45,40 @@ export default class BitcoinDClient {
     }
     if (options.port) {
       this.port = options.port
-      clientConfig['port'] = this.port
+    } else {
+      if (this.network === 'mainnet') this.port = 8332
+      if (this.network === 'testnet') this.port = 18332
+      if (this.network === 'regtest') this.port = 18443
     }
-    if (options.network) {
-      this.network = options.network
-      clientConfig['network'] = this.network
-    }
+    clientConfig['port'] = this.port
+
     if (options.wallet) {
       this.wallet = options.wallet
-      clientConfig['wallet'] = this.wallet
     }
+    clientConfig['wallet'] = this.wallet
+
     if (options.walletPassphrase) {
       this.walletPassphrase = options.walletPassphrase
     }
 
+    clientConfig.useWalletURL = true
+
     this.client = new Client(clientConfig)
     if (this.wallet) {
-      // load wallet will fail if already loaded
-      try {
-        await this.client.loadWallet(this.wallet)
-      } catch (e) {
-        // do nothing
+      const wallets = await this.client.listWallets()
+      if (!(this.wallet in wallets)) {
+        try {
+          await this.client.loadWallet(this.wallet)
+        } catch (e) {
+          if (e.code === -18) {
+            throw e
+          }
+        }
       }
     }
     if (options.walletPassphrase) {
       await this.client.walletPassphrase(this.walletPassphrase, 60)
     }
-    // this will crash if bitcoind is not running
     await this.client.getNetworkInfo()
   }
 

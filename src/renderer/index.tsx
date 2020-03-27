@@ -6,7 +6,7 @@ import { Provider } from 'react-redux'
 import { ConnectedRouter } from 'connected-react-router'
 import routes from './routes'
 import createStore, { history } from './createStore'
-import { MuiThemeProvider } from '@material-ui/core'
+import { MuiThemeProvider, makeStyles } from '@material-ui/core'
 import theme from './components/theme'
 import { SnackbarProvider } from './providers/Snackbar'
 
@@ -14,11 +14,11 @@ const store = createStore()
 
 ReactDOM.render(
   <Provider store={store}>
-    <SnackbarProvider>
-      <MuiThemeProvider theme={theme}>
+    <MuiThemeProvider theme={theme}>
+      <SnackbarProvider>
         <ConnectedRouter history={history}>{routes}</ConnectedRouter>
-      </MuiThemeProvider>
-    </SnackbarProvider>
+      </SnackbarProvider>
+    </MuiThemeProvider>
   </Provider>,
   document.getElementById('root')
 )

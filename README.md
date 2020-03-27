@@ -39,8 +39,10 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
-## Learn More
+## Integration Tests
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Bitcoind Tests
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The Bitcoind integration test requires the bitcoind to be using `regtest` and to be running on the default `regtest` port, 18443.
+
+It also requires that a wallet is created ( besides the default one ), named `test` with wallet passphrase `test123!`.
