@@ -24,6 +24,7 @@ const RegistrationPage: FC = () => {
   const registrationError = useSelector(state => state.user.error)
   const dispatch = useDispatch()
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const handleClose = () => {}
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const RegistrationPage: FC = () => {
         )
       }
     }
-  }, [isRegistering, isRegistered, registrationError])
+  }, [isRegistering, isRegistered, registrationError, snackbar])
 
   const onSubmit = (username: string, password: string) => {
     dispatch(registerRequest(username, password))

@@ -1,8 +1,8 @@
-import { AuthenticationEvents } from '../../src/browser/ipc/AuthenticationEvents'
-import { UserEvents } from '../../src/browser/ipc/UserEvents'
-import { GrpcClient } from '../../src/browser/api/grpc/GrpcClient'
-import { GrpcConfig } from '../../src/browser/api/grpc/GrpcConfig'
-import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
+import { AuthenticationEvents } from './ipc/AuthenticationEvents'
+import { UserEvents } from './ipc/UserEvents'
+import { GrpcClient } from './api/grpc/GrpcClient'
+import { GrpcConfig } from './api/grpc/GrpcConfig'
+import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { BitcoinDEvents } from './ipc/BitcoinDEvents'
 import FileStorage from './storage/fileStorage'
 

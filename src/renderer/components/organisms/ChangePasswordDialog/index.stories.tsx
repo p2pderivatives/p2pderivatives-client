@@ -13,7 +13,11 @@ export default {
 export const changePasswordDialog = () => (
   <MuiThemeProvider theme={theme}>
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
-      <ChangePasswordDialog open={true} onClose={() => {}} />
+      <ChangePasswordDialog
+        open={true}
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        onClose={() => {}}
+      />
     </div>
   </MuiThemeProvider>
 )

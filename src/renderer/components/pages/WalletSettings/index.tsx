@@ -62,7 +62,16 @@ const WalletSetings: FC = () => {
         'success'
       )
     }
-  }, [submitted, processing, checkSuccessful, bitcoinError, balance])
+  }, [
+    submitted,
+    processing,
+    checkSuccessful,
+    bitcoinError,
+    balance,
+    balanceRequested,
+    snackbar,
+    dispatch,
+  ])
 
   const onSubmit = (config: BitcoinDConfig) => {
     dispatch(checkRequest(config))

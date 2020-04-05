@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import React from 'react'
 import WalletSettingsForm from './'
 import { MuiThemeProvider } from '@material-ui/core'

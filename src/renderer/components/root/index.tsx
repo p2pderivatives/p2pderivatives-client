@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from 'react'
+import React, { FC, useEffect } from 'react'
 import {
   useSelector as useReduxSelector,
   TypedUseSelectorHook,
@@ -21,7 +21,7 @@ const Root: FC<LayoutProps> = (props: LayoutProps) => {
     if (isLoggedIn) {
       dispatch(push('/main'))
     }
-  }, [isLoggedIn])
+  }, [dispatch, isLoggedIn])
   dispatch(refreshRequest())
 
   return <div>{props.children}</div>

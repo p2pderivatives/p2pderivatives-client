@@ -16,7 +16,7 @@ import { getContext } from 'redux-saga/effects'
 class MockAuthAPI implements BitcoinAPI {
   getConfig(): Promise<BitcoinDConfig> {
     return new Promise((resolve, reject) => {
-      const config: BitcoinDConfig = { network: 'regtest', wallet: 'test'}
+      const config: BitcoinDConfig = { network: 'regtest', wallet: 'test' }
       resolve(config)
     })
   }
@@ -66,7 +66,7 @@ describe('bitcoin saga', () => {
   it('should get config successfully', () => {
     return expectSaga(bitcoinSagas)
       .provide([[getContext('bitcoinAPI'), bitcoinAPI]])
-      .put(configRetrieved({ network: 'regtest', wallet: 'test'}))
+      .put(configRetrieved({ network: 'regtest', wallet: 'test' }))
       .dispatch(configRequest())
       .run()
   })

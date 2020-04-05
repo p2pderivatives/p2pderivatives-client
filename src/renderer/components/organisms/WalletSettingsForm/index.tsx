@@ -50,7 +50,7 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
   )
   const [defaultPort, setDefaultPort] = useState('8332')
 
-  const checkSettings = () => {
+  const checkSettings = (): void => {
     const tempConfig: BitcoinDConfig = {}
     if (ip) tempConfig.host = ip
     if (port) tempConfig.port = parseInt(port)

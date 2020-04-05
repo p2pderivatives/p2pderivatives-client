@@ -6,6 +6,7 @@
       "dom.iterable",
       "esnext"
     ],
+    "outDir": "build",
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
