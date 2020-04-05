@@ -1,4 +1,8 @@
-import { LoginRequest, LoginResponse, TokenInfo } from './gen/authentication_pb'
+import {
+  LoginRequest,
+  LoginResponse,
+  TokenInfo,
+} from '@internal/gen-grpc/authentication_pb'
 import { Metadata, ServiceError } from 'grpc'
 import { promisify } from './grpcPromisify'
 import { GrpcError } from './GrpcError'

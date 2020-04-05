@@ -1,6 +1,6 @@
 /* eslint-disable no-dupe-class-members */
 
-import { IAuthenticationClient } from './gen/authentication_grpc_pb'
+import { IAuthenticationClient } from '@internal/gen-grpc/authentication_grpc_pb'
 import { AuthenticationService } from './AuthenticationService'
 import {
   LoginRequest,
@@ -11,7 +11,7 @@ import {
   RefreshResponse,
   Empty,
   UpdatePasswordRequest,
-} from './gen/authentication_pb'
+} from '@internal/gen-grpc/authentication_pb'
 import grpc, { Metadata, ServiceError } from 'grpc'
 import { GrpcAuth } from './GrpcAuth'
 

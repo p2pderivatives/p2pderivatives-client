@@ -15,7 +15,7 @@ import {
   GeneralAnswerProps,
 } from '../../common/models/ipc/GeneralAnswer'
 import { Subject } from 'rxjs'
-import { UserInfo } from '../../browser/api/grpc/gen/user_pb'
+import { UserInfo } from '@internal/gen-grpc/user_pb'
 import { UserAPI } from './UserAPI'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { ipcRenderer: ipc } = window.require('electron-better-ipc')

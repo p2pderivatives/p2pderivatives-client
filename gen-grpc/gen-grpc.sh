@@ -1,5 +1,5 @@
-PROTO_DIR=./p2pderivatives-proto
-OUTPUT=./src/browser/api/grpc/gen
+PROTO_DIR=../p2pderivatives-proto
+OUTPUT=.
 
 mkdir -p $OUTPUT
 

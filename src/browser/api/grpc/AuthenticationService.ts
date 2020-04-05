@@ -5,8 +5,8 @@ import {
   RefreshResponse,
   RefreshRequest,
   Empty,
-} from './gen/authentication_pb'
-import { IAuthenticationClient } from './gen/authentication_grpc_pb'
+} from '@internal/gen-grpc/authentication_pb'
+import { IAuthenticationClient } from '@internal/gen-grpc/authentication_grpc_pb'
 import { Metadata } from 'grpc'
 import { promisify } from './grpcPromisify'
 import { GrpcAuth } from './GrpcAuth'

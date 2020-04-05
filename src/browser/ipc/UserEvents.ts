@@ -4,7 +4,7 @@ import { GrpcClient } from '../api/grpc/GrpcClient'
 import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { ClientReadableStream } from 'grpc'
-import { UserInfo } from '../api/grpc/gen/user_pb'
+import { UserInfo } from '@internal/gen-grpc/user_pb'
 import { IPCEvents } from './IPCEvents'
 import {
   REGISTER_USER,

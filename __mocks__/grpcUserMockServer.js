@@ -2,7 +2,7 @@ const { createMockServer } = require('grpc-mock')
 
 module.exports = function getMockServer() {
   return createMockServer({
-    protoPath: './src/browser/api/grpc/gen/user.proto',
+    protoPath: './gen-grpc/user.proto',
     packageName: 'usercontroller',
     serviceName: 'User',
     rules: [
