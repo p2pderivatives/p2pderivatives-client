@@ -13,7 +13,11 @@ export default {
 export const userSelectionDialog = () => (
   <MuiThemeProvider theme={theme}>
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
-      <UserSelectionDialog open={true} onClose={() => {}} />
+      <UserSelectionDialog
+        open={true}
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        onClose={() => {}}
+      />
     </div>
   </MuiThemeProvider>
 )

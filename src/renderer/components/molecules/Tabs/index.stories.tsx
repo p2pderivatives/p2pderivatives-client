@@ -19,6 +19,11 @@ const items: TabItem[] = [
 
 export const tabs = () => (
   <MuiThemeProvider theme={theme}>
-    <Tabs items={items} initialIndex={1} onTabChange={() => {}} />
+    <Tabs
+      items={items}
+      initialIndex={1}
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      onTabChange={() => {}}
+    />
   </MuiThemeProvider>
 )

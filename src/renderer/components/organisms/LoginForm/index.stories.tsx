@@ -18,6 +18,7 @@ export const loginForm = () => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="xs">
       <LoginForm
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         onSubmit={(username, password): void => {}}
         error={text('Error', '')}
       />

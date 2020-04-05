@@ -1,6 +1,6 @@
 import React, { useState, FC } from 'react'
 import MUIDataTable, { MUIDataTableProps, Responsive } from 'mui-datatables'
-import { MuiThemeProvider, createMuiTheme, responsiveFontSizes } from '@material-ui/core/styles'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import Toolbar from './DatePickerToolbar'
 
 export type DataGridProps = Omit<MUIDataTableProps, 'options' | 'columns'>

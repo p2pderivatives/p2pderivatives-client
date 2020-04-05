@@ -104,6 +104,7 @@ const options = {
   elevation: 0,
   rowsPerPage: 5,
   selectableRows: 'single' as SelectableRows,
+  // eslint-disable-next-line react/display-name
   customToolbarSelect: () => <div />,
 }
 

@@ -2,12 +2,13 @@
   "name": "p2pderivatives-client",
   "version": "0.1.0",
   "private": true,
-  "main": "src/browser/electron.js",
+  "main": "build/browser/electron.js",
   "homepage": "./",
   "files": [
     "gen-grpc"
   ],
   "build": {
+    "extends": null,
     "appId": "jp.co.cryptogarage.p2pd.client",
     "files": [
       "build/**/*"
@@ -16,13 +17,15 @@
   "scripts": {
     "postinstall": "npm install ./gen-grpc",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build-react": "react-scripts build",
+    "build-browser": "tsc -p src/browser",
+    "build": "npm run build-react && npm run build-browser",
     "test": "jest",
     "integration-test": "jest --config jest.config.integration.js",
     "eject": "react-scripts eject",
-    "electron-dev": "tsc -p src/browser && concurrently \"cross-env BROWSER=none PORT=9000 npm start\" \"wait-on http://localhost:9000 && electron .\"",
-    "dist": "npm run build && electron-builder",
-    "lint": "eslint src --ext .ts,.tsx",
+    "electron-dev": "concurrently \"cross-env BROWSER=none PORT=9000 npm start\" \"wait-on http://localhost:9000 && tsc -p src/browser && electron .\"",
+    "dist": "npm run build && electron-builder install-app-deps && electron-builder",
+    "lint": "eslint src test --ext .ts,.tsx",
     "mocha": "electron-mocha ./test/*.ts",
     "storybook": "start-storybook"
   },

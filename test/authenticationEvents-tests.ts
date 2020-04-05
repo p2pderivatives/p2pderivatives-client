@@ -23,7 +23,6 @@ class Main {
   @test async ipcLoginFailsWithWrongPassword() {
     const loginCall = new LoginCall('error', 'test')
     const result = (await ipc.callMain(LOGIN, loginCall)) as GeneralAnswerProps
-    console.log('result: ', result)
     const answer = GeneralAnswer.parse(result)
 
     expect(answer.isSuccess()).eq(false)

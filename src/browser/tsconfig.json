@@ -19,7 +19,7 @@
     "resolveJsonModule": true,
     "noEmit": false,
     "noImplicitAny": false,
-    "outDir": "../",
+    "outDir": "../../build",
     "rootDir": "../"
   },
   "exclude": ["./**/*.test.ts"]

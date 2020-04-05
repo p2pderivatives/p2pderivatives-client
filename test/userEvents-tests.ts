@@ -5,25 +5,15 @@ import {
   GeneralAnswer,
   GeneralAnswerProps,
 } from '../src/common/models/ipc/GeneralAnswer'
-import { IPCError } from '../src/common/models/ipc/IPCError'
 import { RegisterUserCall } from '../src/common/models/ipc/RegisterUserCall'
-import {
-  REGISTER_USER,
-  UNREGISTER_USER,
-  SEND_USER,
-  SEND_USER_END,
-  GET_USERLIST,
-} from '../src/common/constants/IPC'
+import { REGISTER_USER, UNREGISTER_USER } from '../src/common/constants/IPC'
 import {
   RegisterUserProps,
   RegisterUserAnswer,
 } from '../src/common/models/ipc/RegisterUserAnswer'
-import { User, UserProps } from '../src/common/models/user/User'
-import { LoginCall } from '../src/common/models/ipc/LoginCall'
 
 @suite('IPC-User')
 class Main {
-
   @test async ipcCanRegisterUser() {
     const registerCall = new RegisterUserCall('test', 'test')
     const result = (await ipc.callMain(

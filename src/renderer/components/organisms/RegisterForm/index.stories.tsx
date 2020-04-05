@@ -14,7 +14,10 @@ export default {
 export const registerForm = () => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="xs">
-      <RegisterForm onSubmit={(username, password): void => {}} />
+      <RegisterForm
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        onSubmit={(username, password): void => {}}
+      />
     </Container>
   </MuiThemeProvider>
 )

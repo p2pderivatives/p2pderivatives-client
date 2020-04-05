@@ -47,7 +47,7 @@ const LoginPage: FC = () => {
         snackbar.createSnack('Error: ' + loginError, 'error', handleClose)
       }
     }
-  }, [isLoggingIn, isLoggedIn, loginError])
+  }, [isLoggingIn, isLoggedIn, loginError, submitted, snackbar, handleClose])
 
   const onSubmit = (username: string, password: string) => {
     dispatch(loginRequest(username, password))
