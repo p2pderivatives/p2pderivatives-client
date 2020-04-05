@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
 
@@ -15,8 +15,9 @@
 
 
 # generated files
-gen/
-src/**/*.js
+gen-grpc/*.js
+gen-grpc/*.d.ts
+gen-grpc/*.proto
 
 # misc
 .DS_Store

@@ -1,4 +1,4 @@
-import { IUserClient } from './gen/user_grpc_pb'
+import { IUserClient } from '@internal/gen-grpc/user_grpc_pb'
 import { ClientReadableStream, Metadata } from 'grpc'
 import {
   UserRegisterRequest,
@@ -6,7 +6,7 @@ import {
   UnregisterUserRequest,
   Empty,
   UserInfo,
-} from './gen/user_pb'
+} from '@internal/gen-grpc/user_pb'
 import { promisify } from './grpcPromisify'
 import { GrpcAuth } from './GrpcAuth'
 

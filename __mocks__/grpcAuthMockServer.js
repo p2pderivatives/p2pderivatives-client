@@ -2,7 +2,7 @@ const { createMockServer } = require('grpc-mock')
 
 module.exports = function getMockServer() {
   return createMockServer({
-    protoPath: './src/browser/api/grpc/gen/authentication.proto',
+    protoPath: './gen-grpc/authentication.proto',
     packageName: 'authentication',
     serviceName: 'Authentication',
     rules: [

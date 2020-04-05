@@ -3,8 +3,8 @@ import * as grpc from 'grpc'
 import {
   IAuthenticationClient,
   AuthenticationClient,
-} from './gen/authentication_grpc_pb'
-import { UserClient, IUserClient } from './gen/user_grpc_pb'
+} from '@internal/gen-grpc/authentication_grpc_pb'
+import { UserClient, IUserClient } from '@internal/gen-grpc/user_grpc_pb'
 import * as fs from 'fs'
 import { GrpcAuth } from './GrpcAuth'
 import { AuthenticationService } from './AuthenticationService'

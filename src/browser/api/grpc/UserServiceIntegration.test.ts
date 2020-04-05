@@ -1,7 +1,7 @@
 import getMockServer from '../../../../__mocks__/grpcUserMockServer'
 import { GrpcClient } from './GrpcClient'
 import { GrpcConfig } from './GrpcConfig'
-import { UserInfo, Empty } from './gen/user_pb'
+import { UserInfo, Empty } from '@internal/gen-grpc/user_pb'
 import { GrpcAuth } from './GrpcAuth'
 
 const mockServer = getMockServer()
