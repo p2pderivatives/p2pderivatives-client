@@ -3,7 +3,9 @@ Repository for the P2PDerivatives client
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Ensure that protobuf compiler `protoc` is installed and added to `PATH` before running `npm install`.
 
+After running `npm install`, it will automatically generate an internal library `@internal/gen-grpc` from `gen-grpc` folder containing javascript protobuf files with types and `.proto` files.
 
 ## Available Scripts
 
