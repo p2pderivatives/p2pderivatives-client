@@ -1,0 +1,90 @@
+
+version: 2.1
+orbs:
+  node: circleci/node@2.0.1
+jobs:
+  dependencies:
+    docker:
+      - image: cryptogarageinc/p2pderivatives-client-ci:latest
+    steps:
+      - checkout
+      - run: git submodule update --init --recursive
+      - node/install-packages
+      - persist_to_workspace:
+          root: .
+          paths: 
+            - .
+
+  lint:
+    docker:
+      - image: circleci/node
+    steps:
+      - attach_workspace:
+          at: .
+      - run: npm run lint
+      - store_test_results:
+          path: ./reports/linter
+      - store_artifacts:
+          path: ./reports/linter    
+
+
+  build:
+    docker:
+      - image: circleci/node:latest-browsers
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: build
+          command: CI=false npm run build # ci to false avoid linter warnings as errors
+
+  jest-tests:
+    docker:
+      - image: circleci/node:latest-browsers
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: ReBuild grpc for node
+          command: npm install grpc --runtime=node
+      - run: 
+          name: run jest test
+          command: npm run test
+      - store_test_results:
+          path: ./reports/jest
+      - store_artifacts:
+          path: ./reports/jest    
+
+  mocha-tests:
+    docker:
+      - image: circleci/node:latest-browsers
+    steps:
+      - attach_workspace:
+          at: .
+      - run: 
+          name: Rebuild grpc for electron
+          command: npm install grpc --runtime=electron --target=7.0.0
+      - run: 
+          name: Run mocha test
+          command: npm run mocha -- --reporter mocha-junit-reporter
+      - store_test_results:
+          path: ./reports/mocha
+      - store_artifacts:
+          path: ./reports/mocha
+
+workflows:
+  lint-build-test:
+    jobs:
+      - dependencies
+      - lint:
+          requires:
+            - dependencies
+      - build:
+          requires:
+            - dependencies
+      - jest-tests:
+          requires:
+            - build
+      - mocha-tests:
+          requires:
+            - build

@@ -10,49 +10,51 @@ const config = new GrpcConfig('127.0.0.1:50051', false)
 const auth = new GrpcAuth()
 const client = new GrpcClient(config, auth)
 
-beforeAll(() => {
-  mockServer.listen('0.0.0.0:50051')
-})
+describe('authentification-service-integration-tests', () => {
+  beforeAll(() => {
+    mockServer.listen('0.0.0.0:50051')
+  })
 
-afterAll(() => {
-  mockServer.close(true)
-})
+  afterAll(() => {
+    mockServer.close(true)
+  })
 
-test('grpc-client-login', async () => {
-  const loginResponse = await client
-    .getAuthenticationService()
-    .login('test', 'test')
-  expect(loginResponse.getName()).toBe('test')
-  expect(loginResponse.getRequireChangePassword()).toBe(false)
-  const token = loginResponse.getToken()
-  if (token) {
-    expect(token.getAccessToken()).toBe('testToken')
-  }
-})
+  test('grpc-client-login', async () => {
+    const loginResponse = await client
+      .getAuthenticationService()
+      .login('test', 'test')
+    expect(loginResponse.getName()).toBe('test')
+    expect(loginResponse.getRequireChangePassword()).toBe(false)
+    const token = loginResponse.getToken()
+    if (token) {
+      expect(token.getAccessToken()).toBe('testToken')
+    }
+  })
 
-test('grpc-client-refresh', async done => {
-  const loginResponse = await client
-    .getAuthenticationService()
-    .login('test', 'test')
-  expect(auth.isExpired()).toBeFalsy()
-
-  setTimeout(async () => {
-    expect(auth.isExpired()).toBeTruthy()
-    await client.getAuthenticationService().refresh()
-    expect(auth.getAuthToken()).toBe('refreshToken')
-    expect(auth.getRefreshToken()).toBe('testRefresh')
+  test('grpc-client-refresh', async done => {
+    const loginResponse = await client
+      .getAuthenticationService()
+      .login('test', 'test')
     expect(auth.isExpired()).toBeFalsy()
-    done()
-  }, 2000)
-})
 
-test('grpc-client-logout', async () => {
-  const logoutResponse = await client.getAuthenticationService().logout()
-  expect(logoutResponse).toBeInstanceOf(Empty)
-})
+    setTimeout(async () => {
+      expect(auth.isExpired()).toBeTruthy()
+      await client.getAuthenticationService().refresh()
+      expect(auth.getAuthToken()).toBe('refreshToken')
+      expect(auth.getRefreshToken()).toBe('testRefresh')
+      expect(auth.isExpired()).toBeFalsy()
+      done()
+    }, 2000)
+  })
 
-test('grpc-client-login-fail', async () => {
-  await expect(
-    client.getAuthenticationService().login('error', 'test')
-  ).rejects.toBeInstanceOf(GrpcError)
+  test('grpc-client-logout', async () => {
+    const logoutResponse = await client.getAuthenticationService().logout()
+    expect(logoutResponse).toBeInstanceOf(Empty)
+  })
+
+  test('grpc-client-login-fail', async () => {
+    await expect(
+      client.getAuthenticationService().login('error', 'test')
+    ).rejects.toBeInstanceOf(GrpcError)
+  })
 })
