@@ -18,7 +18,7 @@ const DatePickerToolbar: FC<DatePickerToolbarProps> = (
   const [localTo, setLocalTo] = useState(props.toDate)
   const [localFrom, setLocalFrom] = useState(props.fromDate)
 
-  const handleToDateChange = (newDate: Date | null) => {
+  const handleToDateChange = (newDate: Date | null): void => {
     console.log('new to date ', newDate)
     if (newDate) {
       props.setToDate(newDate)
@@ -26,7 +26,7 @@ const DatePickerToolbar: FC<DatePickerToolbarProps> = (
     }
   }
 
-  const handleFromDateChange = (newDate: Date | null) => {
+  const handleFromDateChange = (newDate: Date | null): void => {
     console.log('new from date ', newDate)
     if (newDate) {
       props.setFromDate(newDate)

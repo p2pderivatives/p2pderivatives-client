@@ -19,6 +19,10 @@ export type WalletSettingsFormProps = {
 }
 
 const useStyles = makeStyles({
+  item: {
+    marginTop: '1.5rem',
+    marginBottom: '1.5rem',
+  },
   buttons: {
     marginTop: '3rem',
     '& > button': {
@@ -71,19 +75,24 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
 
   return (
     <div>
-      <Grid container spacing={5} direction="column" xl>
-        <Grid item xs={12}>
+      <Grid
+        container
+        direction="column"
+        justify="space-evenly"
+        alignItems="stretch"
+      >
+        <Grid item xs={12} className={classes.item}>
           <Select
             value={network}
             fullWidth
-            onChange={e => setNetwork(e.target.value as BitcoinNetwork)}
+            onChange={(e): void => setNetwork(e.target.value as BitcoinNetwork)}
           >
             <MenuItem value={'mainnet'}>mainnet</MenuItem>
             <MenuItem value={'testnet'}>testnet</MenuItem>
             <MenuItem value={'regtest'}>regtest</MenuItem>
           </Select>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.item}>
           <TextInput
             label="IP Address"
             placeholder="Leave blank for localhost"
@@ -91,10 +100,10 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             id="ip"
             name="ip"
             value={ip}
-            onChange={e => setIP(e.target.value)}
+            onChange={(e): void => setIP(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.item}>
           <TextInput
             label="Port"
             type="number"
@@ -103,10 +112,10 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             id="port"
             name="port"
             value={port}
-            onChange={e => setPort(e.target.value)}
+            onChange={(e): void => setPort(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.item}>
           <TextInput
             label="RPC Username"
             placeholder="Leave blank if not secured"
@@ -114,10 +123,10 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             id="rpcuser"
             name="rpcuser"
             value={rpcUser}
-            onChange={e => setRPCUser(e.target.value)}
+            onChange={(e): void => setRPCUser(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.item}>
           <TextInput
             label="RPC Password"
             placeholder="Leave blank if not secured"
@@ -125,10 +134,10 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             id="rpcPassword"
             name="rpcPassword"
             value={rpcPassword}
-            onChange={e => setRPCPassword(e.target.value)}
+            onChange={(e): void => setRPCPassword(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.item}>
           <TextInput
             label="Wallet"
             placeholder="Leave blank for default wallet"
@@ -136,10 +145,10 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             id="wallet"
             name="wallet"
             value={wallet}
-            onChange={e => setWallet(e.target.value)}
+            onChange={(e): void => setWallet(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.item}>
           <TextInput
             label="Wallet Passphrase"
             placeholder="Leave blank if there is no passphrase"
@@ -147,7 +156,7 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             id="wallet"
             name="wallet"
             value={walletPass}
-            onChange={e => setWalletPass(e.target.value)}
+            onChange={(e): void => setWalletPass(e.target.value)}
           />
         </Grid>
       </Grid>

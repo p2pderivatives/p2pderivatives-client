@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { action } from 'typesafe-actions'
 import { BitcoinActionTypes } from './types'
 import { BitcoinDConfig } from '../../../common/models/ipc/BitcoinDConfig'

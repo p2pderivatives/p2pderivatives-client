@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import StoryRouter from 'storybook-react-router'
 import { action } from '@storybook/addon-actions'
 import LoginTemplate from './'
@@ -11,7 +11,7 @@ export default {
   decorators: [withKnobs, StoryRouter()],
 }
 
-export const loginTemplate = () => (
+export const loginTemplate = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ width: 1366, height: 768 }}>
       <LoginTemplate onSubmit={action('onSubmit')} error={text('Error', '')} />

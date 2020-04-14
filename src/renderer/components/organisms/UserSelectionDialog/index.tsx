@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from 'react'
+import React, { FC, useState, useEffect, ReactElement } from 'react'
 
 import { createMuiTheme, MuiThemeProvider, makeStyles } from '@material-ui/core'
 import Dialog from '@material-ui/core/Dialog'
@@ -105,7 +105,7 @@ const options = {
   rowsPerPage: 5,
   selectableRows: 'single' as SelectableRows,
   // eslint-disable-next-line react/display-name
-  customToolbarSelect: () => <div />,
+  customToolbarSelect: (): ReactElement => <div />,
 }
 
 const UserSelectionDialog: FC<UserSelectionDialogProps> = (

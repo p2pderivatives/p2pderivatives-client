@@ -5,6 +5,8 @@ export const initialState: LoginState = {
   loggingIn: false,
   loggingOut: false,
   loggedIn: false,
+  changingPassword: false,
+  changedPassword: false,
   error: undefined,
 }
 
@@ -58,6 +60,20 @@ const reducer: Reducer<LoginState> = (
       return {
         ...state,
         loggedIn: true,
+      }
+    }
+    case LoginActionTypes.CHANGEPW_REQUEST: {
+      return { ...state, changingPassword: true }
+    }
+    case LoginActionTypes.CHANGEPW_SUCCESS: {
+      return { ...state, changingPassword: false, changedPassword: true }
+    }
+    case LoginActionTypes.CHANGEPW_ERROR: {
+      return {
+        ...state,
+        changingPassword: false,
+        changedPassword: false,
+        error: action.payload,
       }
     }
     default: {

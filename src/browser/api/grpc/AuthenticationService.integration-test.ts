@@ -32,9 +32,7 @@ describe('authentification-service-integration-tests', () => {
   })
 
   test('grpc-client-refresh', async done => {
-    const loginResponse = await client
-      .getAuthenticationService()
-      .login('test', 'test')
+    await client.getAuthenticationService().login('test', 'test')
     expect(auth.isExpired()).toBeFalsy()
 
     setTimeout(async () => {
@@ -57,4 +55,17 @@ describe('authentification-service-integration-tests', () => {
       client.getAuthenticationService().login('error', 'test')
     ).rejects.toBeInstanceOf(GrpcError)
   })
+})
+
+test('grpc-update-password', async () => {
+  const cpResponse = await client
+    .getAuthenticationService()
+    .changePassword('old', 'new')
+  expect(cpResponse).toBeInstanceOf(Empty)
+})
+
+test('grpc-update-password-fail', async () => {
+  await expect(
+    client.getAuthenticationService().changePassword('old', 'old')
+  ).rejects.toBeInstanceOf(GrpcError)
 })

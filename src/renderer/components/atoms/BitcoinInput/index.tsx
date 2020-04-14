@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useState, ReactElement } from 'react'
 import TextField, { TextFieldProps } from '@material-ui/core/TextField'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import Select from '@material-ui/core/Select'
@@ -44,7 +44,9 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
     { label: 's (Satoshi)', short: 's' },
   ]
 
-  const handleCoinChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleCoinChange = (
+    event: React.ChangeEvent<{ value: unknown }>
+  ): void => {
     const coinIdx = parseInt(event.target.value as string)
     setCoinValue(coinIdx)
   }
@@ -59,7 +61,9 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
           <InputAdornment position="end">
             <Select
               value={coinValue}
-              renderValue={val => <div>{coinValues[val as number].label}</div>}
+              renderValue={(val): ReactElement => (
+                <div>{coinValues[val as number].label}</div>
+              )}
               onChange={handleCoinChange}
             >
               <MenuItem value="0">{coinValues[0].label}</MenuItem>

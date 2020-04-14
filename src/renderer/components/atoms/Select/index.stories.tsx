@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import Select from './'
 
 import { withKnobs } from '@storybook/addon-knobs'
@@ -15,11 +15,14 @@ export default {
   },
 }
 
-export const select = () => {
+export const select = (): ReactElement => {
   let value = 0
   return (
     <MuiThemeProvider theme={theme}>
-      <Select value={value} onChange={e => (value = e.target.value as number)}>
+      <Select
+        value={value}
+        onChange={(e): number => (value = e.target.value as number)}
+      >
         <MenuItem value={0}>Test Value #1</MenuItem>
         <MenuItem value={1}>Test Value #2</MenuItem>
         <MenuItem value={2}>Test Value #3</MenuItem>

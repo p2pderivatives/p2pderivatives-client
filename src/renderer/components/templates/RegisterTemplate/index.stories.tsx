@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import StoryRouter from 'storybook-react-router'
 import { action } from '@storybook/addon-actions'
 import RegisterTemplate from './'
@@ -10,7 +10,7 @@ export default {
   decorators: [StoryRouter()],
 }
 
-export const registerTemplate = () => (
+export const registerTemplate = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ width: 1366, height: 768 }}>
       <RegisterTemplate onSubmit={action('onSubmit')} />

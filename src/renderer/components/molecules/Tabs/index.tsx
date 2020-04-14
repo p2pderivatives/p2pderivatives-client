@@ -31,7 +31,10 @@ const Tabs: FC<TabsProps> = (props: TabsProps) => {
   const classes = useStyles()
   const [tabValue, setTabValue] = React.useState(props.initialIndex)
 
-  const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (
+    event: React.ChangeEvent<{}>,
+    newValue: number
+  ): void => {
     setTabValue(newValue)
     props.onTabChange(newValue)
   }

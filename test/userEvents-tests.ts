@@ -13,6 +13,7 @@ import {
 } from '../src/common/models/ipc/RegisterUserAnswer'
 
 @suite('IPC-User')
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
   @test async ipcCanRegisterUser() {
     const registerCall = new RegisterUserCall('test', 'test')

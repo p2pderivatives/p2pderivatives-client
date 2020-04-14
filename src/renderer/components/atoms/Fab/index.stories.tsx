@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import Fab from './'
 import AddIcon from '@material-ui/icons/Add'
 import { MuiThemeProvider } from '@material-ui/core'
@@ -17,7 +17,7 @@ export default {
 type buttonColorType = 'primary' | 'secondary' | 'inherit' | 'default'
 const buttonColorValues: buttonColorType[] = ['primary', 'secondary']
 
-export const fab = () => (
+export const fab = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Fab
       variant="extended"
@@ -30,7 +30,7 @@ export const fab = () => (
   </MuiThemeProvider>
 )
 
-export const justTextFab = () => (
+export const justTextFab = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Fab
       variant="extended"

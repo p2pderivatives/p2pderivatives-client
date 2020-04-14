@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import LoginForm from './'
 import { Container } from '@material-ui/core'
 import { MuiThemeProvider } from '@material-ui/core'
@@ -14,7 +14,7 @@ export default {
   },
 }
 
-export const loginForm = () => (
+export const loginForm = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="xs">
       <LoginForm

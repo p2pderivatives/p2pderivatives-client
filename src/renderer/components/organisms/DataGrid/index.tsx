@@ -1,9 +1,19 @@
-import React, { useState, FC } from 'react'
+import React, { useState, FC, ReactElement } from 'react'
+import { DateTime } from 'luxon'
 import MUIDataTable, { MUIDataTableProps, Responsive } from 'mui-datatables'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import Toolbar from './DatePickerToolbar'
 
 export type DataGridProps = Omit<MUIDataTableProps, 'options' | 'columns'>
+
+interface DataType {
+  contractId: string
+  product: string
+  status: string
+  sendAddress: string
+  tradeDate: string
+  expirationDate: string
+}
 
 const theme = createMuiTheme({
   palette: {
@@ -67,27 +77,32 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
   const [toDate, setToDate] = useState<Date>()
   let localData = props.data
 
-  const handleFromDateChange = (date: Date) => {
+  const handleFromDateChange = (date: Date): void => {
     console.log('state from change: ', date)
     setFromDate(date)
     filterByDate()
   }
 
-  const handleToDateChange = (date: Date) => {
+  const handleToDateChange = (date: Date): void => {
     console.log('state to change: ', date)
     setToDate(date)
     filterByDate()
   }
 
-  const filterByDate = () => {
-    localData = props.data.filter((d: any) => {
-      if (fromDate && toDate) {
-        return d.tradeDate >= fromDate && d.tradeDate <= toDate
-      } else if (fromDate) {
-        return d.tradeDate >= fromDate
-      } else if (toDate) {
-        return d.tradeDate <= toDate
+  const filterByDate = (): void => {
+    localData = props.data.filter((d: unknown): boolean => {
+      const data = d as DataType
+      const tradeDate = DateTime.fromISO(data.tradeDate)
+      const from = fromDate ? DateTime.fromJSDate(fromDate) : null
+      const to = toDate ? DateTime.fromJSDate(toDate) : null
+      if (from && to) {
+        return tradeDate >= from && tradeDate <= to
+      } else if (from) {
+        return tradeDate >= from
+      } else if (to) {
+        return tradeDate <= to
       }
+      return false
     })
   }
 
@@ -95,7 +110,7 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
     selectableRowsOnClick: true,
     responsive: 'scrollMaxHeight' as Responsive,
     // eslint-disable-next-line react/display-name
-    customToolbar: () => {
+    customToolbar: (): ReactElement => {
       return (
         <Toolbar
           fromDate={fromDate}

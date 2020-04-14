@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import { Container } from '@material-ui/core'
 import CETxGrid from './'
 import { MuiThemeProvider } from '@material-ui/core'
@@ -11,7 +11,7 @@ export default {
   },
 }
 
-export const sampleTable = () => (
+export const sampleTable = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="lg">
       <CETxGrid title={'All Contracts'} data={data} />

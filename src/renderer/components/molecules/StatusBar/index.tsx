@@ -47,11 +47,13 @@ const StatusBar: FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const isMenuOpen = Boolean(anchorEl)
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleProfileMenuOpen = (
+    event: React.MouseEvent<HTMLElement>
+  ): void => {
     setAnchorEl(event.currentTarget)
   }
 
-  const handleMenuClose = () => {
+  const handleMenuClose = (): void => {
     setAnchorEl(null)
   }
 
@@ -70,11 +72,17 @@ const StatusBar: FC = () => {
       <MenuItem
         onClick={handleMenuClose}
         component={RouterLink}
-        to="/wallet-settings"
+        to="/settings/bitcoind"
       >
         BitcoinD Settings
       </MenuItem>
-      <MenuItem onClick={handleMenuClose}>Change Password</MenuItem>
+      <MenuItem
+        component={RouterLink}
+        to="/settings/password"
+        onClick={handleMenuClose}
+      >
+        Change Password
+      </MenuItem>
       <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
     </Menu>
   )

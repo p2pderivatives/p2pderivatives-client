@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import Tabs, { TabItem } from '.'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
@@ -17,13 +17,13 @@ const items: TabItem[] = [
   { label: 'Requested' },
 ]
 
-export const tabs = () => (
+export const tabs = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Tabs
       items={items}
       initialIndex={1}
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      onTabChange={() => {}}
+      onTabChange={(): void => {}}
     />
   </MuiThemeProvider>
 )

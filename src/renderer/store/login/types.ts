@@ -8,11 +8,16 @@ export enum LoginActionTypes {
   REFRESH_REQUEST = '@@login/REFRESH_REQUEST',
   REFRESH_SUCCESS = '@@login/REFRESH_SUCCESS',
   REFRESH_ERROR = '@@login/REFRESH_ERROR',
+  CHANGEPW_REQUEST = '@@login/CHANGEPW_REQUEST',
+  CHANGEPW_SUCCESS = '@@login/CHANGEPW_SUCCESS',
+  CHANGEPW_ERROR = '@@login/CHANGEPW_ERROR',
 }
 
 export interface LoginState {
   readonly loggingIn: boolean
   readonly loggingOut: boolean
   readonly loggedIn: boolean
+  readonly changingPassword: boolean
+  readonly changedPassword: boolean
   readonly error?: string
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { action } from 'typesafe-actions'
 import { UserActionTypes } from './types'
 

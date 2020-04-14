@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
 
 import { makeStyles } from '@material-ui/core'
 import AddIcon from '@material-ui/icons/Add'
@@ -10,7 +11,7 @@ import Paper from '@material-ui/core/Paper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
 
-type LayoutProps = {
+export type LayoutProps = {
   onBack?: () => void
   children?: React.ReactNode
   showSidebar?: boolean
@@ -26,7 +27,6 @@ const useStyles = makeStyles({
     backgroundColor: '#303855',
   },
   paper: {
-    height: '100%',
     backgroundColor: '#303855',
   },
   buttonContainer: {
@@ -63,14 +63,18 @@ const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
               <Paper className={classes.paper} elevation={4} variant="outlined">
                 <MenuList>
                   <MenuItem
-                    onClick={() =>
+                    onClick={(): void =>
                       props.onBack !== undefined ? props.onBack() : void 0
                     }
                   >
                     🠐 Back
                   </MenuItem>
-                  <MenuItem>BitcoinD</MenuItem>
-                  <MenuItem>Change Password</MenuItem>
+                  <MenuItem component={RouterLink} to="/settings/bitcoind">
+                    BitcoinD
+                  </MenuItem>
+                  <MenuItem component={RouterLink} to="/settings/password">
+                    Change Password
+                  </MenuItem>
                 </MenuList>
               </Paper>
             ) : (

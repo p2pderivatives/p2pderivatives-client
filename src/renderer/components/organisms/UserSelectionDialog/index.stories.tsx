@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import UserSelectionDialog from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
@@ -10,13 +10,13 @@ export default {
   },
 }
 
-export const userSelectionDialog = () => (
+export const userSelectionDialog = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
       <UserSelectionDialog
         open={true}
         // eslint-disable-next-line @typescript-eslint/no-empty-function
-        onClose={() => {}}
+        onClose={(): void => {}}
       />
     </div>
   </MuiThemeProvider>

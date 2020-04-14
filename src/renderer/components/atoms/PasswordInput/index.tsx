@@ -41,7 +41,7 @@ const TextInput: FC<TextInputProps> = (props: TextInputProps) => {
   const classes = useStyles()
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleClickShowPassword = () => {
+  const handleClickShowPassword = (): void => {
     setShowPassword(!showPassword)
   }
 

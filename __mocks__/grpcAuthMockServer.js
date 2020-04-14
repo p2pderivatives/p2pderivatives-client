@@ -45,6 +45,14 @@ module.exports = function getMockServer() {
         input: { oldPassword: 'old', newPassword: 'new' },
         output: {},
       },
+      {
+        method: 'updatePassword',
+        input: { oldPassword: 'old', newPassword: 'old' },
+        error: {
+          code: 17,
+          message: 'New password is the same as old password!',
+        },
+      },
     ],
   })
 }
