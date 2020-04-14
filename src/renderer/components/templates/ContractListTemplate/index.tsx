@@ -148,7 +148,7 @@ const ContractListTemplate: FC = () => {
           <Tabs
             items={tabItems}
             // eslint-disable-next-line @typescript-eslint/no-empty-function
-            onTabChange={tabIdx => {}}
+            onTabChange={(tabIdx): void => {}}
           />
           <DataGrid title={'All'} data={data} />
         </div>

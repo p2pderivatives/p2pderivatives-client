@@ -27,7 +27,7 @@ const LoginPage: FC = () => {
   const loginError = useSelector(state => state.login.error)
   const dispatch = useDispatch()
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     if (isLoggedIn) {
       dispatch(configRequest())
       dispatch(push('/main'))
@@ -47,9 +47,10 @@ const LoginPage: FC = () => {
         snackbar.createSnack('Error: ' + loginError, 'error', handleClose)
       }
     }
-  }, [isLoggingIn, isLoggedIn, loginError, submitted, snackbar, handleClose])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggingIn, isLoggedIn, loginError, submitted])
 
-  const onSubmit = (username: string, password: string) => {
+  const onSubmit = (username: string, password: string): void => {
     dispatch(loginRequest(username, password))
     setSubmitted(true)
   }

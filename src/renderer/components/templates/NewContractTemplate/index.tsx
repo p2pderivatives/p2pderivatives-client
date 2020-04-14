@@ -113,7 +113,7 @@ const NewContractListTemplate: FC = () => {
   return (
     <div className={classes.rootContainer}>
       <MainLayout>
-        <Tabs items={tabItems} onTabChange={idx => setTabIndex(idx)} />
+        <Tabs items={tabItems} onTabChange={(idx): void => setTabIndex(idx)} />
         {tabIndex === 0 && (
           <div className={classes.content}>
             <Typography color="textPrimary" variant="h6">
@@ -137,7 +137,7 @@ const NewContractListTemplate: FC = () => {
                   endAdornment: (
                     <IconButton
                       style={{ color: '#67B1F6' }}
-                      onClick={() => setOpenAddressBook(true)}
+                      onClick={(): void => setOpenAddressBook(true)}
                     >
                       <Contacts />
                     </IconButton>
@@ -185,7 +185,7 @@ const NewContractListTemplate: FC = () => {
       </MainLayout>
       <UserSelectionDialog
         open={openAddressBook}
-        onClose={() => setOpenAddressBook(false)}
+        onClose={(): void => setOpenAddressBook(false)}
       />
     </div>
   )

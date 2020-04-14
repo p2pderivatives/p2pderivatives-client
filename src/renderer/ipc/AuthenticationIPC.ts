@@ -1,10 +1,16 @@
-import { LOGIN, LOGOUT, REFRESH } from '../../common/constants/IPC'
+import {
+  LOGIN,
+  LOGOUT,
+  REFRESH,
+  CHANGE_PASSWORD,
+} from '../../common/constants/IPC'
 import { LoginCall } from '../../common/models/ipc/LoginCall'
 import {
   GeneralAnswer,
   GeneralAnswerProps,
 } from '../../common/models/ipc/GeneralAnswer'
 import { AuthenticationAPI } from './AuthenticationAPI'
+import { ChangePasswordCall } from '../../common/models/ipc/ChangePasswordCall'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
@@ -37,6 +43,23 @@ export class AuthenticationIPC implements AuthenticationAPI {
     const answer = GeneralAnswer.parse(answerProps)
 
     if (!answer.isSuccess()) {
+      const error = answer.getError()
+      throw error
+    }
+  }
+
+  public async changePassword(
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    const call: ChangePasswordCall = { oldPassword, newPassword }
+    const answerProps = (await ipc.callMain(
+      CHANGE_PASSWORD,
+      call
+    )) as GeneralAnswerProps
+    const answer = GeneralAnswer.parse(answerProps)
+    if (!answer.isSuccess()) {
+      // TODO: transform exceptions if needed into more front-end friendly messages
       const error = answer.getError()
       throw error
     }

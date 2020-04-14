@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import StoryRouter from 'storybook-react-router'
 import { action } from '@storybook/addon-actions'
 import WalletSettingsTemplate from './'
@@ -10,13 +10,10 @@ export default {
   decorators: [StoryRouter()],
 }
 
-export const walletSettingsTemplate = () => (
+export const walletSettingsTemplate = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ width: 1366, height: 768 }}>
-      <WalletSettingsTemplate
-        onBack={action('onBack')}
-        checkSettings={action('checkSettings')}
-      />
+      <WalletSettingsTemplate checkSettings={action('checkSettings')} />
     </div>
   </MuiThemeProvider>
 )

@@ -43,7 +43,7 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
           autoComplete="username"
           autoFocus
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={(e): void => setUsername(e.target.value)}
         />
       </Grid>
       <Grid item xs={12}>
@@ -54,14 +54,14 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
           name="password"
           autoComplete="password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e): void => setPassword(e.target.value)}
         />
       </Grid>
       <Grid item container xs={12} justify="center">
         <Button
           variant="contained"
           disabled={username === '' || password === ''}
-          onClick={() => props.onSubmit(username, password)}
+          onClick={(): void => props.onSubmit(username, password)}
         >
           Login
         </Button>

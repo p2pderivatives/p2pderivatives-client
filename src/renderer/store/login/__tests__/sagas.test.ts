@@ -8,6 +8,8 @@ import {
   logoutSuccess,
   logoutRequest,
   logoutError,
+  changePasswordRequest,
+  changePasswordSuccess,
 } from '../actions'
 import { getContext } from 'redux-saga/effects'
 
@@ -36,9 +38,10 @@ class MockAuthAPI implements AuthenticationAPI {
   }
 
   refresh(): Promise<void> {
-    return new Promise(resolve => {
-      resolve()
-    })
+    return Promise.resolve()
+  }
+  changePassword(oldPassword: string, newPassword: string): Promise<void> {
+    return Promise.resolve()
   }
 }
 
@@ -75,6 +78,14 @@ describe('login saga', () => {
       .provide([[getContext('authAPI'), authAPI]])
       .put(logoutError('test error'))
       .dispatch(logoutRequest())
+      .run()
+  })
+
+  it('should handle change password', () => {
+    return expectSaga(loginSagas)
+      .provide([[getContext('authAPI'), authAPI]])
+      .put(changePasswordSuccess())
+      .dispatch(changePasswordRequest('new', 'old'))
       .run()
   })
 })

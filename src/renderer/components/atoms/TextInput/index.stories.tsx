@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import TextInput from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
@@ -13,7 +13,7 @@ export default {
   },
 }
 
-export const textInput = () => (
+export const textInput = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <TextInput
       label={text('Label', 'Label goes here')}

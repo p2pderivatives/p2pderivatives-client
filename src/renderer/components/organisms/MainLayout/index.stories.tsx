@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import MainLayout from './'
 import StoryRouter from 'storybook-react-router'
 import { MuiThemeProvider } from '@material-ui/core'
@@ -13,7 +13,7 @@ export default {
   },
 }
 
-export const mainLayout = () => (
+export const mainLayout = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
       <MainLayout onBack={action('onBack')}>
@@ -33,7 +33,7 @@ export const mainLayout = () => (
   </MuiThemeProvider>
 )
 
-export const settingsLayout = () => (
+export const settingsLayout = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
       <MainLayout settingsConfig={true} onBack={action('onBack')}>

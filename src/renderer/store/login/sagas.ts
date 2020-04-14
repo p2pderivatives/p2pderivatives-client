@@ -8,10 +8,16 @@ import {
   loginRequest,
   refreshSuccess,
   refreshError,
+  changePasswordRequest,
+  changePasswordSuccess,
+  changePasswordError,
 } from './actions'
 import { AuthenticationAPI } from '../../ipc/AuthenticationAPI'
+import { SagaIterator } from 'redux-saga'
 
-export function* handleLogin(action: ReturnType<typeof loginRequest>) {
+export function* handleLogin(
+  action: ReturnType<typeof loginRequest>
+): SagaIterator {
   try {
     const authAPI: AuthenticationAPI = yield getContext('authAPI')
     yield call(authAPI.login, action.payload.username, action.payload.password)
@@ -25,7 +31,7 @@ export function* handleLogin(action: ReturnType<typeof loginRequest>) {
   }
 }
 
-export function* handleLogout() {
+export function* handleLogout(): SagaIterator {
   try {
     const authAPI: AuthenticationAPI = yield getContext('authAPI')
     yield call(authAPI.logout)
@@ -39,7 +45,7 @@ export function* handleLogout() {
   }
 }
 
-export function* handleRefresh() {
+export function* handleRefresh(): SagaIterator {
   try {
     const authAPI: AuthenticationAPI = yield getContext('authAPI')
     yield call(authAPI.refresh)
@@ -53,13 +59,34 @@ export function* handleRefresh() {
   }
 }
 
-function* watchRequests() {
+export function* handleChangePassword(
+  action: ReturnType<typeof changePasswordRequest>
+): SagaIterator {
+  try {
+    const authAPI: AuthenticationAPI = yield getContext('authAPI')
+    yield call(
+      authAPI.changePassword,
+      action.payload.oldPassword,
+      action.payload.newPassword
+    )
+    yield put(changePasswordSuccess())
+  } catch (err) {
+    if (err instanceof Error && err.message) {
+      yield put(changePasswordError(err.message))
+    } else {
+      yield put(changePasswordError('An unknown error occured.'))
+    }
+  }
+}
+
+function* watchRequests(): SagaIterator {
   yield takeEvery(LoginActionTypes.LOGIN_REQUEST, handleLogin)
   yield takeEvery(LoginActionTypes.LOGOUT_REQUEST, handleLogout)
   yield takeEvery(LoginActionTypes.REFRESH_REQUEST, handleRefresh)
+  yield takeEvery(LoginActionTypes.CHANGEPW_REQUEST, handleChangePassword)
 }
 
-function* loginSagas() {
+function* loginSagas(): SagaIterator {
   yield all([fork(watchRequests)])
 }
 

@@ -5,6 +5,7 @@ import {
   RefreshResponse,
   RefreshRequest,
   Empty,
+  UpdatePasswordRequest,
 } from '@internal/gen-grpc/authentication_pb'
 import { IAuthenticationClient } from '@internal/gen-grpc/authentication_grpc_pb'
 import { Metadata } from 'grpc'
@@ -103,5 +104,22 @@ export class AuthenticationService {
       .catch((e: GrpcError) => {
         throw new AuthenticationError(e.getName())
       })
+  }
+
+  public changePassword(
+    oldPassword: string,
+    newPassword: string
+  ): Promise<Empty> {
+    const cpRequest = new UpdatePasswordRequest()
+    cpRequest.setOldPassword(oldPassword)
+    cpRequest.setNewPassword(newPassword)
+
+    const metaData = new Metadata()
+    metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
+
+    const changePasswordAsync = promisify<UpdatePasswordRequest, Empty>(
+      this._client.updatePassword.bind(this._client)
+    )
+    return changePasswordAsync(cpRequest, metaData).then(response => response)
   }
 }

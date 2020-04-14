@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-dupe-class-members */
 
 import { IAuthenticationClient } from '@internal/gen-grpc/authentication_grpc_pb'
@@ -90,7 +91,12 @@ class AuthMock implements IAuthenticationClient {
     options: Partial<grpc.CallOptions>,
     callback: (error: grpc.ServiceError | null, response: LoginResponse) => void
   ): grpc.ClientUnaryCall
-  login(request: any, metadata: any, options?: any, callback?: any) {
+  login(
+    request: any,
+    metadata: any,
+    options?: any,
+    callback?: any
+  ): grpc.ClientUnaryCall {
     // we only use second signature, which means options == callback, unsure how the generated code does it internally ( type checks? )
     return loginFn(request, metadata, options)
   }
@@ -118,7 +124,12 @@ class AuthMock implements IAuthenticationClient {
       response: RefreshResponse
     ) => void
   ): grpc.ClientUnaryCall
-  refresh(request: any, metadata: any, options?: any, callback?: any) {
+  refresh(
+    request: any,
+    metadata: any,
+    options?: any,
+    callback?: any
+  ): grpc.ClientUnaryCall {
     return refreshFn(request, callback, options)
   }
   logout(
@@ -136,7 +147,12 @@ class AuthMock implements IAuthenticationClient {
     options: Partial<grpc.CallOptions>,
     callback: (error: grpc.ServiceError | null, response: Empty) => void
   ): grpc.ClientUnaryCall
-  logout(request: any, metadata: any, options?: any, callback?: any) {
+  logout(
+    request: any,
+    metadata: any,
+    options?: any,
+    callback?: any
+  ): grpc.ClientUnaryCall {
     return logoutFn(request, callback, options)
   }
   updatePassword(
@@ -154,7 +170,12 @@ class AuthMock implements IAuthenticationClient {
     options: Partial<grpc.CallOptions>,
     callback: (error: grpc.ServiceError | null, response: Empty) => void
   ): grpc.ClientUnaryCall
-  updatePassword(request: any, metadata: any, options?: any, callback?: any) {
+  updatePassword(
+    request: any,
+    metadata: any,
+    options?: any,
+    callback?: any
+  ): grpc.ClientUnaryCall {
     return changePasswordFn(request, callback, options)
   }
 }
@@ -162,32 +183,34 @@ class AuthMock implements IAuthenticationClient {
 const authClient = new AuthMock()
 const authService = new AuthenticationService(authClient, auth)
 
-test('returns-login-response', () => {
-  return authService.login('test', 'test').then(response => {
-    expect(response.getName()).toBe('testName')
-    expect(response.getToken()).toBeDefined()
-    const token = response.getToken()
-    if (token) {
-      expect(token.getAccessToken()).toBe('accessToken')
-    }
+test('returns-login-response', async () => {
+  const response = await authService.login('test', 'test')
+  expect(response.getName()).toBe('testName')
+  expect(response.getToken()).toBeDefined()
+  const token = response.getToken()
+  if (token) {
+    expect(token.getAccessToken()).toBe('accessToken')
+  }
 
-    expect(auth.getAuthToken()).toBe('accessToken')
-    expect(auth.isExpired()).toBe(false)
-  })
+  expect(auth.getAuthToken()).toBe('accessToken')
+  expect(auth.isExpired()).toBe(false)
 })
 
-test('returns-refresh-response', () => {
-  return authService.refresh().then(response => {
-    expect(auth.getAuthToken()).toBe('accessToken')
-    expect(auth.isExpired()).toBe(false)
-  })
+test('returns-refresh-response', async () => {
+  await authService.refresh()
+  expect(auth.getAuthToken()).toBe('accessToken')
+  expect(auth.isExpired()).toBe(false)
 })
 
-test('returns-logout-response', () => {
-  return authService.logout().then(response => {
-    expect(response).toBeInstanceOf(Empty)
+test('returns-logout-response', async () => {
+  const response = await authService.logout()
+  expect(response).toBeInstanceOf(Empty)
 
-    expect(auth.getAuthToken()).toBe('')
-    expect(auth.isExpired()).toBe(true)
-  })
+  expect(auth.getAuthToken()).toBe('')
+  expect(auth.isExpired()).toBe(true)
+})
+
+test('return-updatepassword-response', async () => {
+  const response = await authService.changePassword('test', 'test')
+  expect(response).toBeInstanceOf(Empty)
 })

@@ -45,7 +45,7 @@ export const SnackbarProvider: FC<LayoutProps> = (props: LayoutProps) => {
     }
   }
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     if (current) {
       if (current.onClose) current.onClose()
       setCurrent({ ...current, open: false })
@@ -53,7 +53,7 @@ export const SnackbarProvider: FC<LayoutProps> = (props: LayoutProps) => {
     setTimeout(openNext, 1000)
   }
 
-  const openNext = () => {
+  const openNext = (): void => {
     if (queue.length) {
       setCurrent(queue[0])
       setQueue(queue.slice(1))

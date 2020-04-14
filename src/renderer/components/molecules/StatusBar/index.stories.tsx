@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import StatusBar from '.'
+import StoryRouter from 'storybook-react-router'
 import { Container } from '@material-ui/core'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
@@ -9,9 +10,10 @@ export default {
   parameters: {
     backgrounds: [{ name: 'p2pd', value: '#303855' }],
   },
+  decorators: [StoryRouter()],
 }
 
-export const statusBar = () => (
+export const statusBar = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="xs">
       <StatusBar />

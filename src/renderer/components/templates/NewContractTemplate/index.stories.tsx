@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import StoryRouter from 'storybook-react-router'
 import NewContractTemplate from './'
 import { MuiThemeProvider } from '@material-ui/core'
@@ -9,7 +9,7 @@ export default {
   decorators: [StoryRouter()],
 }
 
-export const newContract = () => (
+export const newContract = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ width: 1366, height: 768 }}>
       <NewContractTemplate />

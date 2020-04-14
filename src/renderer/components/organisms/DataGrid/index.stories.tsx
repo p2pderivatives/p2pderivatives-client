@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import { Container } from '@material-ui/core'
 import { DateTime } from 'luxon'
 import DataGrid from './'
@@ -12,7 +12,7 @@ export default {
   },
 }
 
-export const sampleTable = () => (
+export const sampleTable = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="lg">
       <DataGrid title={'Contracts'} data={data} />

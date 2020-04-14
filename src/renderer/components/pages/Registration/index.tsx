@@ -13,6 +13,7 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 import RegisterTemplate from '../../templates/RegisterTemplate'
 import { ApplicationState } from '../../../store'
 import { registerRequest } from '../../../store/user/actions'
+import { isValidPassword } from '../../../util/password-validator'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
@@ -24,25 +25,24 @@ const RegistrationPage: FC = () => {
   const registrationError = useSelector(state => state.user.error)
   const dispatch = useDispatch()
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const handleClose = () => {}
-
   useEffect(() => {
     if (!isRegistering) {
       if (isRegistered) {
-        snackbar.createSnack('Registered successfully!', 'success', handleClose)
+        snackbar.createSnack('Registered successfully!', 'success')
       } else if (registrationError) {
-        snackbar.createSnack(
-          'Error: ' + registrationError,
-          'error',
-          handleClose
-        )
+        snackbar.createSnack('Error: ' + registrationError, 'error')
       }
     }
-  }, [isRegistering, isRegistered, registrationError, snackbar])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRegistering, isRegistered, registrationError])
 
-  const onSubmit = (username: string, password: string) => {
-    dispatch(registerRequest(username, password))
+  const onSubmit = (username: string, password: string): void => {
+    const validationError = isValidPassword(password)
+    if (validationError) {
+      snackbar.createSnack(validationError, 'error')
+    } else {
+      dispatch(registerRequest(username, password))
+    }
   }
   return (
     <div style={{ position: 'absolute', height: '100%', width: '100%' }}>

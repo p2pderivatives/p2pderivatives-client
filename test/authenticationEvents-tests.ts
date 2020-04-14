@@ -10,6 +10,7 @@ import { IPCError } from '../src/common/models/ipc/IPCError'
 import { LOGIN, LOGOUT } from '../src/common/constants/IPC'
 
 @suite('IPC-Auth')
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
   @test async ipcLoginShouldSucceed() {
     const loginCall = new LoginCall('test', 'test')

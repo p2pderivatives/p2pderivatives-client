@@ -30,7 +30,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           autoComplete="username"
           autoFocus
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={(e): void => setUsername(e.target.value)}
         />
       </Grid>
       <Grid item xs={12}>
@@ -41,7 +41,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           name="password"
           autoComplete="password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e): void => setPassword(e.target.value)}
         />
       </Grid>
       <Grid item xs={12}>
@@ -51,7 +51,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           label="Confirm password"
           name="confirmPassword"
           value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
+          onChange={(e): void => setConfirmPassword(e.target.value)}
         />
       </Grid>
       <Grid item container xs={12} justify="center">
@@ -60,7 +60,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           disabled={
             username === '' || password === '' || confirmPassword !== password
           }
-          onClick={() => props.onSubmit(username, password)}
+          onClick={(): void => props.onSubmit(username, password)}
         >
           Register
         </Button>

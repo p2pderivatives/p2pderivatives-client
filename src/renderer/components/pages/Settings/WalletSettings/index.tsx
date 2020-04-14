@@ -4,26 +4,27 @@ import {
   TypedUseSelectorHook,
   useDispatch,
 } from 'react-redux'
-import { goBack } from 'connected-react-router'
 
-import { useSnackbar } from '../../../providers/Snackbar'
+import { useSnackbar } from '../../../../providers/Snackbar'
 
-import Backdrop from '@material-ui/core/Backdrop'
-import CircularProgress from '@material-ui/core/CircularProgress'
-
-import WalletSettingsTemplate from '../../templates/WalletSettingsTemplate'
-import { ApplicationState } from '../../../store'
+import WalletSettingsTemplate from '../../../templates/WalletSettingsTemplate'
+import { ApplicationState } from '../../../../store'
 import {
   checkRequest,
   balanceRequest,
   configRequest,
-} from '../../../store/bitcoin/actions'
+} from '../../../../store/bitcoin/actions'
 
-import { BitcoinDConfig } from '../../../../common/models/ipc/BitcoinDConfig'
+import { BitcoinDConfig } from '../../../../../common/models/ipc/BitcoinDConfig'
+import { LoadingProps } from '../../../props'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
-const WalletSetings: FC = () => {
+type WalletSettingsProps = LoadingProps
+
+const WalletSettings: FC<WalletSettingsProps> = (
+  props: WalletSettingsProps
+) => {
   const snackbar = useSnackbar()
   const dispatch = useDispatch()
 
@@ -37,6 +38,7 @@ const WalletSetings: FC = () => {
 
   useEffect(() => {
     if (submitted && !processing) {
+      props.onLoading(false)
       setSubmitted(false)
       if (checkSuccessful) {
         snackbar.createSnack(
@@ -62,6 +64,7 @@ const WalletSetings: FC = () => {
         'success'
       )
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     submitted,
     processing,
@@ -69,26 +72,16 @@ const WalletSetings: FC = () => {
     bitcoinError,
     balance,
     balanceRequested,
-    snackbar,
-    dispatch,
   ])
 
-  const onSubmit = (config: BitcoinDConfig) => {
+  const onSubmit = (config: BitcoinDConfig): void => {
+    props.onLoading(true)
     dispatch(checkRequest(config))
     setSubmitted(true)
   }
   return (
-    <div style={{ position: 'absolute', height: '100%', width: '100%' }}>
-      <Backdrop open={processing}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-      <WalletSettingsTemplate
-        config={bitcoinConfig}
-        checkSettings={onSubmit}
-        onBack={() => dispatch(goBack())}
-      />
-    </div>
+    <WalletSettingsTemplate config={bitcoinConfig} checkSettings={onSubmit} />
   )
 }
 
-export default WalletSetings
+export default WalletSettings

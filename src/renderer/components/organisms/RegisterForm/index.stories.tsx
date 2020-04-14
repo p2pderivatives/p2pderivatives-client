@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import RegisterForm from '.'
 import { Container } from '@material-ui/core'
 import { MuiThemeProvider } from '@material-ui/core'
@@ -11,7 +11,7 @@ export default {
   },
 }
 
-export const registerForm = () => (
+export const registerForm = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="xs">
       <RegisterForm
