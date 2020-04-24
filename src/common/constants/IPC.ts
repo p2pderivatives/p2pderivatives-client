@@ -12,3 +12,5 @@ export const SEND_USER_END = 'send-user-end'
 export const CHECK_BITCOIND = 'check-bitcoind'
 export const GET_BALANCE = 'get-balance'
 export const GET_CONFIG = 'get-config'
+
+export const PARSE_OUTCOME = 'parse-outcome'

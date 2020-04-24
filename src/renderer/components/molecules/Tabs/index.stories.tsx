@@ -21,7 +21,7 @@ export const tabs = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Tabs
       items={items}
-      initialIndex={1}
+      value={1}
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       onTabChange={(): void => {}}
     />

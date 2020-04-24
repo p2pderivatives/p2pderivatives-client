@@ -6,7 +6,11 @@ import {
   GeneralAnswerProps,
 } from '../src/common/models/ipc/GeneralAnswer'
 import { RegisterUserCall } from '../src/common/models/ipc/RegisterUserCall'
-import { REGISTER_USER, UNREGISTER_USER } from '../src/common/constants/IPC'
+import {
+  REGISTER_USER,
+  UNREGISTER_USER,
+  GET_USERLIST,
+} from '../src/common/constants/IPC'
 import {
   RegisterUserProps,
   RegisterUserAnswer,
@@ -34,5 +38,9 @@ class Main {
     const answer = GeneralAnswer.parse(result)
 
     expect(answer.isSuccess()).eq(true)
+  }
+
+  @test async ipcCanGetUserList() {
+    const result = await ipc.callMain(GET_USERLIST)
   }
 }

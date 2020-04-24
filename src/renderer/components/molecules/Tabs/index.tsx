@@ -11,7 +11,7 @@ export type TabItem = {
 
 export type TabsProps = {
   items: TabItem[]
-  initialIndex?: number
+  value: number
   onTabChange: (tabIndex: number) => void
 }
 
@@ -29,20 +29,18 @@ const useStyles = makeStyles(theme => ({
 
 const Tabs: FC<TabsProps> = (props: TabsProps) => {
   const classes = useStyles()
-  const [tabValue, setTabValue] = React.useState(props.initialIndex)
 
   const handleTabChange = (
     event: React.ChangeEvent<{}>,
     newValue: number
   ): void => {
-    setTabValue(newValue)
     props.onTabChange(newValue)
   }
 
   return (
     <Paper elevation={0}>
       <MuiTabs
-        value={tabValue}
+        value={props.value}
         onChange={handleTabChange}
         classes={{ root: classes.root, indicator: classes.indicator }}
       >
@@ -56,6 +54,6 @@ const Tabs: FC<TabsProps> = (props: TabsProps) => {
 
 Tabs.defaultProps = {
   items: [],
-  initialIndex: 0,
+  value: 0,
 }
 export default Tabs
