@@ -61,7 +61,7 @@ const theme = createMuiTheme({
   },
 })
 
-const CETxGrid: FC<DataGridProps> = (props: DataGridProps) => {
+const OutcomesGrid: FC<DataGridProps> = (props: DataGridProps) => {
   const columns = [
     {
       name: 'fixingPrice',
@@ -71,7 +71,7 @@ const CETxGrid: FC<DataGridProps> = (props: DataGridProps) => {
       },
     },
     {
-      name: 'partyArec',
+      name: 'aReward',
       label: 'Party A receive (BTC)',
       options: {
         filter: true,
@@ -79,7 +79,7 @@ const CETxGrid: FC<DataGridProps> = (props: DataGridProps) => {
       },
     },
     {
-      name: 'partyBrec',
+      name: 'bReward',
       label: 'Party B receive (BTC)',
       options: {
         filter: true,
@@ -95,4 +95,4 @@ const CETxGrid: FC<DataGridProps> = (props: DataGridProps) => {
   )
 }
 
-export default CETxGrid
+export default OutcomesGrid

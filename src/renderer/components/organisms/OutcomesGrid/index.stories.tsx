@@ -1,11 +1,11 @@
 import React, { ReactElement } from 'react'
 import { Container } from '@material-ui/core'
-import CETxGrid from './'
+import OutcomesGrid from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
 
 export default {
-  title: 'Components/Organisms/CETxGrid',
+  title: 'Components/Organisms/OutcomesGrid',
   parameters: {
     backgrounds: [{ name: 'p2pd', value: '#303855' }],
   },
@@ -14,7 +14,7 @@ export default {
 export const sampleTable = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="lg">
-      <CETxGrid title={'All Contracts'} data={data} />
+      <OutcomesGrid title={'All Contracts'} data={data} />
     </Container>
   </MuiThemeProvider>
 )

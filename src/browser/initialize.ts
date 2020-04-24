@@ -5,6 +5,7 @@ import { GrpcConfig } from './api/grpc/GrpcConfig'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { BitcoinDEvents } from './ipc/BitcoinDEvents'
 import FileStorage from './storage/fileStorage'
+import { FileEvents } from './ipc/FileEvents'
 
 const initialize = async (): Promise<void> => {
   const auth = new GrpcAuth()
@@ -20,6 +21,9 @@ const initialize = async (): Promise<void> => {
 
   const bitcoinEvents = new BitcoinDEvents(new FileStorage())
   bitcoinEvents.registerReplies()
+
+  const fileEvents = new FileEvents()
+  fileEvents.registerReplies()
 }
 
 export default initialize

@@ -147,6 +147,7 @@ const ContractListTemplate: FC = () => {
         <div className={classes.contentDiv}>
           <Tabs
             items={tabItems}
+            value={0}
             // eslint-disable-next-line @typescript-eslint/no-empty-function
             onTabChange={(tabIdx): void => {}}
           />

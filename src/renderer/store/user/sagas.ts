@@ -12,8 +12,11 @@ import { UserAPI } from '../../ipc/UserAPI'
 import { IPCError } from '../../../common/models/ipc/IPCError'
 import { AUTH_ERROR } from '../../../common/constants/Errors'
 import { push } from 'connected-react-router'
+import { SagaIterator } from 'redux-saga'
 
-function* handleRegistration(action: ReturnType<typeof registerRequest>) {
+function* handleRegistration(
+  action: ReturnType<typeof registerRequest>
+): SagaIterator {
   try {
     const userAPI: UserAPI = yield getContext('userAPI')
 
@@ -32,7 +35,9 @@ function* handleRegistration(action: ReturnType<typeof registerRequest>) {
   }
 }
 
-function* handleUnregistration(action: ReturnType<typeof unregisterRequest>) {
+function* handleUnregistration(
+  action: ReturnType<typeof unregisterRequest>
+): SagaIterator {
   try {
     const userAPI: UserAPI = yield getContext('userAPI')
 
@@ -49,12 +54,12 @@ function* handleUnregistration(action: ReturnType<typeof unregisterRequest>) {
   }
 }
 
-function* watchRequests() {
+function* watchRequests(): SagaIterator {
   yield takeEvery(UserActionTypes.REGISTRATION_REQUEST, handleRegistration)
   yield takeEvery(UserActionTypes.UNREGISTRATION_REQUEST, handleUnregistration)
 }
 
-function* userSagas() {
+function* userSagas(): SagaIterator {
   yield all([fork(watchRequests)])
 }
 

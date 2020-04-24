@@ -10,6 +10,9 @@ import { UserState } from './user/types'
 import { bitcoinReducer } from './bitcoin/reducer'
 import { BitcoinState } from './bitcoin/types'
 import bitcoinSaga from './bitcoin/sagas'
+import { FileState } from './file/types'
+import { fileReducer } from './file/reducer'
+import fileSaga from './file/sagas'
 import { History } from 'history'
 import { connectRouter, RouterState } from 'connected-react-router'
 
@@ -17,6 +20,7 @@ export interface ApplicationState {
   login: LoginState
   user: UserState
   bitcoin: BitcoinState
+  file: FileState
   router: RouterState
 }
 
@@ -25,9 +29,15 @@ export const createRootReducer = (history: History) =>
     login: loginReducer,
     user: userReducer,
     bitcoin: bitcoinReducer,
+    file: fileReducer,
     router: connectRouter(history),
   })
 
 export function* rootSaga() {
-  yield all([fork(loginSaga), fork(userSaga), fork(bitcoinSaga)])
+  yield all([
+    fork(loginSaga),
+    fork(userSaga),
+    fork(bitcoinSaga),
+    fork(fileSaga),
+  ])
 }

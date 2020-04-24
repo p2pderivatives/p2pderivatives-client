@@ -34,6 +34,9 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     marginTop: '1rem',
   },
+  buttonLink: {
+    textDecoration: 'none',
+  },
   contentRoot: {
     height: '100%',
     flexGrow: 2,
@@ -79,10 +82,12 @@ const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
               </Paper>
             ) : (
               <div className={classes.buttonContainer}>
-                <Fab variant="extended" color="primary">
-                  <AddIcon />
-                  {'New contract'}
-                </Fab>
+                <RouterLink className={classes.buttonLink} to="/new-contract">
+                  <Fab variant="extended" color="primary">
+                    <AddIcon />
+                    {'New contract'}
+                  </Fab>
+                </RouterLink>
               </div>
             )}
           </div>

@@ -21,7 +21,6 @@ export class AuthenticationEvents implements IPCEvents {
   public registerReplies(): void {
     ipc.answerRenderer(LOGIN, async data => {
       const request = data as LoginCall
-
       try {
         await this._client
           .getAuthenticationService()

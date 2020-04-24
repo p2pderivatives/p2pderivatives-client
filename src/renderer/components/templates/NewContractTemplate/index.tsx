@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useState, useEffect } from 'react'
 
 import { DateTime } from 'luxon'
 import {
@@ -19,8 +19,17 @@ import MainLayout from '../../organisms/MainLayout'
 import TextInput from '../../atoms/TextInput'
 import Button from '../../atoms/Button'
 import BitcoinInput from '../../atoms/BitcoinInput'
-import CETxGrid from '../../organisms/CETxGrid'
+import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
+import Outcome from '../../../../common/models/ipc/Outcome'
+
+type NewContractTemplateProps = {
+  tab: number
+  onTabChange: (tab: number) => void
+  onCSVImport: () => void
+  data: Outcome[]
+  onCancel: () => void
+}
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -50,58 +59,13 @@ const useStyles = makeStyles({
   },
 })
 
-const tabItems: TabItem[] = [{ label: 'General' }, { label: 'CETx' }]
-const data = [
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.5,
-    partyBrec: 0.0,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.45,
-    partyBrec: 0.05,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.4,
-    partyBrec: 0.1,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.35,
-    partyBrec: 0.15,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.3,
-    partyBrec: 0.2,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.25,
-    partyBrec: 0.25,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.2,
-    partyBrec: 0.3,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.15,
-    partyBrec: 0.35,
-  },
-  {
-    fixingPrice: 3000.001,
-    partyArec: 0.1,
-    partyBrec: 0.4,
-  },
-]
+const tabItems: TabItem[] = [{ label: 'General' }, { label: 'Outcomes' }]
 
-const NewContractListTemplate: FC = () => {
+const NewContractListTemplate: FC<NewContractTemplateProps> = (
+  props: NewContractTemplateProps
+) => {
   const classes = useStyles()
-  const [tabIndex, setTabIndex] = useState(0)
+  const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
 
   const oracleDates = [
@@ -110,10 +74,23 @@ const NewContractListTemplate: FC = () => {
     DateTime.utc().plus({ days: 3 }),
   ]
 
+  const handleTabChange = (index: number): void => {
+    setTabIndex(index)
+    props.onTabChange(index)
+  }
+
+  useEffect(() => {
+    setTabIndex(props.tab)
+  }, [props.tab])
+
   return (
     <div className={classes.rootContainer}>
       <MainLayout>
-        <Tabs items={tabItems} onTabChange={(idx): void => setTabIndex(idx)} />
+        <Tabs
+          items={tabItems}
+          value={tabIndex}
+          onTabChange={(idx): void => handleTabChange(idx)}
+        />
         {tabIndex === 0 && (
           <div className={classes.content}>
             <Typography color="textPrimary" variant="h6">
@@ -148,7 +125,11 @@ const NewContractListTemplate: FC = () => {
               <BitcoinInput label={'Remote collateral'} />
               <FormControl>
                 <FormLabel color="secondary">Outcomes</FormLabel>
-                <Button style={{ margin: '0.5rem 0rem' }} variant="contained">
+                <Button
+                  style={{ margin: '0.5rem 0rem' }}
+                  variant="contained"
+                  onClick={(): void => props.onCSVImport()}
+                >
                   {'CSV File import'}
                 </Button>
               </FormControl>
@@ -170,7 +151,11 @@ const NewContractListTemplate: FC = () => {
                 >
                   Publish
                 </Button>
-                <Button variant="outlined" color="secondary">
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={props.onCancel}
+                >
                   Cancel
                 </Button>
               </div>
@@ -179,7 +164,7 @@ const NewContractListTemplate: FC = () => {
         )}
         {tabIndex === 1 && (
           <Box display={tabIndex === 1 ? 'inline' : 'none'}>
-            <CETxGrid title={'All contracts'} data={data} />
+            <OutcomesGrid title={'All contracts'} data={props.data} />
           </Box>
         )}
       </MainLayout>
@@ -189,6 +174,10 @@ const NewContractListTemplate: FC = () => {
       />
     </div>
   )
+}
+
+NewContractListTemplate.defaultProps = {
+  tab: 0,
 }
 
 export default NewContractListTemplate
