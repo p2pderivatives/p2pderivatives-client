@@ -3,8 +3,6 @@ import {
   REGISTER_USER,
   UNREGISTER_USER,
   GET_USERLIST,
-  SEND_USER,
-  SEND_USER_END,
 } from '../../common/constants/IPC'
 import {
   RegisterUserAnswer,
@@ -17,6 +15,10 @@ import {
 import { Subject } from 'rxjs'
 import { UserInfo } from '@internal/gen-grpc/user_pb'
 import { UserAPI } from './UserAPI'
+import { User } from '../../common/models/user/User'
+import UserListAnswer, {
+  UserListAnswerProps,
+} from '../../common/models/ipc/UserListAnswer'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
@@ -54,33 +56,15 @@ export class UserIPC implements UserAPI {
     }
   }
 
-  public async getUserList(): Promise<Subject<UserInfo>> {
-    const answerProps = (await ipc.callMain(GET_USERLIST)) as GeneralAnswerProps
-    const answer = GeneralAnswer.parse(answerProps)
+  public async getUserList(): Promise<User[]> {
+    const result = (await ipc.callMain(GET_USERLIST)) as UserListAnswerProps
+    const answer = UserListAnswer.parse(result)
 
     if (answer.isSuccess()) {
-      this._userListObservable = new Subject<UserInfo>()
-      this._unregisterUserList = ipc.answerMain(SEND_USER, (data: UserInfo) => {
-        const userInfo = data as UserInfo
-        if (this._userListObservable) {
-          this._userListObservable.next(userInfo)
-        }
-      })
-      this._unregisterUserListEnd = ipc.answerMain(
-        SEND_USER_END,
-        (data: any) => {
-          if (this._userListObservable) {
-            this._userListObservable.complete()
-          }
-          if (this._unregisterUserList) {
-            this._unregisterUserList()
-          }
-          if (this._unregisterUserListEnd) {
-            this._unregisterUserListEnd()
-          }
-        }
-      )
-      return this._userListObservable
+      const users = answer
+        .getUserList()
+        .map(userJson => new User(userJson._name))
+      return users
     } else {
       const error = answer.getError()
       throw error

@@ -10,11 +10,17 @@ import {
   REGISTER_USER,
   UNREGISTER_USER,
   GET_USERLIST,
+  LOGIN,
 } from '../src/common/constants/IPC'
 import {
   RegisterUserProps,
   RegisterUserAnswer,
 } from '../src/common/models/ipc/RegisterUserAnswer'
+import UserListAnswer, {
+  UserListAnswerProps,
+} from '../src/common/models/ipc/UserListAnswer'
+import { LoginCall } from '../src/common/models/ipc/LoginCall'
+import { User } from '../src/common/models/user/User'
 
 @suite('IPC-User')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -41,6 +47,20 @@ class Main {
   }
 
   @test async ipcCanGetUserList() {
-    const result = await ipc.callMain(GET_USERLIST)
+    const loginCall = new LoginCall('test', 'test')
+    const loginResult = (await ipc.callMain(
+      LOGIN,
+      loginCall
+    )) as GeneralAnswerProps
+    const loginAnswer = GeneralAnswer.parse(loginResult)
+    expect(loginAnswer.isSuccess()).eq(true)
+
+    const result = (await ipc.callMain(GET_USERLIST)) as UserListAnswerProps
+    const answer = UserListAnswer.parse(result)
+    const users = answer.getUserList().map(userJson => new User(userJson._name))
+    console.log('users: ', users)
+
+    expect(users.length).eq(4)
+    expect(users[0].getName()).eq('user1')
   }
 }

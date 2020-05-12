@@ -7,10 +7,12 @@ import DialogContent from '@material-ui/core/DialogContent'
 import MUIDataTable, { SelectableRows } from 'mui-datatables'
 
 import Button from '../../atoms/Button'
+import { User } from '../../../../common/models/user/User'
 
 export type UserSelectionDialogProps = {
   open?: boolean
   onClose: () => void
+  users: User[]
 }
 
 const useStyles = makeStyles({
@@ -81,20 +83,12 @@ const lightTableTheme = createMuiTheme({
 
 const columns = [
   {
-    name: 'name',
+    name: '_name',
     label: 'Name',
     options: {
       filter: true,
       sort: true,
     },
-  },
-]
-const data = [
-  {
-    name: 'Nice company, Inc.',
-  },
-  {
-    name: 'Lasagne, Inc.',
   },
 ]
 
@@ -132,7 +126,7 @@ const UserSelectionDialog: FC<UserSelectionDialogProps> = (
         <MuiThemeProvider theme={lightTableTheme}>
           <MUIDataTable
             title={'Parties'}
-            data={data}
+            data={props.users}
             columns={columns}
             options={options}
           />

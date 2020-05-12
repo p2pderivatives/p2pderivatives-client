@@ -22,6 +22,7 @@ import BitcoinInput from '../../atoms/BitcoinInput'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
 import Outcome from '../../../../common/models/ipc/Outcome'
+import { User } from '../../../../common/models/user/User'
 
 type NewContractTemplateProps = {
   tab: number
@@ -29,6 +30,7 @@ type NewContractTemplateProps = {
   onCSVImport: () => void
   data: Outcome[]
   onCancel: () => void
+  users: User[]
 }
 
 const useStyles = makeStyles({
@@ -169,6 +171,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
         )}
       </MainLayout>
       <UserSelectionDialog
+        users={props.users}
         open={openAddressBook}
         onClose={(): void => setOpenAddressBook(false)}
       />

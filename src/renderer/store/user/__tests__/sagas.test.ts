@@ -8,12 +8,20 @@ import {
   unregisterSuccess,
   unregisterRequest,
   unregisterError,
+  userListSuccess,
+  userListRequest,
 } from '../actions'
 import { getContext } from 'redux-saga/effects'
+import { User } from '../../../../common/models/user/User'
 
 let failUnregister = false
 
 class MockUserAPI implements UserAPI {
+  getUserList(): Promise<User[]> {
+    return new Promise((resolve, reject) => {
+      resolve([new User('test1'), new User('test2')])
+    })
+  }
   registerUser(password: string, name: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (name === 'test') {
@@ -68,6 +76,14 @@ describe('login saga', () => {
       .provide([[getContext('userAPI'), userAPI]])
       .put(unregisterError('test error'))
       .dispatch(unregisterRequest())
+      .run()
+  })
+
+  it('should get user list', () => {
+    return expectSaga(userSagas)
+      .provide([[getContext('userAPI'), userAPI]])
+      .put(userListSuccess([new User('test1'), new User('test2')]))
+      .dispatch(userListRequest())
       .run()
   })
 })

@@ -6,8 +6,6 @@ export const CHANGE_PASSWORD = 'change-password'
 export const REGISTER_USER = 'register-user'
 export const UNREGISTER_USER = 'unregister-user'
 export const GET_USERLIST = 'get-userlist'
-export const SEND_USER = 'send-user'
-export const SEND_USER_END = 'send-user-end'
 
 export const CHECK_BITCOIND = 'check-bitcoind'
 export const GET_BALANCE = 'get-balance'

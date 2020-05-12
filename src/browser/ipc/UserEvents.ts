@@ -10,9 +10,8 @@ import {
   REGISTER_USER,
   UNREGISTER_USER,
   GET_USERLIST,
-  SEND_USER,
-  SEND_USER_END,
 } from '../../common/constants/IPC'
+import UserListAnswer from '../../common/models/ipc/UserListAnswer'
 import { User } from '../../common/models/user/User'
 
 export class UserEvents implements IPCEvents {
@@ -52,23 +51,26 @@ export class UserEvents implements IPCEvents {
     })
 
     ipc.answerRenderer(GET_USERLIST, async data => {
-      try {
-        await this._client.getAuthenticationService().refresh()
-        this._listStream = this._client.getUserService().getUserListStream()
-        this._listStream.on('data', (data: UserInfo) => {
-          ipc.callFocusedRenderer(SEND_USER, new User(data.getName()))
-        })
-        this._listStream.on('close', () => {
-          if (this._listStream) {
-            this._listStream.removeAllListeners()
-            this._listStream = null
-            ipc.callFocusedRenderer(SEND_USER_END)
-          }
-        })
-        return new GeneralAnswer(true)
-      } catch (e) {
-        return new GeneralAnswer(false, e)
-      }
+      const userList: User[] = []
+      await this._client.getAuthenticationService().refresh()
+
+      return new Promise((resolve, reject) => {
+        try {
+          this._listStream = this._client.getUserService().getUserListStream()
+          this._listStream.on('data', (data: UserInfo) => {
+            userList.push(new User(data.getName()))
+          })
+          this._listStream.on('end', () => {
+            if (this._listStream) {
+              this._listStream.removeAllListeners()
+              this._listStream = null
+            }
+            return resolve(new UserListAnswer(true, userList))
+          })
+        } catch (e) {
+          return resolve(new UserListAnswer(false, [], e))
+        }
+      })
     })
   }
 }
