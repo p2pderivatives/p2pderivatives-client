@@ -5,6 +5,7 @@ export const initialState: UserState = {
   isRegistering: false,
   isRegistered: false,
   isUnregistering: false,
+  userList: [],
   error: undefined,
 }
 
@@ -41,6 +42,18 @@ const reducer: Reducer<UserState> = (state = initialState, action) => {
       return {
         ...state,
         isUnregistering: false,
+        error: action.payload,
+      }
+    }
+    case UserActionTypes.USERLIST_SUCCESS: {
+      return {
+        ...state,
+        userList: action.payload,
+      }
+    }
+    case UserActionTypes.USERLIST_ERROR: {
+      return {
+        ...state,
         error: action.payload,
       }
     }
