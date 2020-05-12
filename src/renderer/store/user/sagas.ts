@@ -7,6 +7,8 @@ import {
   unregisterRequest,
   unregisterSuccess,
   unregisterError,
+  userListSuccess,
+  userListError,
 } from './actions'
 import { UserAPI } from '../../ipc/UserAPI'
 import { IPCError } from '../../../common/models/ipc/IPCError'
@@ -54,9 +56,27 @@ function* handleUnregistration(
   }
 }
 
+function* handleUserList(): SagaIterator {
+  try {
+    const userAPI: UserAPI = yield getContext('userAPI')
+
+    const users = yield call(userAPI.getUserList)
+    yield put(userListSuccess(users))
+  } catch (err) {
+    if (err instanceof IPCError && (err as IPCError).getType() === AUTH_ERROR) {
+      yield put(push('/'))
+    } else if (err instanceof Error && err.message) {
+      yield put(userListError(err.message))
+    } else {
+      yield put(userListError('An unknown error occured.'))
+    }
+  }
+}
+
 function* watchRequests(): SagaIterator {
   yield takeEvery(UserActionTypes.REGISTRATION_REQUEST, handleRegistration)
   yield takeEvery(UserActionTypes.UNREGISTRATION_REQUEST, handleUnregistration)
+  yield takeEvery(UserActionTypes.USERLIST_REQUEST, handleUserList)
 }
 
 function* userSagas(): SagaIterator {

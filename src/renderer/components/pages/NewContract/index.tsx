@@ -10,6 +10,7 @@ import NewContractTemplate from '../../templates/NewContractTemplate'
 import { ApplicationState } from '../../../store'
 import { outcomeRequest } from '../../../store/file/actions'
 import { goBack } from 'connected-react-router'
+import { userListRequest } from '../../../store/user/actions'
 
 const { dialog } = window.require('electron').remote
 
@@ -22,6 +23,7 @@ const NewContractPage: FC = () => {
   const outcomesList = useSelector(state => state.file.parsedOutcomes)
   const parsed = useSelector(state => state.file.parsed)
   const processing = useSelector(state => state.file.processing)
+  const userList = useSelector(state => state.user.userList)
 
   const dispatchOutcomeRequest = (filepath: string): void => {
     dispatch(outcomeRequest(filepath))
@@ -41,6 +43,11 @@ const NewContractPage: FC = () => {
   }
 
   useEffect(() => {
+    dispatch(userListRequest())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
     if (parsed && !processing) {
       console.log('set tab')
       setTab(1)
@@ -52,6 +59,7 @@ const NewContractPage: FC = () => {
       <NewContractTemplate
         onCSVImport={handleCSVImport}
         data={outcomesList}
+        users={userList}
         tab={tab}
         onTabChange={(index): void => setTab(index)}
         onCancel={handleCancel}

@@ -2,6 +2,7 @@ import React, { ReactElement } from 'react'
 import UserSelectionDialog from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
+import { User } from '../../../../common/models/user/User'
 
 export default {
   title: 'Components/Organisms/UserSelectionDialog',
@@ -10,6 +11,12 @@ export default {
   },
 }
 
+const testUsers: User[] = [
+  new User('Jane Doe'),
+  new User('Joe Exotic'),
+  new User('Dirk Daggers'),
+]
+
 export const userSelectionDialog = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
@@ -17,6 +24,7 @@ export const userSelectionDialog = (): ReactElement => (
         open={true}
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         onClose={(): void => {}}
+        users={testUsers}
       />
     </div>
   </MuiThemeProvider>
