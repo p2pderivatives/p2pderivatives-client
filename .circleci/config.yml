@@ -1,4 +1,3 @@
-
 version: 2.1
 orbs:
   node: circleci/node@2.0.1
@@ -9,10 +8,14 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - node/install-packages
+      #necessary when root privileges
+      - run: npm config set unsafe-perm true
+      - node/install-packages:
+          # use a different format while debugging ex: debug-vX
+          cache-version: v2
       - persist_to_workspace:
           root: .
-          paths: 
+          paths:
             - .
 
   lint:
@@ -25,8 +28,7 @@ jobs:
       - store_test_results:
           path: ./reports/linter
       - store_artifacts:
-          path: ./reports/linter    
-
+          path: ./reports/linter
 
   build:
     docker:
@@ -47,13 +49,13 @@ jobs:
       - run:
           name: ReBuild grpc for node
           command: npm install grpc --runtime=node
-      - run: 
+      - run:
           name: run jest test
           command: npm run test
       - store_test_results:
           path: ./reports/jest
       - store_artifacts:
-          path: ./reports/jest    
+          path: ./reports/jest
 
   mocha-tests:
     docker:
@@ -61,10 +63,10 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: 
+      - run:
           name: Rebuild grpc for electron
           command: npm install grpc --runtime=electron --target=7.0.0
-      - run: 
+      - run:
           name: Run mocha test
           command: npm run mocha -- --reporter mocha-junit-reporter
       - store_test_results:
