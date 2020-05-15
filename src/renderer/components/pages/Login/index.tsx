@@ -38,6 +38,7 @@ const LoginPage: FC = () => {
     if (submitted && !isLoggingIn) {
       setSubmitted(false)
       if (isLoggedIn) {
+        console.log('Login createSnack')
         snackbar.createSnack(
           'Logged in successfully, redirecting to main page.',
           'success',

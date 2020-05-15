@@ -1,29 +1,10 @@
-import React, { FC, useEffect } from 'react'
-import {
-  useSelector as useReduxSelector,
-  TypedUseSelectorHook,
-  useDispatch,
-} from 'react-redux'
-import { push } from 'connected-react-router'
-import { ApplicationState } from '../../store'
-import { refreshRequest } from '../../store/login/actions'
+import React, { FC } from 'react'
 
-const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 type LayoutProps = {
   children?: React.ReactNode
 }
 
 const Root: FC<LayoutProps> = (props: LayoutProps) => {
-  const isLoggedIn = useSelector(state => state.login.loggedIn)
-  const dispatch = useDispatch()
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      dispatch(push('/main'))
-    }
-  }, [dispatch, isLoggedIn])
-  dispatch(refreshRequest())
-
   return <div>{props.children}</div>
 }
 

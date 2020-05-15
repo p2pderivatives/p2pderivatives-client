@@ -29,8 +29,8 @@ function* handleRegistration(
     )
     yield put(registerSuccess())
   } catch (err) {
-    if (err instanceof Error && err.message) {
-      yield put(registerError(err.message))
+    if (err instanceof IPCError && err.getMessage()) {
+      yield put(registerError(err.getMessage()))
     } else {
       yield put(registerError('An unknown error occured.'))
     }
@@ -48,8 +48,8 @@ function* handleUnregistration(
   } catch (err) {
     if (err instanceof IPCError && (err as IPCError).getType() === AUTH_ERROR) {
       yield put(push('/'))
-    } else if (err instanceof Error && err.message) {
-      yield put(unregisterError(err.message))
+    } else if (err instanceof IPCError && err.getMessage()) {
+      yield put(unregisterError(err.getMessage()))
     } else {
       yield put(unregisterError('An unknown error occured.'))
     }
@@ -65,8 +65,8 @@ function* handleUserList(): SagaIterator {
   } catch (err) {
     if (err instanceof IPCError && (err as IPCError).getType() === AUTH_ERROR) {
       yield put(push('/'))
-    } else if (err instanceof Error && err.message) {
-      yield put(userListError(err.message))
+    } else if (err instanceof IPCError && err.getMessage()) {
+      yield put(userListError(err.getMessage()))
     } else {
       yield put(userListError('An unknown error occured.'))
     }

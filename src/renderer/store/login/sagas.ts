@@ -14,6 +14,7 @@ import {
 } from './actions'
 import { AuthenticationAPI } from '../../ipc/AuthenticationAPI'
 import { SagaIterator } from 'redux-saga'
+import { IPCError } from '../../../common/models/ipc/IPCError'
 
 export function* handleLogin(
   action: ReturnType<typeof loginRequest>
@@ -23,8 +24,8 @@ export function* handleLogin(
     yield call(authAPI.login, action.payload.username, action.payload.password)
     yield put(loginSuccess())
   } catch (err) {
-    if (err instanceof Error && err.message) {
-      yield put(loginError(err.message))
+    if (err instanceof IPCError && err.getMessage()) {
+      yield put(loginError(err.getMessage()))
     } else {
       yield put(loginError('An unknown error occured.'))
     }
@@ -37,8 +38,8 @@ export function* handleLogout(): SagaIterator {
     yield call(authAPI.logout)
     yield put(logoutSuccess())
   } catch (err) {
-    if (err instanceof Error && err.message) {
-      yield put(logoutError(err.message))
+    if (err instanceof IPCError && err.getMessage()) {
+      yield put(logoutError(err.getMessage()))
     } else {
       yield put(logoutError('An unknown error occured.'))
     }
@@ -51,8 +52,8 @@ export function* handleRefresh(): SagaIterator {
     yield call(authAPI.refresh)
     yield put(refreshSuccess())
   } catch (err) {
-    if (err instanceof Error && err.message) {
-      yield put(refreshError(err.message))
+    if (err instanceof IPCError && err.getMessage()) {
+      yield put(refreshError(err.getMessage()))
     } else {
       yield put(refreshError('An unknown error occured.'))
     }
