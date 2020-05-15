@@ -3,6 +3,7 @@ import { Grid, Typography, makeStyles } from '@material-ui/core'
 import TextInput from '../../atoms/TextInput'
 import PasswordInput from '../../atoms/PasswordInput'
 import Button from '../../atoms/Button'
+import { useKeyHook } from '../../../util/use-key-hook'
 
 export interface LoginFormProps {
   onSubmit: (username: string, password: string) => void
@@ -19,6 +20,13 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
   const classes = useStyles()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+
+  const handleEnterSubmit = (): void => {
+    if (!(username === '' || password === '')) {
+      props.onSubmit(username, password)
+    }
+  }
+  const onEnterSubmit = useKeyHook('Enter', handleEnterSubmit)
 
   return (
     <Grid container spacing={5} direction="column">
@@ -44,6 +52,7 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
           autoFocus
           value={username}
           onChange={(e): void => setUsername(e.target.value)}
+          onKeyPress={onEnterSubmit}
         />
       </Grid>
       <Grid item xs={12}>
@@ -55,6 +64,7 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
           autoComplete="password"
           value={password}
           onChange={(e): void => setPassword(e.target.value)}
+          onKeyPress={onEnterSubmit}
         />
       </Grid>
       <Grid item container xs={12} justify="center">

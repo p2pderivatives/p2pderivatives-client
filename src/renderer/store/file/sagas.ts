@@ -3,6 +3,7 @@ import { FileActionTypes } from './types'
 import { outcomeRequest, outcomeError, outcomeSuccess } from './actions'
 import { FileAPI } from '../../ipc/FileAPI'
 import { SagaIterator } from 'redux-saga'
+import { IPCError } from '../../../common/models/ipc/IPCError'
 
 export function* handleOutcomes(
   action: ReturnType<typeof outcomeRequest>
@@ -12,8 +13,8 @@ export function* handleOutcomes(
     const outcomeList = yield call(fileAPI.parseOutcomes, action.payload)
     yield put(outcomeSuccess(outcomeList))
   } catch (err) {
-    if (err instanceof Error && err.message) {
-      yield put(outcomeError(err.message))
+    if (err instanceof IPCError && err.getMessage()) {
+      yield put(outcomeError(err.getMessage()))
     } else {
       yield put(outcomeError('An unknown error occured.'))
     }

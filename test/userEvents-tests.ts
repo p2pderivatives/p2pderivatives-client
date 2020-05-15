@@ -39,7 +39,15 @@ class Main {
   }
 
   // TODO fix test failing, disabled for now
-  @skip @test async ipcCanDeregisterUser() {
+  @test async ipcCanDeregisterUser() {
+    const loginCall = new LoginCall('test', 'test')
+    const loginResult = (await ipc.callMain(
+      LOGIN,
+      loginCall
+    )) as GeneralAnswerProps
+    const loginAnswer = GeneralAnswer.parse(loginResult)
+    expect(loginAnswer.isSuccess()).eq(true)
+
     const result = (await ipc.callMain(UNREGISTER_USER)) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(result)
 

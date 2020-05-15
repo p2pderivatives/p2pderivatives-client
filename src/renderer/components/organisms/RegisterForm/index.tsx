@@ -3,6 +3,7 @@ import { Grid, Typography } from '@material-ui/core'
 import TextInput from '../../atoms/TextInput'
 import PasswordInput from '../../atoms/PasswordInput'
 import Button from '../../atoms/Button'
+import { useKeyHook } from '../../../util/use-key-hook'
 
 export interface RegisterFormProps {
   onSubmit: (username: string, password: string) => void
@@ -13,6 +14,15 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+
+  const handleEnterSubmit = (): void => {
+    console.log('username: ', username)
+    console.log('passsword:', password)
+    if (!(username === '' || password === '' || confirmPassword !== password)) {
+      props.onSubmit(username, password)
+    }
+  }
+  const onEnterSubmit = useKeyHook('Enter', handleEnterSubmit)
 
   return (
     <Grid container spacing={5} direction="column">
@@ -31,6 +41,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           autoFocus
           value={username}
           onChange={(e): void => setUsername(e.target.value)}
+          onKeyPress={onEnterSubmit}
         />
       </Grid>
       <Grid item xs={12}>
@@ -42,6 +53,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           autoComplete="password"
           value={password}
           onChange={(e): void => setPassword(e.target.value)}
+          onKeyPress={onEnterSubmit}
         />
       </Grid>
       <Grid item xs={12}>
@@ -52,6 +64,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
           name="confirmPassword"
           value={confirmPassword}
           onChange={(e): void => setConfirmPassword(e.target.value)}
+          onKeyPress={onEnterSubmit}
         />
       </Grid>
       <Grid item container xs={12} justify="center">
