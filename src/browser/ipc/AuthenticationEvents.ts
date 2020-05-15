@@ -3,7 +3,7 @@ import { ChangePasswordCall } from '../../common/models/ipc/ChangePasswordCall'
 import { GrpcClient } from '../api/grpc/GrpcClient'
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 import {
   LOGIN,
   LOGOUT,
