@@ -1,4 +1,4 @@
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
 import { BalanceAnswer } from '../../common/models/ipc/BalanceAnswer'

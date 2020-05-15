@@ -12,3 +12,6 @@ export const GET_BALANCE = 'get-balance'
 export const GET_CONFIG = 'get-config'
 
 export const PARSE_OUTCOME = 'parse-outcome'
+
+export const DLC_EVENT = 'dlc-event'
+export const GET_CONTRACTS = 'get-contracts'

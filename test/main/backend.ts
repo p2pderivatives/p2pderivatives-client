@@ -3,6 +3,7 @@ import getUserMockServer from '../../__mocks__/grpcUserMockServer'
 import { AuthenticationEvents } from '../../src/browser/ipc/AuthenticationEvents'
 import { UserEvents } from '../../src/browser/ipc/UserEvents'
 import { FileEvents } from '../../src/browser/ipc/FileEvents'
+import { DlcEvents } from '../../src/browser/ipc/DlcEvents'
 import { GrpcClient } from '../../src/browser/api/grpc/GrpcClient'
 import { GrpcConfig } from '../../src/browser/api/grpc/GrpcConfig'
 import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
@@ -25,3 +26,6 @@ const client2 = new GrpcClient(config2, auth)
 const userEvents = new UserEvents(client2)
 userMockServer.listen('0.0.0.0:50056')
 userEvents.registerReplies()
+
+const dlcEvents = new DlcEvents()
+dlcEvents.registerReplies()
