@@ -10,24 +10,26 @@ import {
   GET_CONFIG,
 } from '../../common/constants/IPC'
 import BitcoinDClient from '../api/bitcoind'
-import Storage from '../storage/storage'
+import ConfigRepository from '../config/ConfigRepository'
 
 export class BitcoinDEvents implements IPCEvents {
   private _client = new BitcoinDClient()
-  private _storage: Storage
+  private _storage: ConfigRepository
   private _config: BitcoinDConfig | null = null
 
-  constructor(storage: Storage) {
+  constructor(storage: ConfigRepository) {
     this._storage = storage
-    try {
-      const bitcoinConfig = this._storage.readBitcoinDConfig()
-      if (bitcoinConfig) {
-        this._client.configure(bitcoinConfig)
-        this._config = bitcoinConfig
-      }
-    } catch (e) {
-      // pretend nothing happened
+  }
+
+  public async Initialize(): Promise<void> {
+    const result = await this._storage.ReadBitcoinDConfig()
+    if (result.hasError()) {
+      // TODO(tibo): handle error once blocking config screen is implemented
+      return
     }
+
+    this._config = result.getValue()
+    await this._client.configure(this._config)
   }
 
   public registerReplies(): void {
@@ -35,7 +37,7 @@ export class BitcoinDEvents implements IPCEvents {
       const config = data as BitcoinDConfig
       try {
         await this._client.configure(config)
-        this._storage.writeBitcoinDConfig(config)
+        await this._storage.WriteBitcoinDConfig(config)
         this._config = config
         return new GeneralAnswer(true)
       } catch (e) {

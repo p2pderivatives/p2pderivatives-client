@@ -13,9 +13,17 @@ import {
 
 export class AuthenticationEvents implements IPCEvents {
   private _client: GrpcClient
+  private _loginCallback: (userName: string) => Promise<void>
+  private _logoutCallback: () => Promise<void>
 
-  public constructor(client: GrpcClient) {
+  public constructor(
+    client: GrpcClient,
+    loginCallback: (userName: string) => Promise<void>,
+    logoutCallback: () => Promise<void>
+  ) {
     this._client = client
+    this._loginCallback = loginCallback
+    this._logoutCallback = logoutCallback
   }
 
   public registerReplies(): void {

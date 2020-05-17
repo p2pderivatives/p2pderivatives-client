@@ -17,7 +17,10 @@ const auth = new GrpcAuth()
 
 const config = new GrpcConfig('127.0.0.1:50055', false)
 const client = new GrpcClient(config, auth)
-const authEvents = new AuthenticationEvents(client)
+const voidCallback = (): Promise<void> => {
+  return Promise.resolve()
+}
+const authEvents = new AuthenticationEvents(client, voidCallback, voidCallback)
 const fileEvents = new FileEvents()
 mockServer.listen('0.0.0.0:50055')
 authEvents.registerReplies()

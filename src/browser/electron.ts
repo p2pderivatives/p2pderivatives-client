@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
 import * as isDev from 'electron-is-dev'
-import initialize from './initialize'
+import { Initialize, Finalize } from './initialize'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -12,7 +12,7 @@ function createWindow(): void {
     height: 768,
     webPreferences: { nodeIntegration: true },
   })
-  initialize()
+  Initialize()
   mainWindow.loadURL(
     isDev
       ? 'http://localhost:9000'
@@ -24,7 +24,8 @@ function createWindow(): void {
 
 app.on('ready', createWindow)
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  await Finalize()
   if (process.platform !== 'darwin') {
     app.quit()
   }
