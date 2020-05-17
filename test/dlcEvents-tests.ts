@@ -5,7 +5,7 @@ import {
   GeneralAnswer,
   GeneralAnswerProps,
 } from '../src/common/models/ipc/GeneralAnswer'
-import { DlcCall } from './common/models/ipc/DlcCall'
+import { DlcCall } from '../src/common/models/ipc/DlcCall'
 import { DLC_EVENT, GET_CONTRACTS } from '../src/common/constants/IPC'
 import { GetContractsCall } from '../src/common/models/ipc/GetContractsCall'
 import { ContractTest } from './Consts'
