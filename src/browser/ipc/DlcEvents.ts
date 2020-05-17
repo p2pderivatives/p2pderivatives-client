@@ -7,8 +7,15 @@ import { Contract } from '../../common/models/dlc/Contract'
 import { ContractState } from '../../common/models/dlc/ContractState'
 import Amount from '../../common/models/dlc/Amount'
 import { DateTime } from 'luxon'
+import { DlcService } from '../dlc/service/DlcService'
 
 export class DlcEvents implements IPCEvents {
+  private readonly _dlcService: DlcService
+
+  constructor(dlcService: DlcService) {
+    this._dlcService = dlcService
+  }
+
   registerReplies(): void {
     ipc.answerRenderer(DLC_EVENT, data => {
       // TODO(Tibo): implement logic
@@ -33,10 +40,9 @@ export class DlcEvents implements IPCEvents {
       }
       return Promise.resolve(new DlcAnswer(true, contract))
     })
-    ipc.answerRenderer(GET_CONTRACTS, data => {
-      // TODO(Tibo): implement logic, this might not
-      //  need to be async in the final version
-      return Promise.resolve(new GetContractsAnswer(true, []))
+    ipc.answerRenderer(GET_CONTRACTS, async () => {
+      const contracts = await this._dlcService.GetAllContracts()
+      return Promise.resolve(new GetContractsAnswer(true, contracts))
     })
   }
 }

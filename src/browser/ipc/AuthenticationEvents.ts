@@ -25,6 +25,7 @@ export class AuthenticationEvents implements IPCEvents {
         await this._client
           .getAuthenticationService()
           .login(request.username, request.password)
+        this._loginCallback(request.username)
         return new GeneralAnswer(true)
       } catch (e) {
         return new GeneralAnswer(false, e)
@@ -34,6 +35,7 @@ export class AuthenticationEvents implements IPCEvents {
     ipc.answerRenderer(LOGOUT, async data => {
       try {
         await this._client.getAuthenticationService().logout()
+        this._logoutCallback()
         return new GeneralAnswer(true)
       } catch (e) {
         return new GeneralAnswer(false, e)

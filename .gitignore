@@ -28,3 +28,7 @@ gen-grpc/*.proto
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# leveldb files
+!test/leveldb/.gitkeep
+test/leveldb/*

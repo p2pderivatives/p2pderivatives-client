@@ -6,6 +6,8 @@ import { UserEvents } from '../../src/browser/ipc/UserEvents'
 import getMockServer from '../../__mocks__/grpcAuthMockServer'
 import getUserMockServer from '../../__mocks__/grpcUserMockServer'
 import { DlcEvents } from '../../src/browser/ipc/DlcEvents'
+import { DlcService } from '../../src/browser/dlc/service/DlcService'
+import { ContractRepositoryMock } from '../../__mocks__/contractRepositoryMock'
 
 const mockServer = getMockServer()
 const userMockServer = getUserMockServer()
@@ -24,5 +26,6 @@ const userEvents = new UserEvents(client2)
 userMockServer.listen('0.0.0.0:50056')
 userEvents.registerReplies()
 
-const dlcEvents = new DlcEvents()
+const dlcService = new DlcService(new ContractRepositoryMock())
+const dlcEvents = new DlcEvents(dlcService)
 dlcEvents.registerReplies()
