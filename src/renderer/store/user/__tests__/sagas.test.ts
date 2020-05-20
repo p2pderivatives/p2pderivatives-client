@@ -13,6 +13,7 @@ import {
 } from '../actions'
 import { getContext } from 'redux-saga/effects'
 import { User } from '../../../../common/models/user/User'
+import { IPCError } from '../../../../common/models/ipc/IPCError'
 
 let failUnregister = false
 
@@ -27,7 +28,7 @@ class MockUserAPI implements UserAPI {
       if (name === 'test') {
         resolve()
       } else {
-        throw new Error('test error')
+        throw new IPCError('general', -1, 'test error', 'test_error')
       }
     })
   }
@@ -37,7 +38,7 @@ class MockUserAPI implements UserAPI {
       if (!failUnregister) {
         resolve()
       } else {
-        throw new Error('test error')
+        throw new IPCError('general', -1, 'test error', 'test_error')
       }
     })
   }

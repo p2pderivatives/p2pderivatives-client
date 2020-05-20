@@ -4,7 +4,8 @@ import { LoginActionTypes } from './types'
 
 export const loginRequest = (username: string, password: string) =>
   action(LoginActionTypes.LOGIN_REQUEST, { username, password })
-export const loginSuccess = () => action(LoginActionTypes.LOGIN_SUCCESS)
+export const loginSuccess = (username: string) =>
+  action(LoginActionTypes.LOGIN_SUCCESS, username)
 export const loginError = (error: string) =>
   action(LoginActionTypes.LOGIN_ERROR, error)
 export const logoutRequest = () => action(LoginActionTypes.LOGOUT_REQUEST)

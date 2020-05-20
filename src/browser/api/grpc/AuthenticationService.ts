@@ -116,10 +116,9 @@ export class AuthenticationService {
 
     const metaData = new Metadata()
     metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
-
     const changePasswordAsync = promisify<UpdatePasswordRequest, Empty>(
       this._client.updatePassword.bind(this._client)
     )
-    return changePasswordAsync(cpRequest, metaData).then(response => response)
+    return changePasswordAsync(cpRequest)
   }
 }

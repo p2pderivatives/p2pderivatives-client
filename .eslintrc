@@ -16,7 +16,8 @@
   },
   "rules": {
     "prettier/prettier": ["error"],
-    "semi": [2, "never"]
+    "semi": [2, "never"],
+    "no-console": "error"
   },
   "settings": {
     "react": {

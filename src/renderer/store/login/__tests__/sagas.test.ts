@@ -12,6 +12,7 @@ import {
   changePasswordSuccess,
 } from '../actions'
 import { getContext } from 'redux-saga/effects'
+import { IPCError } from '../../../../common/models/ipc/IPCError'
 
 let failLogout = false
 
@@ -21,7 +22,7 @@ class MockAuthAPI implements AuthenticationAPI {
       if (username === 'test') {
         resolve()
       } else {
-        throw new Error('test error')
+        throw new IPCError('general', -1, 'test error', 'test_error')
         //reject()
       }
     })
@@ -32,7 +33,7 @@ class MockAuthAPI implements AuthenticationAPI {
       if (!failLogout) {
         resolve()
       } else {
-        throw new Error('test error')
+        throw new IPCError('general', -1, 'test error', 'test_error')
       }
     })
   }
@@ -51,7 +52,7 @@ describe('login saga', () => {
   it('should handle successfully logging in', () => {
     return expectSaga(loginSagas)
       .provide([[getContext('authAPI'), authAPI]])
-      .put(loginSuccess())
+      .put(loginSuccess('test'))
       .dispatch(loginRequest('test', 'test'))
       .run()
   })

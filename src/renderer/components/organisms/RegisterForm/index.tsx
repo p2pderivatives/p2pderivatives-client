@@ -16,9 +16,7 @@ const LoginForm: FC<RegisterFormProps> = (props: RegisterFormProps) => {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const handleEnterSubmit = (): void => {
-    console.log('username: ', username)
-    console.log('passsword:', password)
-    if (!(username === '' || password === '' || confirmPassword !== password)) {
+    if (username !== '' && password !== '' && confirmPassword === password) {
       props.onSubmit(username, password)
     }
   }

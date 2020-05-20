@@ -9,18 +9,16 @@ import { useSnackbar } from '../../../../providers/Snackbar'
 
 import WalletSettingsTemplate from '../../../templates/WalletSettingsTemplate'
 import { ApplicationState } from '../../../../store'
-import {
-  checkRequest,
-  balanceRequest,
-  configRequest,
-} from '../../../../store/bitcoin/actions'
+import { checkRequest, configRequest } from '../../../../store/bitcoin/actions'
 
 import { BitcoinDConfig } from '../../../../../common/models/ipc/BitcoinDConfig'
 import { LoadingProps } from '../../../props'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
-type WalletSettingsProps = LoadingProps
+type WalletSettingsProps = LoadingProps & {
+  onSaved?: () => void
+}
 
 const WalletSettings: FC<WalletSettingsProps> = (
   props: WalletSettingsProps
@@ -29,10 +27,8 @@ const WalletSettings: FC<WalletSettingsProps> = (
   const dispatch = useDispatch()
 
   const [submitted, setSubmitted] = useState(false)
-  const [balanceRequested, setBalanceRequested] = useState(false)
   const processing = useSelector(state => state.bitcoin.processing)
   const checkSuccessful = useSelector(state => state.bitcoin.checkSuccessful)
-  const balance = useSelector(state => state.bitcoin.balance)
   const bitcoinError = useSelector(state => state.bitcoin.error)
   const bitcoinConfig = useSelector(state => state.bitcoin.config)
 
@@ -41,13 +37,12 @@ const WalletSettings: FC<WalletSettingsProps> = (
       props.onLoading(false)
       setSubmitted(false)
       if (checkSuccessful) {
+        if (props.onSaved) props.onSaved()
         snackbar.createSnack(
-          'Configuration was validated successfully. Retrieving balance...',
+          'Configuration was validated successfully.',
           'success',
           () => {
-            dispatch(balanceRequest())
             dispatch(configRequest())
-            setBalanceRequested(true)
           }
         )
       } else if (bitcoinError) {
@@ -57,22 +52,8 @@ const WalletSettings: FC<WalletSettingsProps> = (
         )
       }
     }
-    if (!processing && balanceRequested && balance !== undefined) {
-      setBalanceRequested(false)
-      snackbar.createSnack(
-        'Balance for configured wallet: ' + balance,
-        'success'
-      )
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    submitted,
-    processing,
-    checkSuccessful,
-    bitcoinError,
-    balance,
-    balanceRequested,
-  ])
+  }, [submitted, processing, checkSuccessful, bitcoinError])
 
   const onSubmit = (config: BitcoinDConfig): void => {
     props.onLoading(true)
@@ -82,6 +63,10 @@ const WalletSettings: FC<WalletSettingsProps> = (
   return (
     <WalletSettingsTemplate config={bitcoinConfig} checkSettings={onSubmit} />
   )
+}
+
+WalletSettings.defaultProps = {
+  onSaved: (): void => void 0,
 }
 
 export default WalletSettings

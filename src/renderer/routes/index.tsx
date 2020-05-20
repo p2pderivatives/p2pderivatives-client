@@ -7,6 +7,7 @@ import Registration from '../components/pages/Registration'
 import ContractOverview from '../components/pages/ContractOverview'
 import NewContract from '../components/pages/NewContract'
 import Settings from '../components/pages/Settings'
+import InitialWalletSettings from '../components/pages/InitialWalletSettings'
 
 const routes = (
   <div>
@@ -17,6 +18,7 @@ const routes = (
         <Route exact path="/main" component={ContractOverview} />
         <Route exact path="/new-contract" component={NewContract} />
         <Route path="/settings" component={Settings} />
+        <Route path="/initial-settings" component={InitialWalletSettings} />
       </Switch>
     </Root>
   </div>

@@ -13,7 +13,7 @@ describe('login reducer', () => {
       initialState,
       loginRequest('test', 'test')
     )
-    const successState = loginReducer(requestState, loginSuccess())
+    const successState = loginReducer(requestState, loginSuccess('test'))
 
     expect(requestState).toEqual({
       ...initialState,
@@ -23,6 +23,7 @@ describe('login reducer', () => {
       ...initialState,
       loggingIn: false,
       loggedIn: true,
+      username: 'test',
     })
   })
 

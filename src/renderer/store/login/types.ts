@@ -14,6 +14,7 @@ export enum LoginActionTypes {
 }
 
 export interface LoginState {
+  readonly username: string
   readonly loggingIn: boolean
   readonly loggingOut: boolean
   readonly loggedIn: boolean

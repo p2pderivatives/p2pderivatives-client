@@ -49,11 +49,15 @@ export const bitcoinReducer: Reducer<BitcoinState> = (
       }
     }
     case BitcoinActionTypes.CONFIG_REQUEST: {
-      return state
+      return {
+        ...state,
+        processing: true,
+      }
     }
     case BitcoinActionTypes.CONFIG_RETRIEVED: {
       return {
         ...state,
+        processing: false,
         config: action.payload,
       }
     }

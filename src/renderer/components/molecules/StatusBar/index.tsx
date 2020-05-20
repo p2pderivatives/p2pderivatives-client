@@ -11,6 +11,10 @@ import AccountCircle from '@material-ui/icons/AccountCircle'
 
 import p2plogo from '../../../assets/p2p-logo.png'
 
+type StatusBarProps = {
+  username: string
+}
+
 const theme = createMuiTheme({
   palette: {
     primary: {
@@ -42,7 +46,7 @@ const useStyles = makeStyles({
   },
 })
 
-const StatusBar: FC = () => {
+const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
   const classes = useStyles()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const isMenuOpen = Boolean(anchorEl)
@@ -108,7 +112,7 @@ const StatusBar: FC = () => {
               onClick={handleProfileMenuOpen}
               endIcon={<AccountCircle />}
             >
-              John Doe
+              {props.username}
             </Button>
           </Toolbar>
         </AppBar>

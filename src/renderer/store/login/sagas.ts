@@ -22,7 +22,7 @@ export function* handleLogin(
   try {
     const authAPI: AuthenticationAPI = yield getContext('authAPI')
     yield call(authAPI.login, action.payload.username, action.payload.password)
-    yield put(loginSuccess())
+    yield put(loginSuccess(action.payload.username))
   } catch (err) {
     if (err instanceof IPCError && err.getMessage()) {
       yield put(loginError(err.getMessage()))

@@ -22,23 +22,37 @@ const LoginPage: FC = () => {
   const snackbar = useSnackbar()
 
   const [submitted, setSubmitted] = useState(false)
+  const [configRequested, setConfigRequested] = useState(false)
   const isLoggingIn = useSelector(state => state.login.loggingIn)
   const isLoggedIn = useSelector(state => state.login.loggedIn)
   const loginError = useSelector(state => state.login.error)
+  const bitcoinConfig = useSelector(state => state.bitcoin.config)
+  const configProcessing = useSelector(state => state.bitcoin.processing)
+
   const dispatch = useDispatch()
 
   const handleClose = (): void => {
     if (isLoggedIn) {
       dispatch(configRequest())
-      dispatch(push('/main'))
+      setConfigRequested(true)
     }
   }
+
+  useEffect(() => {
+    if (isLoggedIn && configRequested && !configProcessing) {
+      if (!(bitcoinConfig === undefined || bitcoinConfig === {})) {
+        dispatch(push('/main'))
+      } else {
+        dispatch(push('/initial-settings'))
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bitcoinConfig, isLoggedIn, configProcessing, configRequested])
 
   useEffect(() => {
     if (submitted && !isLoggingIn) {
       setSubmitted(false)
       if (isLoggedIn) {
-        console.log('Login createSnack')
         snackbar.createSnack(
           'Logged in successfully, redirecting to main page.',
           'success',
