@@ -42,6 +42,6 @@ test('grpc-client-getuserlist', done => {
     done()
   })
   userStream.on('error', (err: Error) => {
-    console.log('error: ', err)
+    throw new Error('shouldnt fail')
   })
 })

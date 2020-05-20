@@ -10,6 +10,11 @@ import Fab from '../../atoms/Fab'
 import Paper from '@material-ui/core/Paper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
+import { ApplicationState } from '../../../store'
+import {
+  useSelector as useReduxSelector,
+  TypedUseSelectorHook,
+} from 'react-redux'
 
 export type LayoutProps = {
   onBack?: () => void
@@ -17,6 +22,8 @@ export type LayoutProps = {
   showSidebar?: boolean
   settingsConfig?: boolean
 }
+
+const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -56,9 +63,12 @@ const useStyles = makeStyles({
 
 const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
   const classes = useStyles()
+
+  const username = useSelector(state => state.login.username)
+
   return (
     <div className={classes.rootContainer}>
-      <StatusBar />
+      <StatusBar username={username} />
       <div className={classes.contentRoot}>
         {props.showSidebar && (
           <div className={classes.sidebar}>

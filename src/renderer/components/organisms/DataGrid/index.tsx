@@ -78,13 +78,11 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
   let localData = props.data
 
   const handleFromDateChange = (date: Date): void => {
-    console.log('state from change: ', date)
     setFromDate(date)
     filterByDate()
   }
 
   const handleToDateChange = (date: Date): void => {
-    console.log('state to change: ', date)
     setToDate(date)
     filterByDate()
   }

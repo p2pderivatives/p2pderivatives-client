@@ -65,7 +65,11 @@ test('grpc-update-password', async () => {
 })
 
 test('grpc-update-password-fail', async () => {
-  await expect(
-    client.getAuthenticationService().changePassword('old', 'old')
-  ).rejects.toBeInstanceOf(GrpcError)
+  expect.hasAssertions()
+  try {
+    await client.getAuthenticationService().changePassword('old', 'old')
+  } catch (e) {
+    expect(e).toBeInstanceOf(GrpcError)
+    expect((e as GrpcError).getCode()).toBe(17)
+  }
 })

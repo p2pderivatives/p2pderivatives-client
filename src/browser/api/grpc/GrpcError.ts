@@ -30,7 +30,6 @@ export class GrpcError {
   }
 
   public static fromServiceError(error: ServiceError): GrpcError {
-    console.log(error)
     return new GrpcError(error.name, error.details, error.code)
   }
 }

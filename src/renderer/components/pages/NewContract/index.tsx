@@ -49,7 +49,6 @@ const NewContractPage: FC = () => {
 
   useEffect(() => {
     if (parsed && !processing) {
-      console.log('set tab')
       setTab(1)
     }
   }, [parsed, processing, outcomesList])

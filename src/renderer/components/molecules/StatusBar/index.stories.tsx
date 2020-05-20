@@ -16,7 +16,7 @@ export default {
 export const statusBar = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="xs">
-      <StatusBar />
+      <StatusBar username={'John Storybook'} />
     </Container>
   </MuiThemeProvider>
 )

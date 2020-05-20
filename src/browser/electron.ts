@@ -6,7 +6,6 @@ import initialize from './initialize'
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
-  console.log('isDev: ', isDev)
   mainWindow = new BrowserWindow({
     width: 1366,
     height: 768,

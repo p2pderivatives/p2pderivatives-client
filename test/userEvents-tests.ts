@@ -66,7 +66,6 @@ class Main {
     const result = (await ipc.callMain(GET_USERLIST)) as UserListAnswerProps
     const answer = UserListAnswer.parse(result)
     const users = answer.getUserList().map(userJson => new User(userJson._name))
-    console.log('users: ', users)
 
     expect(users.length).eq(4)
     expect(users[0].getName()).eq('user1')

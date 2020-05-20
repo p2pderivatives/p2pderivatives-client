@@ -2,6 +2,7 @@ import { Reducer } from 'redux'
 import { LoginState, LoginActionTypes } from './types'
 
 export const initialState: LoginState = {
+  username: '',
   loggingIn: false,
   loggingOut: false,
   loggedIn: false,
@@ -19,7 +20,12 @@ const reducer: Reducer<LoginState> = (
       return { ...state, loggingIn: true }
     }
     case LoginActionTypes.LOGIN_SUCCESS: {
-      return { ...state, loggingIn: false, loggedIn: true }
+      return {
+        ...state,
+        loggingIn: false,
+        loggedIn: true,
+        username: action.payload,
+      }
     }
     case LoginActionTypes.LOGIN_ERROR: {
       return {
