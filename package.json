@@ -54,7 +54,7 @@
     "@types/history": "^4.7.4",
     "@types/js-yaml": "^3.12.2",
     "@types/luxon": "^1.21.0",
-    "@types/mui-datatables": "^2.13.4",
+    "@types/mui-datatables": "^2.14.1",
     "@types/node": "12.12.14",
     "@types/react-dom": "16.9.4",
     "@types/react-redux": "^7.1.6",

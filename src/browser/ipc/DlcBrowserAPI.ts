@@ -1,6 +1,5 @@
-import { Contract } from '../../common/models/dlc/Contract'
-import { DlcEventType } from '../../common/constants/DlcEventType'
+import { ContractSimple } from '../../common/models/ipc/ContractSimple'
 
-export interface DlcIPCBrowserAPI {
-  dlcCall(eventCode: DlcEventType, contract: Contract): Promise<void>
+export interface DlcBrowserAPI {
+  dlcUpdate(contract: ContractSimple): Promise<void>
 }

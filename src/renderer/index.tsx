@@ -8,8 +8,11 @@ import createStore, { history } from './createStore'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from './components/theme'
 import { SnackbarProvider } from './providers/Snackbar'
+import { DlcEvents } from './ipc/DlcEvents'
 
 const store = createStore()
+const dlcEvents = new DlcEvents(store)
+dlcEvents.registerReplies()
 
 ReactDOM.render(
   <Provider store={store}>

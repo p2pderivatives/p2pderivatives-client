@@ -1,9 +1,10 @@
 import React, { ReactElement } from 'react'
 import { Container } from '@material-ui/core'
-import { DateTime } from 'luxon'
 import DataGrid from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
+import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
 
 export default {
   title: 'Components/Organisms/DataGrid',
@@ -12,103 +13,93 @@ export default {
   },
 }
 
-export const sampleTable = (): ReactElement => (
-  <MuiThemeProvider theme={theme}>
-    <Container maxWidth="lg">
-      <DataGrid title={'Contracts'} data={data} />
-    </Container>
-  </MuiThemeProvider>
-)
-
-const data = [
+const contracts: ContractSimple[] = [
   {
-    contractId: 'XX0001',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 1 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
+    id: 'testid1',
+    state: ContractState.Offered,
+    counterPartyName: 'UserB',
+    feeRate: 1.01,
+    localCollateral: 2.01,
+    maturityTime: new Date(),
+    remoteCollateral: 2.99,
+    outcomes: [
+      {
+        local: 5,
+        remote: 0,
+        message: 'yes',
+      },
+      {
+        local: 0,
+        remote: 5.0,
+        message: 'no',
+      },
+      {
+        local: 2.5,
+        remote: 2.5,
+        message: 'maybe',
+      },
+    ],
   },
   {
-    contractId: 'XX0002',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 2 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
+    id: 'testid2',
+    state: ContractState.Accepted,
+    counterPartyName: 'UserB',
+    feeRate: 1.01,
+    localCollateral: 2.01,
+    maturityTime: new Date(),
+    remoteCollateral: 2.99,
+    outcomes: [
+      {
+        local: 5,
+        remote: 0,
+        message: 'yes',
+      },
+      {
+        local: 0,
+        remote: 5.0,
+        message: 'no',
+      },
+      {
+        local: 2.5,
+        remote: 2.5,
+        message: 'maybe',
+      },
+    ],
   },
   {
-    contractId: 'XX0003',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 3 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0004',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 4 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0005',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 4 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0006',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 5 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0007',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 6 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0008',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 7 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0009',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 8 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
+    id: 'testid3',
+    state: ContractState.MutualClosed,
+    counterPartyName: 'UserB',
+    feeRate: 1.01,
+    localCollateral: 2.01,
+    maturityTime: new Date(),
+    remoteCollateral: 2.99,
+    outcomes: [
+      {
+        local: 5,
+        remote: 0,
+        message: 'yes',
+      },
+      {
+        local: 0,
+        remote: 5.0,
+        message: 'no',
+      },
+      {
+        local: 2.5,
+        remote: 2.5,
+        message: 'maybe',
+      },
+    ],
   },
 ]
+
+export const sampleTable = (): ReactElement => (
+  <MuiThemeProvider theme={theme}>
+    <div style={{ width: 1366, height: 768 }}>
+      <div style={{ height: '100%'}}>
+        <DataGrid title={'Contracts'} data={contracts} />
+      </div>
+    </div>
+  </MuiThemeProvider>
+)

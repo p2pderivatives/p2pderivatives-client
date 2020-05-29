@@ -6,8 +6,12 @@ declare module '@material-ui/core/styles/overrides' {
       root: {
         height: React.CSSProperties.height
       }
+      paper: {
+        height: React.CSSProperties.height
+      }
       responsiveScroll: {
         maxHeight: React.CSSProperties.height
+        height: React.CSSProperties.height
       }
     }
     MUIDataTableToolbar: {

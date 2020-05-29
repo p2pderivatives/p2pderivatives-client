@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { parseFile } from '@fast-csv/parse'
-import Outcome from '../../../common/models/ipc/Outcome'
+import { OutcomeSimple } from '../../../common/models/ipc/ContractSimple'
 
 type UnparsedRow = {
   price: string
@@ -9,9 +9,9 @@ type UnparsedRow = {
 }
 
 export default class IOAPI {
-  public async readOutcomes(path: string): Promise<Outcome[]> {
+  public async readOutcomes(path: string): Promise<OutcomeSimple[]> {
     return new Promise((resolve, reject) => {
-      const outcomes: Outcome[] = []
+      const outcomes: OutcomeSimple[] = []
 
       parseFile<UnparsedRow, UnparsedRow>(path, {
         headers: ['price', 'partyA', 'partyB'],
@@ -20,18 +20,14 @@ export default class IOAPI {
       })
         .validate(
           (data: UnparsedRow) =>
-            !(
-              isNaN(parseFloat(data.partyA)) ||
-              isNaN(parseFloat(data.partyB)) ||
-              isNaN(parseFloat(data.price))
-            )
+            !(isNaN(parseFloat(data.partyA)) || isNaN(parseFloat(data.partyB)))
         )
         .on('error', error => reject(error))
         .on('data', (row: UnparsedRow) => {
           outcomes.push({
-            aReward: parseFloat(row.partyA),
-            bReward: parseFloat(row.partyB),
-            fixingPrice: parseFloat(row.price),
+            local: parseFloat(row.partyA),
+            remote: parseFloat(row.partyB),
+            message: row.price,
           })
         })
         .on('end', () => resolve(outcomes))

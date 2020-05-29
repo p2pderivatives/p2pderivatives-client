@@ -11,6 +11,8 @@ import { ApplicationState } from '../../../store'
 import { outcomeRequest } from '../../../store/file/actions'
 import { goBack } from 'connected-react-router'
 import { userListRequest } from '../../../store/user/actions'
+import { offerRequest } from '../../../store/dlc/actions'
+import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
 
 const { dialog } = window.require('electron').remote
 
@@ -38,6 +40,10 @@ const NewContractPage: FC = () => {
     })
   }
 
+  const handlePublish = (contract: ContractSimple): void => {
+    dispatch(offerRequest(contract))
+  }
+
   const handleCancel = (): void => {
     dispatch(goBack())
   }
@@ -61,6 +67,7 @@ const NewContractPage: FC = () => {
         users={userList}
         tab={tab}
         onTabChange={(index): void => setTab(index)}
+        onPublish={handlePublish}
         onCancel={handleCancel}
       />
     </div>

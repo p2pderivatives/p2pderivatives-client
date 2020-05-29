@@ -3,6 +3,7 @@ import UserSelectionDialog from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
 import { User } from '../../../../common/models/user/User'
+import { action } from '@storybook/addon-actions'
 
 export default {
   title: 'Components/Organisms/UserSelectionDialog',
@@ -22,8 +23,8 @@ export const userSelectionDialog = (): ReactElement => (
     <div style={{ height: 1366, width: 768, display: 'flex' }}>
       <UserSelectionDialog
         open={true}
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        onClose={(): void => {}}
+        onClose={action('onClose')}
+        onSelect={action('onSelect')}
         users={testUsers}
       />
     </div>

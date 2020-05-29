@@ -13,6 +13,9 @@ import bitcoinSaga from './bitcoin/sagas'
 import { FileState } from './file/types'
 import { fileReducer } from './file/reducer'
 import fileSaga from './file/sagas'
+import { DlcState } from './dlc/types'
+import { dlcReducer } from './dlc/reducer'
+import dlcSaga from './dlc/sagas'
 import { History } from 'history'
 import { connectRouter, RouterState } from 'connected-react-router'
 
@@ -21,6 +24,7 @@ export interface ApplicationState {
   user: UserState
   bitcoin: BitcoinState
   file: FileState
+  dlc: DlcState
   router: RouterState
 }
 
@@ -30,6 +34,7 @@ export const createRootReducer = (history: History) =>
     user: userReducer,
     bitcoin: bitcoinReducer,
     file: fileReducer,
+    dlc: dlcReducer,
     router: connectRouter(history),
   })
 
@@ -39,5 +44,6 @@ export function* rootSaga() {
     fork(userSaga),
     fork(bitcoinSaga),
     fork(fileSaga),
+    fork(dlcSaga),
   ])
 }

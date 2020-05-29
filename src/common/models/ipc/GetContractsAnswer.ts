@@ -1,27 +1,27 @@
-import { Contract } from '../dlc/Contract'
 import { GeneralAnswer, GeneralAnswerProps } from './GeneralAnswer'
 import { IPCError } from './IPCError'
+import { ContractSimple } from './ContractSimple'
 
 export interface GetContractsAnswerProps extends GeneralAnswerProps {
-  _contractInfos: Contract[]
+  _contractInfos: ContractSimple[]
 }
 
 export class GetContractsAnswer extends GeneralAnswer {
-  private readonly _contractInfos: Contract[]
+  private readonly _contractInfos: ContractSimple[]
   public constructor(
     success: boolean,
-    contractInfos: Contract[],
+    contractInfos: ContractSimple[],
     error?: IPCError | null
   ) {
     super(success, error)
     this._contractInfos = contractInfos
   }
 
-  getContracts(): Contract[] {
+  getContracts(): ContractSimple[] {
     return this._contractInfos
   }
 
-  static parse(json: GetContractsAnswerProps): GetContractsAnswer {
+  public static parse(json: GetContractsAnswerProps): GetContractsAnswer {
     return new GetContractsAnswer(
       json._success,
       json._contractInfos,

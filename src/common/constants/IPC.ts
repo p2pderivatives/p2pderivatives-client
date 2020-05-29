@@ -16,4 +16,6 @@ export const PARSE_OUTCOME = 'parse-outcome'
 export const GET_ORACLE_ASSET_CONFIG = 'get-oracle-asset-config'
 
 export const DLC_EVENT = 'dlc-event'
+export const DLC_UPDATE = 'dlc-update'
+export const OFFER_CONTRACT = 'offer-contract'
 export const GET_CONTRACTS = 'get-contracts'

@@ -1,24 +1,24 @@
 import { GeneralAnswer, GeneralAnswerProps } from './GeneralAnswer'
 import { IPCError } from './IPCError'
-import Outcome from './Outcome'
+import { OutcomeSimple } from './ContractSimple'
 
 export interface OutcomeAnswerProps extends GeneralAnswerProps {
-  _outcomes: Outcome[]
+  _outcomes: OutcomeSimple[]
 }
 
 export default class OutcomeAnswer extends GeneralAnswer {
-  private readonly _outcomes: Outcome[]
+  private readonly _outcomes: OutcomeSimple[]
 
   public constructor(
     success: boolean,
-    outcomes: Outcome[],
+    outcomes: OutcomeSimple[],
     error: IPCError | null = null
   ) {
     super(success, error)
     this._outcomes = outcomes
   }
 
-  public getOutcomes(): Outcome[] {
+  public getOutcomes(): OutcomeSimple[] {
     return this._outcomes
   }
 

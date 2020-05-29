@@ -22,6 +22,6 @@ class Main {
 
     expect(answer.isSuccess()).eq(true)
     expect(answer.getError()).eq(null)
-    expect(answer.getOutcomes()[0].fixingPrice).eq(3)
+    expect(answer.getOutcomes()[0].message).eq('3')
   }
 }

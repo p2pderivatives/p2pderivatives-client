@@ -1,5 +1,5 @@
-import Outcome from '../../common/models/ipc/Outcome'
+import { OutcomeSimple } from '../../common/models/ipc/ContractSimple'
 
 export interface FileAPI {
-  parseOutcomes(path: string): Promise<Outcome[]>
+  parseOutcomes(path: string): Promise<OutcomeSimple[]>
 }

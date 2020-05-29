@@ -91,8 +91,8 @@ async function LoginCallBack(userName: string): Promise<void> {
     winston.createLogger(),
     1
   )
-  // TODO(Wesley): pass the manager to the DlcEvents and call relevant functions
-  const dlcEvents = new DlcEvents(dlcService)
+
+  const dlcEvents = new DlcEvents(dlcManager, dlcService)
   dlcEvents.registerReplies()
 }
 

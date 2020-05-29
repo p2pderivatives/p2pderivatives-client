@@ -1,6 +1,19 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import { makeStyles, Typography, Grid, Link } from '@material-ui/core'
+import Box from '@material-ui/core/Box'
 import MainLayout from '../../organisms/MainLayout'
+import Tabs, { TabItem } from '../../molecules/Tabs'
+import OutcomesGrid from '../../organisms/OutcomesGrid'
+import Button from '../../atoms/Button'
+import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
+import { ContractState } from '../../../../common/models/dlc/ContractState'
+
+type ContractDetailTemplateProps = {
+  data: ContractSimple
+  isProposal: boolean
+  acceptContract?: () => void
+  rejectContract?: () => void
+}
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -17,6 +30,7 @@ const useStyles = makeStyles({
   },
   contractDiv: {
     width: '60%',
+    marginTop: '1.5rem',
   },
   titleBorder: {
     width: '48rem',
@@ -43,10 +57,34 @@ const useStyles = makeStyles({
   dataTitle: {
     fontWeight: 'bold',
   },
+  buttonDiv: {
+    display: 'flex',
+    justifyContent: 'space-evenly',
+    marginTop: '3rem',
+  },
 })
 
-const ContractDetailTemplate: FC = () => {
+const tabItems: TabItem[] = [{ label: 'General' }, { label: 'Outcomes' }]
+
+const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
+  props: ContractDetailTemplateProps
+) => {
   const classes = useStyles()
+  const contract = props.data
+
+  const [tabIndex, setTabIndex] = useState(0)
+
+  const handleTabChange = (index: number): void => {
+    setTabIndex(index)
+  }
+
+  const handleAccept = (): void => {
+    if (props.acceptContract) props.acceptContract()
+  }
+
+  const handleReject = (): void => {
+    if (props.rejectContract) props.rejectContract()
+  }
 
   return (
     <div className={classes.rootContainer}>
@@ -55,136 +93,126 @@ const ContractDetailTemplate: FC = () => {
           <Link className={classes.backLink} variant="body2">
             🠐 ALL CONTRACTS
           </Link>
-          <div className={classes.contractDiv}>
-            <Typography variant="h4" color="textPrimary">
-              {'XX00001'}
-            </Typography>
-            <div className={classes.titleBorder}></div>
-            <Grid container spacing={3}>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    State
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    Published
-                  </Typography>
-                </div>
+          <Tabs
+            items={tabItems}
+            value={tabIndex}
+            onTabChange={(idx): void => handleTabChange(idx)}
+          />
+          {tabIndex === 0 && (
+            <div className={classes.contractDiv}>
+              <Typography variant="h4" color="textPrimary">
+                {contract.id}
+              </Typography>
+              <div className={classes.titleBorder}></div>
+              <Grid container spacing={3}>
+                <Grid item xs={4}>
+                  <div>
+                    <Typography
+                      className={classes.dataTitle}
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      State
+                    </Typography>
+                    <Typography variant="body2" color="textPrimary">
+                      {ContractState[contract.state]}
+                    </Typography>
+                  </div>
+                </Grid>
+                <Grid item xs={4}>
+                  <div>
+                    <Typography
+                      className={classes.dataTitle}
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      Maturity Date (GMT)
+                    </Typography>
+                    <Typography variant="body2" color="textPrimary">
+                      {contract.maturityTime}
+                    </Typography>
+                  </div>
+                </Grid>
+                <Grid item xs={4}>
+                  <div>
+                    <Typography
+                      className={classes.dataTitle}
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      Counter Party
+                    </Typography>
+                    <Typography variant="body2" color="textPrimary">
+                      {contract.counterPartyName}
+                    </Typography>
+                  </div>
+                </Grid>
+                <Grid item xs={4}>
+                  <div>
+                    <Typography
+                      className={classes.dataTitle}
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      Fee rate (Satoshi)
+                    </Typography>
+                    <Typography variant="body2" color="textPrimary">
+                      {contract.feeRate}
+                    </Typography>
+                  </div>
+                </Grid>
+                <Grid item xs={4}>
+                  <div>
+                    <Typography
+                      className={classes.dataTitle}
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      Local Collateral (Satoshi)
+                    </Typography>
+                    <Typography variant="body2" color="textPrimary">
+                      {contract.localCollateral}
+                    </Typography>
+                  </div>
+                </Grid>
+                <Grid item xs={4}>
+                  <div>
+                    <Typography
+                      className={classes.dataTitle}
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      Remote Collateral (Satoshi)
+                    </Typography>
+                    <Typography variant="body2" color="textPrimary">
+                      {contract.remoteCollateral}
+                    </Typography>
+                  </div>
+                </Grid>
               </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Created at (GMT)
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    2020-02-02 20:00:02
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Approved at (GMT)
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    -
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Published from
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    John Doe
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Published to
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    Nice company, Inc.
-                  </Typography>
-                </div>
-              </Grid>
-            </Grid>
-            <Typography
-              className={classes.dataSubtitle}
-              variant="h6"
-              color="textPrimary"
-            >
-              {'General term'}
-            </Typography>
-            <div className={classes.subtitleBorder}></div>
-            <Grid container spacing={3}>
-              <Grid item xs={8}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Local Party
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    John Doe
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={8}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Remote Party
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    Nice company, Inc.
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={8}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Contract ID
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    TFC0123-01
-                  </Typography>
-                </div>
-              </Grid>
-            </Grid>
-          </div>
+              <div className={classes.buttonDiv}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAccept}
+                >
+                  Accept
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleReject}
+                >
+                  Reject
+                </Button>
+              </div>
+            </div>
+          )}
+          {tabIndex === 1 && (
+            <Box display={tabIndex === 1 ? 'inline' : 'none'}>
+              <OutcomesGrid title={'All contracts'} data={contract.outcomes} />
+            </Box>
+          )}
         </div>
       </MainLayout>
     </div>

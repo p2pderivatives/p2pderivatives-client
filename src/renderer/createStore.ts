@@ -15,6 +15,7 @@ import { AuthenticationIPC } from './ipc/AuthenticationIPC'
 import { UserIPC } from './ipc/UserIPC'
 import { BitcoinIPC } from './ipc/BitcoinIPC'
 import FileIPC from './ipc/FileIPC'
+import { DlcIPCRenderer } from './ipc/DlcIPCRenderer'
 
 export const history = createBrowserHistory()
 
@@ -30,6 +31,7 @@ export default function configureStore(
       userAPI: new UserIPC(),
       bitcoinAPI: new BitcoinIPC(),
       fileAPI: new FileIPC(),
+      dlcAPI: new DlcIPCRenderer(),
     },
   })
 

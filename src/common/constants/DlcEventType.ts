@@ -1,4 +1,4 @@
 export enum DlcEventType {
-  Offer = 1,
-  Accept,
+  Accept = 1,
+  Reject,
 }

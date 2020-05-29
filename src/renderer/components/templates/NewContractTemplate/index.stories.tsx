@@ -26,6 +26,7 @@ export const newContract = (): ReactElement => (
         tab={1}
         users={testUsers}
         onTabChange={action('onTabChange')}
+        onPublish={action('onPublish')}
         onCancel={action('onCancel')}
       />
     </div>

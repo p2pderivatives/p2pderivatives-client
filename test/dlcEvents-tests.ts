@@ -6,7 +6,11 @@ import {
   GeneralAnswerProps,
 } from '../src/common/models/ipc/GeneralAnswer'
 import { DlcCall } from '../src/common/models/ipc/DlcCall'
-import { DLC_EVENT, GET_CONTRACTS } from '../src/common/constants/IPC'
+import {
+  DLC_EVENT,
+  GET_CONTRACTS,
+  OFFER_CONTRACT,
+} from '../src/common/constants/IPC'
 import { GetContractsCall } from '../src/common/models/ipc/GetContractsCall'
 import { ContractTest } from './Consts'
 import {
@@ -14,15 +18,16 @@ import {
   GetContractsAnswerProps,
 } from '../src/common/models/ipc/GetContractsAnswer'
 import { DlcEventType } from '../src/common/constants/DlcEventType'
+import { fromContract } from '../src/common/models/ipc/ContractSimple'
+import { ContractOfferCall } from './common/models/ipc/ContractOfferCall'
 
 @suite('IPC-DLC')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
   @test async ipcOfferContractShouldSucceed(): Promise<void> {
-    const result = (await ipc.callMain(DLC_EVENT, {
-      type: DlcEventType.Offer,
-      contract: ContractTest,
-    } as DlcCall)) as GeneralAnswerProps
+    const result = (await ipc.callMain(OFFER_CONTRACT, {
+      contract: fromContract(ContractTest),
+    } as ContractOfferCall)) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(result)
 
     expect(answer.isSuccess()).eq(true)
@@ -32,7 +37,7 @@ class Main {
   @test async ipcAcceptContractShouldSucceed(): Promise<void> {
     const result = (await ipc.callMain(DLC_EVENT, {
       type: DlcEventType.Accept,
-      contract: ContractTest,
+      contractId: ContractTest.id,
     } as DlcCall)) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(result)
 

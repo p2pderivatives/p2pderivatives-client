@@ -1,12 +1,13 @@
 import { ContractState } from '../../common/models/dlc/ContractState'
-import { Contract } from '../../common/models/dlc/Contract'
 import { DlcEventType } from '../../common/constants/DlcEventType'
+import { ContractSimple } from '../../common/models/ipc/ContractSimple'
 
 export interface DlcRendererAPI {
-  dlcCall(type: DlcEventType, contract: Contract): Promise<Contract>
+  dlcCall(type: DlcEventType, contractId: string): Promise<ContractSimple>
+  offerContract(contract: ContractSimple): Promise<ContractSimple>
   getContracts(
     id?: string,
     state?: ContractState,
     counterPartyName?: string
-  ): Promise<Contract[]>
+  ): Promise<ContractSimple[]>
 }

@@ -21,15 +21,20 @@ import Button from '../../atoms/Button'
 import BitcoinInput from '../../atoms/BitcoinInput'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
-import Outcome from '../../../../common/models/ipc/Outcome'
 import { User } from '../../../../common/models/user/User'
+import {
+  ContractSimple,
+  OutcomeSimple,
+} from '../../../../common/models/ipc/ContractSimple'
+import { ContractState } from '../../../../common/models/dlc/ContractState'
 
 type NewContractTemplateProps = {
   tab: number
   onTabChange: (tab: number) => void
   onCSVImport: () => void
-  data: Outcome[]
+  data: OutcomeSimple[]
   onCancel: () => void
+  onPublish: (contract: ContractSimple) => void
   users: User[]
 }
 
@@ -69,6 +74,12 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const classes = useStyles()
   const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
+  const [remoteParty, setRemoteParty] = useState('')
+  const [localCollateral, setLocalCollateral] = useState(0)
+  const [remoteCollateral, setRemoteCollateral] = useState(0)
+  const [feeRate, setFeeRate] = useState(0)
+  const [maturityDate, setMaturityDate] = useState(0)
+
 
   const oracleDates = [
     DateTime.utc().plus({ days: 1 }),
@@ -79,6 +90,32 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const handleTabChange = (index: number): void => {
     setTabIndex(index)
     props.onTabChange(index)
+  }
+
+  const handleUserSelect = (username: string): void => {
+    setRemoteParty(username)
+    setOpenAddressBook(false)
+  }
+
+  const handleMaturityChange = (
+    event: React.ChangeEvent<{ value: unknown }>
+  ): void => {
+    const valueString = event.target.value as string
+    setMaturityDate(parseInt(valueString))
+  }
+
+  const handlePublish = (): void => {
+    const contract: ContractSimple = {
+      counterPartyName: remoteParty,
+      feeRate: feeRate,
+      localCollateral: localCollateral,
+      remoteCollateral: remoteCollateral,
+      outcomes: props.data,
+      state: ContractState.Initial,
+      id: '',
+      maturityTime: new Date(maturityDate),
+    }
+    props.onPublish(contract)
   }
 
   useEffect(() => {
@@ -104,15 +141,10 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
             </Typography>
             <Grid className={classes.formGrid} container direction="column">
               <TextInput
-                label={'Local Party'}
-                inputProps={{ readOnly: true }}
-                value={'John Doe'}
-                helperText={'Read only'}
-              ></TextInput>
-              <TextInput
                 label={'Remote Party'}
-                value={'Nice company, Inc'}
+                value={remoteParty}
                 InputProps={{
+                  readOnly: true,
                   endAdornment: (
                     <IconButton
                       style={{ color: '#67B1F6' }}
@@ -123,8 +155,21 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                   ),
                 }}
               ></TextInput>
-              <BitcoinInput label={'Local collateral'} />
-              <BitcoinInput label={'Remote collateral'} />
+              <BitcoinInput
+                value={feeRate}
+                onChange={(value: number): void => setFeeRate(value)}
+                label={'Fee rate'}
+              />
+              <BitcoinInput
+                value={localCollateral}
+                onChange={(value: number): void => setLocalCollateral(value)}
+                label={'Local collateral'}
+              />
+              <BitcoinInput
+                value={remoteCollateral}
+                onChange={(value: number): void => setRemoteCollateral(value)}
+                label={'Remote collateral'}
+              />
               <FormControl>
                 <FormLabel color="secondary">Outcomes</FormLabel>
                 <Button
@@ -137,7 +182,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               </FormControl>
               <FormControl>
                 <FormLabel color="secondary">Maturity date</FormLabel>
-                <Select>
+                <Select value={maturityDate} onChange={handleMaturityChange}>
                   {oracleDates.map(d => (
                     <MenuItem key={d.toMillis()} value={d.toMillis()}>
                       {d.toString()}
@@ -150,6 +195,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                   variant="contained"
                   disabled
                   style={{ marginRight: '1rem' }}
+                  onClick={handlePublish}
                 >
                   Publish
                 </Button>
@@ -174,6 +220,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
         users={props.users}
         open={openAddressBook}
         onClose={(): void => setOpenAddressBook(false)}
+        onSelect={handleUserSelect}
       />
     </div>
   )

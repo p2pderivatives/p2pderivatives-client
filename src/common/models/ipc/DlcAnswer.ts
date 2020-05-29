@@ -1,24 +1,24 @@
 import { GeneralAnswer, GeneralAnswerProps } from './GeneralAnswer'
 import { IPCError } from './IPCError'
-import { Contract } from '../dlc/Contract'
+import { ContractSimple } from './ContractSimple'
 
 export interface DlcAnswerProps extends GeneralAnswerProps {
-  _contract: Contract
+  _contract: ContractSimple
 }
 
 export class DlcAnswer extends GeneralAnswer {
-  private readonly _contract: Contract
+  private readonly _contract: ContractSimple
 
   public constructor(
     success: boolean,
-    contract: Contract,
+    contract: ContractSimple,
     error: IPCError | null = null
   ) {
     super(success, error)
     this._contract = contract
   }
 
-  public getContract(): Contract {
+  public getContract(): ContractSimple {
     return this._contract
   }
 

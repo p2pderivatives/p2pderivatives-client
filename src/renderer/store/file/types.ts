@@ -1,4 +1,4 @@
-import Outcome from '../../../common/models/ipc/Outcome'
+import { OutcomeSimple } from '../../../common/models/ipc/ContractSimple';
 
 export enum FileActionTypes {
   OUTCOME_REQUEST = '@@file/OUTCOME_REQUEST',
@@ -7,7 +7,7 @@ export enum FileActionTypes {
 }
 
 export interface FileState {
-  readonly parsedOutcomes: Outcome[]
+  readonly parsedOutcomes: OutcomeSimple[]
   readonly parsed: boolean
   readonly processing: boolean
   readonly error?: string

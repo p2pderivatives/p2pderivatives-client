@@ -5,7 +5,12 @@ import Select from '@material-ui/core/Select'
 import { makeStyles, Theme } from '@material-ui/core/styles'
 import { MenuItem } from '@material-ui/core'
 
-export type TextInputProps = Omit<TextFieldProps, 'color' | 'variant' | 'type'>
+export type TextInputProps = Omit<
+  TextFieldProps,
+  'color' | 'variant' | 'type' | 'onChange'
+> & {
+  onChange: (satoshiValue: number) => void
+}
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -44,6 +49,16 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
     { label: 's (Satoshi)', short: 's' },
   ]
 
+  const handleValueChange = (
+    event: React.ChangeEvent<{ value: string }>
+  ): void => {
+    let val = parseFloat(event.target.value)
+    if (coinValue === 0) {
+      val = val * 100000000
+    }
+    props.onChange(val)
+  }
+
   const handleCoinChange = (
     event: React.ChangeEvent<{ value: unknown }>
   ): void => {
@@ -56,6 +71,7 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
       className={classes.root}
       {...props}
       type="number"
+      onChange={handleValueChange}
       InputProps={{
         endAdornment: (
           <InputAdornment position="end">
