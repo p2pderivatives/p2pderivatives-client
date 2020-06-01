@@ -54,6 +54,7 @@
     "@material-ui/icons": "^4.5.1",
     "@material-ui/lab": "^4.0.0-alpha.45",
     "@material-ui/pickers": "^3.2.10",
+    "axios": "^0.19.2",
     "bitcoin-core": "github:wleev/bitcoin-core#test-version",
     "connected-react-router": "^6.6.1",
     "date-fns": "^2.9.0",
@@ -63,7 +64,7 @@
     "grpc": "^1.24.2",
     "history": "^4.10.1",
     "js-yaml": "^3.13.1",
-    "luxon": "^1.21.3",
+    "luxon": "^1.24.1",
     "mui-datatables": "^2.14.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
@@ -120,7 +121,7 @@
     "react-docgen-typescript-loader": "^3.6.0",
     "react-scripts": "3.2.0",
     "storybook-react-router": "^1.0.8",
-    "ts-jest": "^24.2.0",
+    "ts-jest": "^24.3.0",
     "ts-node": "^8.5.4",
     "wait-on": "^3.3.0"
   }
