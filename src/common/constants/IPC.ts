@@ -12,3 +12,5 @@ export const GET_BALANCE = 'get-balance'
 export const GET_CONFIG = 'get-config'
 
 export const PARSE_OUTCOME = 'parse-outcome'
+
+export const GET_ORACLE_ASSET_CONFIG = 'get-oracle-asset-config'
