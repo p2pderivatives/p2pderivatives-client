@@ -1,18 +1,53 @@
 version: 2.1
-orbs:
-  node: circleci/node@2.0.1
 jobs:
   dependencies:
     docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci:latest
+      - image: prunel/p2pd-client:ci-debug
     steps:
       - checkout
-      - run: git submodule update --init --recursive
-      #necessary when root privileges
-      - run: npm config set unsafe-perm true
-      - node/install-packages:
-          # use a different format while debugging ex: debug-vX
-          cache-version: v2
+      - run:
+          name: Checkout submodules
+          command: |
+            git submodule update --init --recursive
+            git ls-tree HEAD p2pderivatives-proto | awk '{ print $3 }' > p2pd-proto-hash.txt
+
+      - restore_cache:
+          keys:
+            ## add -debug-vX suffix when debugging cache
+            - npm-deps-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}-debug
+      - run:
+          name: Install nodes modules
+          command: |
+            if [ -d "node_modules" ]; then
+              export HAS_NPM_CACHE="true"
+            fi
+            npm run-script preci && (cd gen-grpc && npm run-script preci)
+            if [ -z "$HAS_NPM_CACHE" ]; then
+              npm ci;
+              cd gen-grpc && npm run-script gen
+            fi
+      - save_cache:
+          key: npm-deps-v3-{{ .Branch }}-{{ checksum "package-lock.json" }}-debug
+          paths:
+            - node_modules
+
+      - restore_cache:
+          keys:
+            - gen-grpc-deps-v2-{{checksum "p2pd-proto-hash.txt"}}-debug
+      - run:
+          name: Generate gen grpc
+          command: |
+            if ls gen-grpc/*.proto >/dev/null 2>&1; then
+              export HAS_GEN_GRPC_CACHE="true"
+            fi
+            if [ -z "$HAS_GEN_GRPC_CACHE" ]; then
+              cd gen-grpc && npm run-script gen
+            fi
+      - save_cache:
+          key: gen-grpc-deps-v2-{{checksum "p2pd-proto-hash.txt"}}-debug
+          paths:
+            - gen-grpc
+
       - persist_to_workspace:
           root: .
           paths:
@@ -20,7 +55,7 @@ jobs:
 
   lint:
     docker:
-      - image: circleci/node
+      - image: prunel/p2pd-client:ci-debug
     steps:
       - attach_workspace:
           at: .
@@ -32,7 +67,7 @@ jobs:
 
   build:
     docker:
-      - image: circleci/node:latest-browsers
+      - image: prunel/p2pd-client:ci-debug
     steps:
       - attach_workspace:
           at: .
@@ -42,13 +77,13 @@ jobs:
 
   jest-tests:
     docker:
-      - image: circleci/node:latest-browsers
+      - image: prunel/p2pd-client:ci-debug
     steps:
       - attach_workspace:
           at: .
       - run:
           name: ReBuild grpc for node
-          command: npm install grpc --runtime=node
+          command: npm rebuild grpc --runtime=node
       - run:
           name: run jest test
           command: npm run test
@@ -59,13 +94,13 @@ jobs:
 
   mocha-tests:
     docker:
-      - image: circleci/node:latest-browsers
+      - image: prunel/p2pd-client:ci-browsers-debug
     steps:
       - attach_workspace:
           at: .
       - run:
           name: Rebuild grpc for electron
-          command: npm install grpc --runtime=electron --target=7.0.0
+          command: npm rebuild grpc --runtime=electron --target=7.0.0
       - run:
           name: Run mocha test
           command: npm run mocha -- --reporter mocha-junit-reporter

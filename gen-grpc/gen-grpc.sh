@@ -9,15 +9,15 @@ for file in $PROTO_DIR/*.proto; do
 done
 
 
-./node_modules/.bin/grpc_tools_node_protoc \
+$(npm bin)/grpc_tools_node_protoc \
 --js_out=import_style=commonjs,binary:$OUTPUT \
 --grpc_out=$OUTPUT \
---plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
+--plugin=protoc-gen-grpc=$(npm bin)/grpc_tools_node_protoc_plugin \
 -I $OUTPUT \
 $OUTPUT/*.proto
 
 protoc \
---plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
+--plugin=protoc-gen-ts=$(npm bin)/protoc-gen-ts \
 --ts_out=$OUTPUT \
 -I $OUTPUT \
 $OUTPUT/*.proto
