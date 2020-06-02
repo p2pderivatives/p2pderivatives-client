@@ -1,13 +1,14 @@
-import { GrpcConfig } from './GrpcConfig'
-import * as grpc from 'grpc'
 import {
-  IAuthenticationClient,
   AuthenticationClient,
+  IAuthenticationClient,
 } from '@internal/gen-grpc/authentication_grpc_pb'
-import { UserClient, IUserClient } from '@internal/gen-grpc/user_grpc_pb'
+import { IUserClient, UserClient } from '@internal/gen-grpc/user_grpc_pb'
 import * as fs from 'fs'
-import { GrpcAuth } from './GrpcAuth'
+import * as grpc from 'grpc'
 import { AuthenticationService } from './AuthenticationService'
+import { GrpcAuth } from './GrpcAuth'
+import { GrpcConfig, isSecureGrpcConfig } from './GrpcConfig'
+import { GrpcError } from './GrpcError'
 import { UserService } from './UserService'
 
 export class GrpcClient {
@@ -17,7 +18,14 @@ export class GrpcClient {
 
   public constructor(config: GrpcConfig, auth: GrpcAuth) {
     this._auth = auth
-
+    if (isSecureGrpcConfig(config)) {
+      if (!fs.existsSync(config.certificatePath)) {
+        throw new GrpcError(
+          'Bad config!',
+          'Did not provide valid certificate path for a secure connection!'
+        )
+      }
+    }
     const authClient = this.createClient<IAuthenticationClient>(
       AuthenticationClient,
       config
@@ -39,16 +47,13 @@ export class GrpcClient {
     clientType: new (s: string, creds: grpc.ChannelCredentials) => T,
     config: GrpcConfig
   ): T {
-    if (config.secure) {
+    if (isSecureGrpcConfig(config)) {
       return new clientType(
-        config.host.toString(),
+        config.host,
         grpc.credentials.createSsl(fs.readFileSync(config.certificatePath))
       )
     } else {
-      return new clientType(
-        config.host.toString(),
-        grpc.credentials.createInsecure()
-      )
+      return new clientType(config.host, grpc.credentials.createInsecure())
     }
   }
 }

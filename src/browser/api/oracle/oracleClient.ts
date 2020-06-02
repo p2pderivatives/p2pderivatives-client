@@ -14,6 +14,7 @@ import {
   APIRvalue,
   APISignature,
 } from './apitypes'
+import { OracleConfig } from './oracleConfig'
 import { OracleError } from './oracleError'
 
 export const HeaderRequestIDTag = 'Request-Id'
@@ -28,10 +29,6 @@ export interface OracleFail {
 type APIDLCRoute<T extends APIRvalue | APISignature> = T extends APISignature
   ? 'signature'
   : 'rvalue'
-
-export interface OracleConfig {
-  baseUrl: string
-}
 
 export default class OracleClient {
   private readonly _httpClient: AxiosInstance

@@ -1,11 +1,11 @@
+import { Empty, UserInfo } from '@internal/gen-grpc/user_pb'
 import getMockServer from '../../../../__mocks__/grpcUserMockServer'
-import { GrpcClient } from './GrpcClient'
-import { GrpcConfig } from './GrpcConfig'
-import { UserInfo, Empty } from '@internal/gen-grpc/user_pb'
 import { GrpcAuth } from './GrpcAuth'
+import { GrpcClient } from './GrpcClient'
+import { UnsecureGrpcConfig } from './GrpcConfig'
 
 const mockServer = getMockServer()
-const config = new GrpcConfig('127.0.0.1:50052', false)
+const config: UnsecureGrpcConfig = { host: '127.0.0.1:50052', secure: false }
 const auth = new GrpcAuth()
 const client = new GrpcClient(config, auth)
 

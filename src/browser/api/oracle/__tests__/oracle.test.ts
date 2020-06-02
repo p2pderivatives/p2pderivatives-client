@@ -177,7 +177,7 @@ describe('Oracle Client', () => {
       isAxiosError: true,
       response: {
         data: mockValue,
-        headers: { RequestID: expectedRequestID },
+        headers: { 'Request-Id': expectedRequestID },
         status: expectedStatusCode,
         statusText: '', // ignored
         config: {}, // ignored
