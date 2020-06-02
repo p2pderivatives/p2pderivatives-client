@@ -32,6 +32,8 @@ services:
       SERVER_PORT: 8080
       BITCOIND_HOST: bitcoind
       BITCOIND_PORT: 18443
+      ORACLE_HOST: oracle
+      ORACLE_PORT: 8080
     volumes:
       - reports:/home/circleci/project/reports
       - dev:/home/circleci/project

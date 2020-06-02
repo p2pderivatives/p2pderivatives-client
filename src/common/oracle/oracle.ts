@@ -7,6 +7,7 @@ export interface OracleAssetConfiguration {
 }
 
 export interface OracleRvalue {
+  oraclePublicKey: string
   publishDate: DateTime
   assetID: string
   rvalue: string

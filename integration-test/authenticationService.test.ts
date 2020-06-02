@@ -7,7 +7,6 @@ import {
 } from '../services/server/env'
 import { GrpcAuth } from '../src/browser/api/grpc/GrpcAuth'
 import { GrpcClient } from '../src/browser/api/grpc/GrpcClient'
-import { GrpcConfig } from '../src/browser/api/grpc/GrpcConfig'
 import { GrpcError } from '../src/browser/api/grpc/GrpcError'
 
 describe('authentification-service', () => {
@@ -16,10 +15,7 @@ describe('authentification-service', () => {
     let client: GrpcClient
     beforeEach(() => {
       auth = new GrpcAuth()
-      client = new GrpcClient(
-        new GrpcConfig(TEST_GRPC_CONFIG.host, TEST_GRPC_CONFIG.secure),
-        auth
-      )
+      client = new GrpcClient(TEST_GRPC_CONFIG, auth)
     })
 
     it('login-logout', async () => {

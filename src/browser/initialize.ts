@@ -1,17 +1,21 @@
-import { AuthenticationEvents } from './ipc/AuthenticationEvents'
-import { UserEvents } from './ipc/UserEvents'
+import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
 import { GrpcConfig } from './api/grpc/GrpcConfig'
-import { GrpcAuth } from './api/grpc/GrpcAuth'
+import { OracleClient, OracleConfig } from './api/oracle'
+import { AppConfig } from './config/config'
+import { AuthenticationEvents } from './ipc/AuthenticationEvents'
 import { BitcoinDEvents } from './ipc/BitcoinDEvents'
-import FileStorage from './storage/fileStorage'
 import { FileEvents } from './ipc/FileEvents'
+import { OracleEvents } from './ipc/OracleEvents'
+import { UserEvents } from './ipc/UserEvents'
+import FileStorage from './storage/fileStorage'
 
 const initialize = async (): Promise<void> => {
-  const auth = new GrpcAuth()
-  const config = GrpcConfig.fromConfigOrDefault('./settings.yaml')
+  const appConfig = new AppConfig('./settings.default.yaml')
 
-  const client = new GrpcClient(config, auth)
+  const auth = new GrpcAuth()
+  const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
+  const client = new GrpcClient(grpcConfig, auth)
 
   const authEvents = new AuthenticationEvents(client)
   authEvents.registerReplies()
@@ -24,6 +28,11 @@ const initialize = async (): Promise<void> => {
 
   const fileEvents = new FileEvents()
   fileEvents.registerReplies()
+
+  const oracleConfig = appConfig.parse<OracleConfig>('oracle')
+  const oracleClient = new OracleClient(oracleConfig)
+  const oracleEvents = new OracleEvents(oracleClient)
+  oracleEvents.registerReplies()
 }
 
 export default initialize
