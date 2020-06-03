@@ -1,5 +1,6 @@
 import { AcceptedContract, AcceptedContractProps } from './AcceptedContract'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { SignMessage } from '../SignMessage'
 
 export interface SignedContractProps extends AcceptedContractProps {
   readonly fundTxSignatures: string[]
@@ -44,6 +45,16 @@ export class SignedContract extends AcceptedContract
       utxoPublicKeys,
       localRefundSignature,
       localCetSignatures
+    )
+  }
+
+  ToSignMessage(cetSignatures: string[]): SignMessage {
+    return new SignMessage(
+      this.id,
+      this.fundTxSignatures,
+      cetSignatures,
+      this.refundLocalSignature,
+      this.localUtxoPublicKeys
     )
   }
 }

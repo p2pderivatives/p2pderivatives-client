@@ -24,12 +24,20 @@ export class BitcoinDEvents implements IPCEvents {
   public async Initialize(): Promise<void> {
     const result = await this._storage.ReadBitcoinDConfig()
     if (result.hasError()) {
-      // TODO(tibo): handle error once blocking config screen is implemented
-      return
+      // TODO(tibo): better error handling
+      throw Error()
     }
 
     this._config = result.getValue()
     await this._client.configure(this._config)
+  }
+
+  public getClient(): BitcoinDClient {
+    return this._client
+  }
+
+  public getConfig(): BitcoinDConfig | null {
+    return this._config
   }
 
   public registerReplies(): void {

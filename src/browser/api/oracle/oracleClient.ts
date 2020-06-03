@@ -30,7 +30,23 @@ type APIDLCRoute<T extends APIRvalue | APISignature> = T extends APISignature
   ? 'signature'
   : 'rvalue'
 
-export default class OracleClient {
+export interface OracleClientApi {
+  getOraclePublicKey(): Promise<FailableOracle<string>>
+  getAssets(): Promise<FailableOracle<string[]>>
+  getOracleConfig(
+    assetID: string
+  ): Promise<FailableOracle<OracleAssetConfiguration>>
+  getRvalue(
+    assetID: string,
+    date: Date | DateTime
+  ): Promise<FailableOracle<OracleRvalue>>
+  getSignature(
+    assetID: string,
+    date: Date | DateTime
+  ): Promise<FailableOracle<OracleSignature>>
+}
+
+export default class OracleClient implements OracleClientApi {
   private readonly _httpClient: AxiosInstance
 
   constructor(config: OracleConfig) {

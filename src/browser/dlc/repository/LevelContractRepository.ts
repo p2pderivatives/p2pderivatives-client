@@ -8,6 +8,8 @@ import { RepositoryResult } from '../../storage/RepositoryResult'
 import { Contract } from '../../../common/models/dlc/Contract'
 import { ContractQuery, ExtendedContractQuery } from '../service/ContractQuery'
 import contractConverter from '../models/contract/ContractConverter'
+import { DateTime } from 'luxon'
+import { ContractState } from '../../../common/models/dlc/ContractState'
 
 export class LevelContractRepository implements ContractRepository {
   private readonly _db: LevelUp
@@ -38,7 +40,7 @@ export class LevelContractRepository implements ContractRepository {
     }
     try {
       const key = this.GetKey(contract.id)
-      return this._db.put(key, contract)
+      await this._db.put(key, contract)
     } catch (error) {
       throw new RepositoryError(ErrorCode.InternalError, error.message)
     }
@@ -105,10 +107,18 @@ export class LevelContractRepository implements ContractRepository {
       .filter(key => key in contract)
       .every(key => query[key] === contract[key])
 
-    if (hasEqualKeys && query.maturedBefore) {
-      return contract.maturityTime < query.maturedBefore
-    }
+    return (
+      hasEqualKeys &&
+      this.IsMatureBefore(query, contract) &&
+      this.HasOneOfState(query, contract)
+    )
+  }
 
-    return hasEqualKeys
+  private IsMatureBefore(query: ExtendedContractQuery, contract: Contract) {
+    return !query.maturedBefore || contract.maturityTime < query.maturedBefore
+  }
+
+  private HasOneOfState(query: ExtendedContractQuery, contract: Contract) {
+    return !query.states || query.states.includes(contract.state)
   }
 }

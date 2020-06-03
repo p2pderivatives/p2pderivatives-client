@@ -4,13 +4,15 @@ import { ContractState } from '../../../../common/models/dlc/ContractState'
 
 export interface MaturedContractProps extends SignedContractProps {
   readonly finalOutcome: Outcome
+  readonly oracleSignature: string
 }
 
 export class MaturedContract extends SignedContract
   implements MaturedContractProps {
   protected constructor(
     props: SignedContractProps,
-    readonly finalOutcome: Outcome
+    readonly finalOutcome: Outcome,
+    readonly oracleSignature: string
   ) {
     super(
       props,
@@ -23,11 +25,13 @@ export class MaturedContract extends SignedContract
 
   static CreateMaturedContract(
     props: SignedContractProps,
-    finalOutcome: Outcome
+    finalOutcome: Outcome,
+    oracleSignature: string
   ): MaturedContract {
     return new MaturedContract(
       { ...props, state: ContractState.Mature },
-      finalOutcome
+      finalOutcome,
+      oracleSignature
     )
   }
 }

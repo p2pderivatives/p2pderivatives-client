@@ -1,4 +1,5 @@
 import { ContractState } from '../../../common/models/dlc/ContractState'
+import { DateTime } from 'luxon'
 
 export interface ContractQuery {
   readonly state?: ContractState
@@ -7,5 +8,6 @@ export interface ContractQuery {
 }
 
 export interface ExtendedContractQuery extends ContractQuery {
-  readonly maturedBefore?: Date
+  readonly states?: ContractState[]
+  readonly maturedBefore?: DateTime
 }

@@ -18,8 +18,16 @@ import { DlcEvents } from './ipc/DlcEvents'
 import { FileEvents } from './ipc/FileEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
+import { DlcManager } from './dlc/models/DlcManager'
+import { DlcEventHandler } from './dlc/models/DlcEventHandler'
+import { ContractUpdater } from './dlc/models/ContractUpdater'
+import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
+import { DlcMessageService } from './api/grpc/DlcMessageService'
+import winston from 'winston'
 
 let db: LevelUp | null = null
+let oracleClient: OracleClient | null = null
+let client: GrpcClient | null = null
 
 async function InitializeDB(userName: string): Promise<void> {
   const userPath = electron.app.getPath('userData')
@@ -58,6 +66,32 @@ async function LoginCallBack(userName: string): Promise<void> {
 
   const contractRepository = new LevelContractRepository(db as LevelUp)
   const dlcService = new DlcService(contractRepository)
+  // TODO(tibo): would make more sense to do outside of event object
+  await bitcoinEvents.Initialize()
+  const bitcoindConfig = bitcoinEvents.getConfig()
+  if (bitcoindConfig == null) {
+    throw Error()
+  }
+  const contractUpdater = new ContractUpdater(
+    bitcoinEvents.getClient(),
+    bitcoindConfig.walletPassphrase ? bitcoindConfig.walletPassphrase : ''
+  )
+  if (oracleClient == null || client == null) {
+    throw Error()
+  }
+  const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
+
+  const dlcManager = new DlcManager(
+    eventHandler,
+    dlcService,
+    bitcoinEvents.getClient(),
+    new DlcIPCBrowser(),
+    oracleClient,
+    client.getDlcService(),
+    winston.createLogger(),
+    1
+  )
+  // TODO(Wesley): pass the manager to the DlcEvents and call relevant functions
   const dlcEvents = new DlcEvents(dlcService)
   dlcEvents.registerReplies()
 }
@@ -70,7 +104,7 @@ export function Initialize(): void {
   const appConfig = new AppConfig('./settings.default.yaml')
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
-  const client = new GrpcClient(grpcConfig, auth)
+  client = new GrpcClient(grpcConfig, auth)
 
   const authEvents = new AuthenticationEvents(
     client,
@@ -86,7 +120,7 @@ export function Initialize(): void {
   fileEvents.registerReplies()
 
   const oracleConfig = appConfig.parse<OracleConfig>('oracle')
-  const oracleClient = new OracleClient(oracleConfig)
+  oracleClient = new OracleClient(oracleConfig)
   const oracleEvents = new OracleEvents(oracleClient)
   oracleEvents.registerReplies()
 }

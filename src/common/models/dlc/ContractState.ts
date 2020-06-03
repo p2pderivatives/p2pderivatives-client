@@ -8,6 +8,7 @@ export enum ContractState {
   Confirmed,
   Mature,
   UnilateralClosed,
+  UnilateralClosedByOther,
   MutualClosed,
   MutualCloseProposed,
   Refunded,

@@ -22,6 +22,7 @@ import {
   UnilateralClosedContractProps,
   UnilateralClosedContract,
 } from './UnilateralClosedContract'
+import { DateTime } from 'luxon'
 
 interface Converter {
   state: ContractState
@@ -127,7 +128,7 @@ function restoreProperties(obj: any): any {
     }
     if (typeof value !== 'object' || value === null) {
       if (isDateTime(key)) {
-        const updated = new Date(value)
+        const updated = DateTime.fromISO(value, { setZone: true })
         obj[key] = updated
       }
     } else {
@@ -188,7 +189,11 @@ function createInitialContractFromProps(
 function createMaturedContractFromProps(
   props: MaturedContractProps
 ): MaturedContract {
-  return MaturedContract.CreateMaturedContract(props, props.finalOutcome)
+  return MaturedContract.CreateMaturedContract(
+    props,
+    props.finalOutcome,
+    props.oracleSignature
+  )
 }
 
 function createMutualClosedContractFromProps(
@@ -209,6 +214,7 @@ function createMutualCloseProposedContractFromProps(
     props,
     props.mutualCloseTx,
     props.mutualCloseTxId,
+    props.ownMutualClosingSignature,
     props.proposeTimeOut
   )
 }

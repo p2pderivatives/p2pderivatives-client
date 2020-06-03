@@ -32,6 +32,7 @@ export class DlcEvents implements IPCEvents {
           name: 'olivia',
           rValue: '1',
           publicKey: '1',
+          assetId: 'btcusd',
         },
         premiumInfo: {
           premiumAmount: Amount.FromBitcoin(1),

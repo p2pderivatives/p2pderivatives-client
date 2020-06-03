@@ -1,0 +1,192 @@
+import ContractInfo from '../../../common/models/dlc/ContractInfo'
+import PartyInputs from './PartyInputs'
+import OracleInfo from './OracleInfo'
+import { OfferMessage } from './OfferMessage'
+import { AcceptMessage } from './AcceptMessage'
+import { SignMessage } from './SignMessage'
+import Amount from '../../../common/models/dlc/Amount'
+import { ContractState } from '../../../common/models/dlc/ContractState'
+import { PrivateParams } from './PrivateParams'
+
+export class Contract {
+  state: ContractState = ContractState.Offered
+  readonly contractInfo: ContractInfo
+  readonly oracleInfo: OracleInfo
+  readonly isLocalParty: boolean
+  private _localPartyInputs?: PartyInputs
+  private _remotePartyInputs?: PartyInputs
+  private _privateParams?: PrivateParams
+  private _fundTxHex?: string
+  private _fundTxId?: string
+  private _fundTxOutAmount?: Amount
+  private _fundTxSignatures?: string[]
+  private _refundTransaction?: string
+  private _refundLocalSignature?: string
+  private _refundRemoteSignature?: string
+  private _localCetsHex?: string[]
+  private _remoteCetsHex?: string[]
+  private _cetSignatures?: string[]
+
+  constructor(
+    state: ContractState,
+    contractInfo: ContractInfo,
+    oracleInfo: OracleInfo,
+    isLocalParty: boolean,
+    localPartyInput?: PartyInputs
+  ) {
+    this.state = state
+    this.contractInfo = contractInfo
+    this.oracleInfo = oracleInfo
+    this.isLocalParty = isLocalParty
+    this._localPartyInputs = localPartyInput
+  }
+
+  public static FromOfferMessage(offerMessage: OfferMessage) {
+    const contractInfo = {
+      id: offerMessage.contractId,
+      counterPartyName: offerMessage.localPartyName,
+      localCollateral: offerMessage.localCollateral,
+      remoteCollateral: offerMessage.remoteCollateral,
+      outcomes: offerMessage.outcomes,
+      maturityTime: offerMessage.maturityTime,
+      feeRate: offerMessage.feeRate,
+      premiumInfo: offerMessage.premiumInfo,
+    }
+    return new Contract(
+      ContractState.Offered,
+      contractInfo,
+      offerMessage.oracleInfo,
+      false,
+      offerMessage.localPartyInputs
+    )
+  }
+
+  public GetOfferMessage(partyName: string): OfferMessage {
+    return {
+      localPartyName: partyName,
+      contractId: this.contractInfo.id,
+      localCollateral: this.contractInfo.localCollateral,
+      remoteCollateral: this.contractInfo.remoteCollateral,
+      maturityTime: this.contractInfo.maturityTime,
+      outcomes: this.contractInfo.outcomes,
+      oracleInfo: this.oracleInfo,
+      localPartyInputs: this.localPartyInputs,
+      feeRate: this.contractInfo.feeRate,
+      premiumInfo: this.contractInfo.premiumInfo,
+    }
+  }
+
+  public ApplyAcceptMessage(acceptMessage: AcceptMessage) {
+    this.cetSignatures = acceptMessage.cetSignatures
+    this.refundRemoteSignature = acceptMessage.refundSignature
+    this.remotePartyInputs = acceptMessage.remotePartyInputs
+  }
+
+  public ApplySignMessage(signMessage: SignMessage) {
+    this.cetSignatures = signMessage.cetSignatures
+    this.refundLocalSignature = signMessage.refundSignature
+    this.fundTxSignatures = signMessage.fundTxSignatures
+  }
+
+  public get localPartyInputs(): PartyInputs {
+    return this.GetOrThrow('localPartyInputs', this._localPartyInputs)
+  }
+
+  public set localPartyInputs(value: PartyInputs) {
+    this._localPartyInputs = value
+  }
+
+  public get remotePartyInputs(): PartyInputs {
+    return this.GetOrThrow('remotePartyInputs', this._remotePartyInputs)
+  }
+  public set remotePartyInputs(value: PartyInputs) {
+    this._remotePartyInputs = value
+  }
+
+  public get privateParams(): PrivateParams {
+    return this.GetOrThrow('_privateParams', this._privateParams)
+  }
+  public set privateParams(value: PrivateParams) {
+    this._privateParams = value
+  }
+
+  public get fundTxHex(): string {
+    return this.GetOrThrow('_fundTxHex', this._fundTxHex)
+  }
+  public set fundTxHex(value: string) {
+    this._fundTxHex = value
+  }
+
+  public get fundTxId(): string {
+    return this.GetOrThrow('_fundTxId', this._fundTxId)
+  }
+  public set fundTxId(value: string) {
+    this._fundTxId = value
+  }
+
+  public get fundTxOutAmount(): Amount {
+    return this.GetOrThrow('_fundTxOutAmount', this._fundTxOutAmount)
+  }
+  public set fundTxOutAmount(value: Amount) {
+    this._fundTxOutAmount = value
+  }
+
+  public get fundTxSignatures(): string[] {
+    return this.GetOrThrow('_fundTxSignatures', this._fundTxSignatures)
+  }
+  public set fundTxSignatures(value: string[]) {
+    this._fundTxSignatures = value
+  }
+
+  public get refundTransaction(): string {
+    return this.GetOrThrow('_refundTransaction', this._refundTransaction)
+  }
+  public set refundTransaction(value: string) {
+    this._refundTransaction = value
+  }
+
+  public get refundLocalSignature(): string {
+    return this.GetOrThrow('_refundLocalSignature', this._refundLocalSignature)
+  }
+  public set refundLocalSignature(value: string) {
+    this._refundLocalSignature = value
+  }
+
+  public get refundRemoteSignature(): string {
+    return this.GetOrThrow(
+      '_refundRemoteSignature',
+      this._refundRemoteSignature
+    )
+  }
+  public set refundRemoteSignature(value: string) {
+    this._refundRemoteSignature = value
+  }
+
+  public get localCetsHex(): string[] {
+    return this.GetOrThrow('_localCetsHex', this._localCetsHex)
+  }
+  public set localCetsHex(value: string[]) {
+    this._localCetsHex = value
+  }
+
+  public get remoteCetsHex(): string[] {
+    return this.GetOrThrow('_remoteCetsHex', this._remoteCetsHex)
+  }
+  public set remoteCetsHex(value: string[]) {
+    this._remoteCetsHex = value
+  }
+
+  public get cetSignatures(): string[] {
+    return this.GetOrThrow('_cetSignatures', this._cetSignatures)
+  }
+  public set cetSignatures(value: string[]) {
+    this._cetSignatures = value
+  }
+
+  private GetOrThrow<T>(memberName: string, member?: T) {
+    if (member === undefined) {
+      throw new Error('Trying to access undefined member ' + memberName)
+    }
+    return member
+  }
+}

@@ -3,6 +3,7 @@ import { Outcome } from './Outcome'
 import { PremiumInfo } from './PremiumInfo'
 import { ContractState } from './ContractState'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
+import { DateTime } from 'luxon'
 
 export interface Contract {
   readonly state: ContractState
@@ -12,7 +13,7 @@ export interface Contract {
   readonly localCollateral: Amount
   readonly remoteCollateral: Amount
   readonly outcomes: Outcome[]
-  readonly maturityTime: Date
+  readonly maturityTime: DateTime
   readonly feeRate: number
   readonly premiumInfo?: PremiumInfo
 }

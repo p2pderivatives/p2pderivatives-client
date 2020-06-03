@@ -14,7 +14,7 @@ export class UnilateralClosedContract extends MaturedContract {
     readonly closingTxHex: string,
     readonly closingTxId: string
   ) {
-    super(props, props.finalOutcome)
+    super(props, props.finalOutcome, props.oracleSignature)
   }
 
   static CreateUnilateralClosedContract(

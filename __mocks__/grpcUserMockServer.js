@@ -1,6 +1,6 @@
 const { createMockServer } = require('grpc-mock')
 
-module.exports = function getMockServer() {
+module.exports = function getMockServer(dlcMessages) {
   return createMockServer({
     protoPath: './gen-grpc/user.proto',
     packageName: 'usercontroller',
@@ -41,13 +41,11 @@ module.exports = function getMockServer() {
         method: 'receiveDlcMessages',
         streamType: 'server',
         input: {},
-        stream: [
-          { output: { destName: 'test', orgName: 'test', payload: 0x1 } },
-        ],
+        stream: dlcMessages,
       },
       {
         method: 'sendDlcMessage',
-        input: { destName: 'test', orgName: 'test', payload: 0x1 },
+        input: '[^]*',
         output: {},
       },
     ],

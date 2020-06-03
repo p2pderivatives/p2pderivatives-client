@@ -14,7 +14,7 @@ export class MutualClosedContract extends MaturedContract {
     readonly mutualCloseTxId: string,
     readonly mutualCloseSignature?: string
   ) {
-    super(props, props.finalOutcome)
+    super(props, props.finalOutcome, props.oracleSignature)
   }
 
   static CreateMutualClosedContract(
@@ -22,7 +22,7 @@ export class MutualClosedContract extends MaturedContract {
     mutualCloseTx: string,
     mutualCloseTxId: string,
     mutualCloseSignature?: string
-  ): MaturedContract {
+  ): MutualClosedContract {
     return new MutualClosedContract(
       {
         ...props,

@@ -10,10 +10,12 @@ import { GrpcAuth } from './GrpcAuth'
 import { GrpcConfig, isSecureGrpcConfig } from './GrpcConfig'
 import { GrpcError } from './GrpcError'
 import { UserService } from './UserService'
+import { DlcMessageService } from './DlcMessageService'
 
 export class GrpcClient {
   private _authService: AuthenticationService
   private _userService: UserService
+  private _dlcService: DlcMessageService
   private _auth: GrpcAuth
 
   public constructor(config: GrpcConfig, auth: GrpcAuth) {
@@ -33,6 +35,7 @@ export class GrpcClient {
     this._authService = new AuthenticationService(authClient, this._auth)
     const userClient = this.createClient<IUserClient>(UserClient, config)
     this._userService = new UserService(userClient, this._auth)
+    this._dlcService = new DlcMessageService(userClient, this._auth)
   }
 
   public getAuthenticationService(): AuthenticationService {
@@ -41,6 +44,10 @@ export class GrpcClient {
 
   public getUserService(): UserService {
     return this._userService
+  }
+
+  public getDlcService(): DlcMessageService {
+    return this._dlcService
   }
 
   private createClient<T>(

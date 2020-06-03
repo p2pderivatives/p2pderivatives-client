@@ -4,17 +4,10 @@ import { PremiumInfo } from '../../../../common/models/dlc/PremiumInfo'
 import Amount from '../../../../common/models/dlc/Amount'
 import { Outcome } from '../../../../common/models/dlc/Outcome'
 import { Contract } from '../../../../common/models/dlc/Contract'
+import { OfferMessage } from '../OfferMessage'
+import { DateTime } from 'luxon'
 
 export interface InitialContractProps extends Contract {
-  readonly state: ContractState
-  readonly id: string
-  readonly counterPartyName: string
-  readonly localCollateral: Amount
-  readonly remoteCollateral: Amount
-  readonly outcomes: Outcome[]
-  readonly maturityTime: Date
-  readonly feeRate: number
-  readonly premiumInfo?: PremiumInfo
   readonly oracleInfo: OracleInfo
   readonly isLocalParty: boolean
 }
@@ -27,7 +20,7 @@ export class InitialContract implements InitialContractProps {
     readonly localCollateral: Amount,
     readonly remoteCollateral: Amount,
     readonly outcomes: Outcome[],
-    readonly maturityTime: Date,
+    readonly maturityTime: DateTime,
     readonly feeRate: number,
     readonly oracleInfo: OracleInfo,
     readonly isLocalParty: boolean,
@@ -40,7 +33,7 @@ export class InitialContract implements InitialContractProps {
     localCollateral: Amount,
     remoteCollateral: Amount,
     outcomes: Outcome[],
-    maturityTime: Date,
+    maturityTime: DateTime,
     feeRate: number,
     oracleInfo: OracleInfo,
     isLocalParty: boolean,
@@ -58,6 +51,24 @@ export class InitialContract implements InitialContractProps {
       oracleInfo,
       isLocalParty,
       premiumInfo
+    )
+  }
+
+  static FromOfferMessage(
+    offerMessage: OfferMessage,
+    counterPartyName: string
+  ): InitialContract {
+    return this.CreateInitialContract(
+      offerMessage.contractId,
+      counterPartyName,
+      offerMessage.localCollateral,
+      offerMessage.remoteCollateral,
+      offerMessage.outcomes,
+      offerMessage.maturityTime,
+      offerMessage.feeRate,
+      offerMessage.oracleInfo,
+      false,
+      offerMessage.premiumInfo
     )
   }
 }

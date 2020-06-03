@@ -2,6 +2,7 @@ import { OfferedContract, OfferedContractProps } from './OfferedContract'
 import { PartyInputs } from '../PartyInputs'
 import Amount from '../../../../common/models/dlc/Amount'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { AcceptMessage } from '../AcceptMessage'
 
 export interface AcceptedContractProps extends OfferedContractProps {
   readonly remotePartyInputs: PartyInputs
@@ -55,6 +56,15 @@ export class AcceptedContract extends OfferedContract
       localCetsHex,
       remoteCetsHex,
       remoteCetSignatures
+    )
+  }
+
+  ToAcceptMessage(): AcceptMessage {
+    return new AcceptMessage(
+      this.id,
+      this.remotePartyInputs,
+      this.cetSignatures,
+      this.refundRemoteSignature
     )
   }
 }

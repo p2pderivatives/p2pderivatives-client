@@ -6,6 +6,9 @@ import Client, {
 } from 'bitcoin-core'
 
 import { BitcoinDConfig } from '../../../common/models/ipc/BitcoinDConfig'
+import * as Utils from '../../dlc/utils/CfdUtils'
+import Amount from '../../../common/models/dlc/Amount'
+import { Utxo } from '../../dlc/models/Utxo'
 
 export default class BitcoinDClient {
   private rpcUser = ''
@@ -77,16 +80,13 @@ export default class BitcoinDClient {
       }
     }
     if (options.walletPassphrase) {
-      await this.client.walletPassphrase(this.walletPassphrase, 60)
+      await this.client.walletPassphrase(this.walletPassphrase, 10)
     }
     await this.client.getNetworkInfo()
   }
 
-  public async sendRawTransaction(
-    hexString: string,
-    allowHighFees = false
-  ): Promise<void> {
-    return await this.getClient().sendRawTransaction(hexString, allowHighFees)
+  public async sendRawTransaction(hexString: string): Promise<void> {
+    return await this.getClient().sendRawTransaction(hexString)
   }
 
   public async getTransaction(
@@ -132,5 +132,41 @@ export default class BitcoinDClient {
       minConfirmations,
       includeWatchOnly
     )
+  }
+
+  public async createWallet(name: string) {
+    return await this.getClient().createWallet(name, false, false, name)
+  }
+
+  public async getNewPrivateKey(): Promise<string> {
+    await this.getClient().walletPassphrase(this.walletPassphrase, 10)
+    const address = await this.getClient().getNewAddress()
+    return this.dumpPrivHex(address)
+  }
+
+  public async dumpPrivHex(address: string) {
+    const wif = await this.getClient().dumpPrivKey(address)
+    return Utils.getPrivkeyFromWif(wif)
+  }
+
+  public async getUtxosForAmount(amount: Amount): Promise<Utxo[]> {
+    const unspent = await this.getClient().listUnspent(1)
+    const utxosIn: Utxo[] = unspent.map(utxo => {
+      return {
+        txid: utxo.txid,
+        vout: utxo.vout,
+        amount: Amount.FromBitcoin(utxo.amount),
+        address: utxo.address,
+      }
+    })
+
+    const utxoSet = Utils.selectUtxosForAmount(amount, utxosIn)
+
+    return utxoSet
+  }
+
+  public async generateBlocksToWallet(nbBlocks: number): Promise<void> {
+    const address = await this.getClient().getNewAddress()
+    await this.getClient().generateToAddress(nbBlocks, address)
   }
 }

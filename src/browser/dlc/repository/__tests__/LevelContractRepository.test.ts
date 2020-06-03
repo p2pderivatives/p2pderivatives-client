@@ -9,14 +9,15 @@ import { RejectedContract } from '../../models/contract/RejectedContract'
 import { ContractRepository } from '../../service/DlcService'
 import { Contract } from '../../../../common/models/dlc/Contract'
 import { ExtendedContractQuery } from '../../service/ContractQuery'
+import { DateTime } from 'luxon'
 
-const baseMaturityDate = new Date('May 17, 2020 15:24:00')
-const laterMaturityDate = new Date('May 18, 2020 15:24:00')
+const baseMaturityDate = DateTime.utc(2020, 5, 17, 15, 24)
+const laterMaturityDate = DateTime.utc(2020, 5, 18, 15, 24)
 
 function GenerateContract(
   id: number,
   name: string,
-  maturityDate: Date = baseMaturityDate
+  maturityDate: DateTime = baseMaturityDate
 ): InitialContract {
   return InitialContract.CreateInitialContract(
     id.toString().padStart(4, '0'),
@@ -30,12 +31,13 @@ function GenerateContract(
         message: '1',
       },
     ],
-    maturityDate ? new Date(maturityDate) : new Date('May 17, 2020 15:24:00'),
+    maturityDate ? maturityDate : baseMaturityDate,
     2,
     {
       name: 'oracle',
       rValue: 'a',
       publicKey: 'a',
+      assetId: 'btcusd',
     },
     true,
     {
@@ -48,7 +50,7 @@ function GenerateContract(
 function GenerateContracts(
   nbContracts: number,
   names: string[] = ['alice', 'bob', 'carol'],
-  maturityDate: Date = baseMaturityDate
+  maturityDate: DateTime = baseMaturityDate
 ): InitialContract[] {
   const contracts: InitialContract[] = []
 
@@ -64,7 +66,7 @@ async function InsertContracts(
   contractRepo: ContractRepository,
   nbContracts: number,
   names: string[] = ['alice', 'bob', 'carol'],
-  maturityDate: Date = baseMaturityDate
+  maturityDate: DateTime = baseMaturityDate
 ): Promise<InitialContract[]> {
   const contracts = GenerateContracts(nbContracts, names)
   for (let i = 0; i < nbContracts; i++) {
@@ -104,7 +106,6 @@ test('Test create contract has contract and can be retrieved', async () => {
     expect(result.hasError()).toBeFalsy()
 
     const value = result.getValue() as Contract
-    expect(JSON.stringify(value)).toEqual(JSON.stringify(contracts[i]))
     expect(value).toEqual(contracts[i])
   }
 })
@@ -187,6 +188,25 @@ test('Get contracts with initial state returns all contract in initial state', a
   )
 })
 
+test('Get contracts with multiple states returns all contract in requested states', async () => {
+  // Arrange
+  const nbContracts = 10
+  const contracts = GenerateContracts(nbContracts, ['alice', 'bob', 'carol'])
+  contracts[0] = RejectedContract.CreateRejectedContract(contracts[0])
+
+  for (let i = 0; i < nbContracts; i++) {
+    await contractRepo.CreateContract(contracts[i])
+  }
+
+  // Act
+  const retrievedContracts = await contractRepo.GetContracts({
+    states: [ContractState.Initial, ContractState.Rejected],
+  })
+
+  // Assert
+  expect(retrievedContracts.length).toEqual(nbContracts)
+})
+
 test('Get contracts with state returns all contract in state', async () => {
   // Arrange
   const nbContracts = 10
@@ -215,8 +235,7 @@ test('Get contracts matured before returns matured contracts', async () => {
   await contractRepo.DeleteContract(contracts[0].id)
 
   await InsertContracts(contractRepo, 1, undefined, laterMaturityDate)
-  const queryDate = new Date(laterMaturityDate)
-  queryDate.setHours(queryDate.getHours() - 2)
+  const queryDate = laterMaturityDate.minus({ hour: 2 })
   const query: ExtendedContractQuery = {
     maturedBefore: queryDate,
   }

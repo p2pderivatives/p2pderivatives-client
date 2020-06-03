@@ -2,6 +2,7 @@ import { InitialContract, InitialContractProps } from './InitialContract'
 import { PartyInputs } from '../PartyInputs'
 import { PrivateParams } from '../PrivateParams'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { OfferMessage } from '../OfferMessage'
 
 export interface OfferedContractProps extends InitialContractProps {
   readonly localPartyInputs: PartyInputs
@@ -39,6 +40,20 @@ export class OfferedContract extends InitialContract
       { ...props, state: ContractState.Offered },
       localPartyInputs,
       privateParams
+    )
+  }
+
+  ToOfferMessage(): OfferMessage {
+    return new OfferMessage(
+      this.id,
+      this.localCollateral,
+      this.remoteCollateral,
+      this.maturityTime,
+      this.outcomes,
+      this.oracleInfo,
+      this.localPartyInputs,
+      this.feeRate,
+      this.premiumInfo
     )
   }
 }
