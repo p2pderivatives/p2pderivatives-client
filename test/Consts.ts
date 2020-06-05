@@ -1,6 +1,7 @@
 import { Contract } from './common/models/dlc/Contract'
 import Amount from '../src/common/models/dlc/Amount'
 import { ContractState } from '../src/common/models/dlc/ContractState'
+import { DateTime } from 'luxon'
 
 export const ContractTest: Contract = {
   state: ContractState.Initial,
@@ -19,7 +20,8 @@ export const ContractTest: Contract = {
     name: '1',
     rValue: '1',
     publicKey: '1',
+    assetId: 'btcusd',
   },
-  maturityTime: new Date(),
+  maturityTime: new DateTime(),
   feeRate: 2,
 }

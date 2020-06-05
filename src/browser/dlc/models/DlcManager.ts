@@ -6,7 +6,7 @@ import { DlcIPCBrowserAPI } from '../../ipc/DlcBrowserAPI'
 import { DlcEventType } from '../../../common/constants/DlcEventType'
 import { MutualCloseProposedContract } from './contract/MutualCloseProposedContract'
 import { DateTime } from 'luxon'
-import { isSuccessfull } from '../../../common/utils/failable'
+import { isSuccessful } from '../../../common/utils/failable'
 import { DlcMessageServiceApi } from '../../api/grpc/DlcMessageService'
 import { Contract } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
@@ -146,7 +146,7 @@ export class DlcManager {
           contract.maturityTime
         )
 
-        if (isSuccessfull(result)) {
+        if (isSuccessful(result)) {
           const value = result.value
           const outcome = contract.outcomes.find(x => x.message == value.value)
           if (!outcome) {
@@ -291,7 +291,7 @@ export class DlcManager {
           assetId,
           maturityTime
         )
-        if (isSuccessfull(result)) {
+        if (isSuccessful(result)) {
           return {
             value: result.value.value,
             signature: result.value.signature,
