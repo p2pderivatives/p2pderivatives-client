@@ -198,10 +198,6 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       options: {
         filter: false,
         sort: true,
-        // eslint-disable-next-line react/display-name
-        customBodyRender: (value: Date): ReactElement => (
-          <span>{value.toLocaleString()}</span>
-        ),
       },
     },
   ]

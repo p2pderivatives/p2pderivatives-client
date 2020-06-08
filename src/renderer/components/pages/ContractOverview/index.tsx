@@ -15,6 +15,7 @@ const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 const ContractOverviewPage: FC = () => {
   const dispatch = useDispatch()
   const contracts = useSelector(state => state.dlc.contracts)
+  const username = useSelector(state => state.login.username)
 
   useEffect(() => {
     console.log('dispatching contract request')
@@ -28,6 +29,7 @@ const ContractOverviewPage: FC = () => {
   return (
     <div style={{ position: 'absolute', height: '100%', width: '100%' }}>
       <ContractListTemplate
+        username={username}
         data={contracts}
         onContractClicked={handleContractClicked}
       />

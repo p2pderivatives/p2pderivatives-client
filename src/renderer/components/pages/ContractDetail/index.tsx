@@ -21,6 +21,7 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
   const dispatch = useDispatch()
   const contracts = useSelector(state => state.dlc.contracts)
   const contract = contracts.find(c => c.id === contractId)
+  const username = useSelector(state => state.login.username)
 
   useEffect(() => {
     if (!contract) {
@@ -42,7 +43,10 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
       {contract !== undefined && (
         <ContractDetailTemplate
           data={contract}
-          isProposal={contract.state === ContractState.Offered}
+          isProposal={
+            contract.state === ContractState.Offered &&
+            contract.counterPartyName === username
+          }
           acceptContract={handleAccept}
           rejectContract={handleReject}
         />

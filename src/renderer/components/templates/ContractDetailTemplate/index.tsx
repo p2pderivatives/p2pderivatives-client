@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
 import { makeStyles, Typography, Grid, Link } from '@material-ui/core'
 import Box from '@material-ui/core/Box'
 import MainLayout from '../../organisms/MainLayout'
@@ -90,7 +91,12 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
     <div className={classes.rootContainer}>
       <MainLayout>
         <div className={classes.contentDiv}>
-          <Link className={classes.backLink} variant="body2">
+          <Link
+            className={classes.backLink}
+            variant="body2"
+            component={RouterLink}
+            to="/main"
+          >
             🠐 ALL CONTRACTS
           </Link>
           <Tabs
@@ -190,22 +196,24 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
                   </div>
                 </Grid>
               </Grid>
-              <div className={classes.buttonDiv}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAccept}
-                >
-                  Accept
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleReject}
-                >
-                  Reject
-                </Button>
-              </div>
+              {props.isProposal && (
+                <div className={classes.buttonDiv}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAccept}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleReject}
+                  >
+                    Reject
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           {tabIndex === 1 && (

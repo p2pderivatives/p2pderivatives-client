@@ -98,6 +98,7 @@ export const contractList = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <div style={{ width: 1366, height: 768 }}>
       <ContractListTemplate
+        username={'John Doe'}
         data={contracts}
         onContractClicked={action('onContractClicked')}
       />

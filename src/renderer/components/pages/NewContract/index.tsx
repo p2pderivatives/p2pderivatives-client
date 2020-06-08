@@ -8,8 +8,8 @@ import {
 
 import NewContractTemplate from '../../templates/NewContractTemplate'
 import { ApplicationState } from '../../../store'
-import { outcomeRequest } from '../../../store/file/actions'
-import { goBack } from 'connected-react-router'
+import { outcomeRequest, outcomeSuccess } from '../../../store/file/actions'
+import { goBack, push } from 'connected-react-router'
 import { userListRequest } from '../../../store/user/actions'
 import { offerRequest } from '../../../store/dlc/actions'
 import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
@@ -26,6 +26,7 @@ const NewContractPage: FC = () => {
   const parsed = useSelector(state => state.file.parsed)
   const processing = useSelector(state => state.file.processing)
   const userList = useSelector(state => state.user.userList)
+  const username = useSelector(state => state.login.username)
 
   const dispatchOutcomeRequest = (filepath: string): void => {
     dispatch(outcomeRequest(filepath))
@@ -44,11 +45,12 @@ const NewContractPage: FC = () => {
     console.log('AJJAJAJ')
     console.log(contract)
     dispatch(offerRequest(contract))
-    dispatch(goBack())
+    dispatch(outcomeSuccess([])) // clear outcomes like this for now
+    dispatch(push('/main'))
   }
 
   const handleCancel = (): void => {
-    dispatch(goBack())
+    dispatch(push('/main'))
   }
 
   useEffect(() => {

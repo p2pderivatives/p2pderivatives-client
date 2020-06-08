@@ -22,6 +22,7 @@ export const bitcoinInput = () => (
       disabled={boolean('Disabled', false)}
       helperText={text('Helper text', 'Some help')}
       onChange={action('onChange')}
+      onCoinChange={action('onCoinChange')}
     />
   </MuiThemeProvider>
 )

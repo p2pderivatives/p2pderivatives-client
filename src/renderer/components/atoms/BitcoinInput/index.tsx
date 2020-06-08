@@ -1,4 +1,4 @@
-import React, { FC, useState, ReactElement } from 'react'
+import React, { FC, useState, ReactElement, useEffect } from 'react'
 import TextField, { TextFieldProps } from '@material-ui/core/TextField'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import Select from '@material-ui/core/Select'
@@ -11,6 +11,7 @@ export type TextInputProps = Omit<
 > & {
   isBitcoin: boolean
   onChange: (value: number, isBitcoin: boolean) => void
+  onCoinChange: (isBitcoin: boolean) => void
 }
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -53,7 +54,12 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
   const handleValueChange = (
     event: React.ChangeEvent<{ value: string }>
   ): void => {
-    const val = parseFloat(event.target.value)
+    let val: number
+    if (coinValue === 0) {
+      val = parseFloat(event.target.value)
+    } else {
+      val = parseInt(event.target.value)
+    }
     props.onChange(val, coinValue === 0)
   }
 
@@ -62,7 +68,16 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
   ): void => {
     const coinIdx = parseInt(event.target.value as string)
     setCoinValue(coinIdx)
+    props.onCoinChange(coinValue === 0)
   }
+
+  useEffect(() => {
+    if (props.isBitcoin) {
+      setCoinValue(0)
+    } else {
+      setCoinValue(0)
+    }
+  }, [props.isBitcoin])
 
   return (
     <TextField

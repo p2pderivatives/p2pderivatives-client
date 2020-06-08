@@ -9,6 +9,7 @@ import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
 
 type ContractListTemplateProps = {
+  username: string
   data: ContractSimple[]
   onContractClicked: (contractId: string) => void
 }
@@ -59,8 +60,11 @@ const ContractListTemplate: FC<ContractListTemplateProps> = (
 
   useEffect(() => {
     setContractData(props.data)
-    const newOffered = props.data.filter(c => c.state === ContractState.Offered)
-      .length
+    const newOffered = props.data.filter(
+      c =>
+        c.state === ContractState.Offered &&
+        c.counterPartyName !== props.username
+    ).length
     const offeredIndex = tabStatuses.findIndex(arr =>
       arr.some(c => c === ContractState.Offered)
     )
@@ -72,9 +76,16 @@ const ContractListTemplate: FC<ContractListTemplateProps> = (
     if (statuses.length === 0) {
       setContractData(props.data)
     } else {
-      const filteredData = props.data.filter(c =>
-        statuses.some(state => state === c.state)
-      )
+      const filteredData = props.data.filter(c => {
+        let show = statuses.some(state => state === c.state)
+        if (
+          statuses.some(state => state === ContractState.Offered) &&
+          c.state === ContractState.Offered
+        ) {
+          show = show && c.counterPartyName !== props.username
+        }
+        return show
+      })
       setContractData(filteredData)
     }
     setTabIndex(tabIdx)

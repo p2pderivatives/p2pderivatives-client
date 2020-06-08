@@ -178,6 +178,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               <BitcoinInput
                 value={localCollateral.value}
                 isBitcoin={localCollateral.isBitcoin}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  const collat = localCollateral
+                  collat.isBitcoin = isBitcoin
+                  setLocalCollateral(collat)
+                }}
                 onChange={(value: number, isBitcoin: boolean): void =>
                   setLocalCollateral({ value, isBitcoin })
                 }
@@ -186,6 +191,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               <BitcoinInput
                 value={remoteCollateral.value}
                 isBitcoin={remoteCollateral.isBitcoin}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  const collat = localCollateral
+                  collat.isBitcoin = isBitcoin
+                  setLocalCollateral(collat)
+                }}
                 onChange={(value: number, isBitcoin: boolean): void =>
                   setRemoteCollateral({ value, isBitcoin })
                 }
