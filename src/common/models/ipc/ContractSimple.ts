@@ -70,7 +70,7 @@ export const toContract = (
         remote: Amount.FromSatoshis(o.remote),
       } as Outcome
     }),
-    maturityTime: DateTime.fromISO(contract.maturityTime),
+    maturityTime: DateTime.fromISO(contract.maturityTime, { setZone: true }),
     feeRate: contract.feeRate,
     premiumInfo: contract.premiumInfo
       ? {

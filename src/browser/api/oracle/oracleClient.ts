@@ -56,7 +56,7 @@ export default class OracleClient implements OracleClientApi {
   }
 
   async getOraclePublicKey(): Promise<FailableOracle<string>> {
-    const resp = await this.get<APIOraclePublicKey>('oracle')
+    const resp = await this.get<APIOraclePublicKey>('oracle/publickey')
     if (isSuccessful(resp)) {
       // transform response data
       const apiResp = resp.value

@@ -113,7 +113,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       outcomes: props.data,
       state: ContractState.Initial,
       id: '',
-      maturityTime: DateTime.fromMillis(maturityDate).toISODate(),
+      maturityTime: DateTime.fromMillis(maturityDate)
+        .toUTC()
+        .toISO({
+          suppressMilliseconds: true,
+        }),
     }
     props.onPublish(contract)
   }

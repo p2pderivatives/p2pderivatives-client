@@ -71,12 +71,12 @@ export class DlcManager {
       const result = await this.oracleClient.getRvalue('btcusd', maturityTime)
       console.log(2)
       if (!isSuccessful(result)) {
-        throw new DlcError(`Could not get rValue: ${result.error}`)
+        throw new DlcError(`Could not get rValue: ${result.error.message}`)
       }
       const result2 = await this.oracleClient.getOraclePublicKey()
       console.log(3)
       if (!isSuccessful(result2)) {
-        throw new DlcError(`Could not get rValue: ${result2.error}`)
+        throw new DlcError(`Could not get public key: ${result2.error.message}`)
       }
       console.log(4)
       const values = result.value
