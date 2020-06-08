@@ -9,7 +9,8 @@ export type TextInputProps = Omit<
   TextFieldProps,
   'color' | 'variant' | 'type' | 'onChange'
 > & {
-  onChange: (satoshiValue: number) => void
+  isBitcoin: boolean
+  onChange: (value: number, isBitcoin: boolean) => void
 }
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -43,7 +44,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
   const classes = useStyles()
-  const [coinValue, setCoinValue] = useState(0)
+  const [coinValue, setCoinValue] = useState(props.isBitcoin ? 0 : 1)
   const coinValues = [
     { label: '₿ (BTC)', short: '₿' },
     { label: 's (Satoshi)', short: 's' },
@@ -52,11 +53,8 @@ const BitcoinInput: FC<TextInputProps> = (props: TextInputProps) => {
   const handleValueChange = (
     event: React.ChangeEvent<{ value: string }>
   ): void => {
-    let val = parseFloat(event.target.value)
-    if (coinValue === 0) {
-      val = val * 100000000
-    }
-    props.onChange(val)
+    const val = parseFloat(event.target.value)
+    props.onChange(val, coinValue === 0)
   }
 
   const handleCoinChange = (

@@ -17,6 +17,7 @@ export default {
 export const bitcoinInput = () => (
   <MuiThemeProvider theme={theme}>
     <BitcoinInput
+      isBitcoin={true}
       label={text('Label', 'Label goes here')}
       disabled={boolean('Disabled', false)}
       helperText={text('Helper text', 'Some help')}

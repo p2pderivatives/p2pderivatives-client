@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect } from 'react'
 
-import { DateTime } from 'luxon'
+import { DateTime, Zone } from 'luxon'
 import {
   makeStyles,
   Typography,
@@ -75,8 +75,14 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
   const [remoteParty, setRemoteParty] = useState('')
-  const [localCollateral, setLocalCollateral] = useState(0)
-  const [remoteCollateral, setRemoteCollateral] = useState(0)
+  const [localCollateral, setLocalCollateral] = useState({
+    value: 0,
+    isBitcoin: true,
+  })
+  const [remoteCollateral, setRemoteCollateral] = useState({
+    value: 0,
+    isBitcoin: true,
+  })
   const [feeRate, setFeeRate] = useState(0)
   const [maturityDate, setMaturityDate] = useState(0)
 
@@ -105,11 +111,17 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   }
 
   const handlePublish = (): void => {
+    const localCol = localCollateral.isBitcoin
+      ? localCollateral.value * 100000000
+      : localCollateral.value
+    const remoteCol = remoteCollateral.isBitcoin
+      ? remoteCollateral.value * 100000000
+      : remoteCollateral.value
     const contract: ContractSimple = {
       counterPartyName: remoteParty,
       feeRate: feeRate,
-      localCollateral: localCollateral,
-      remoteCollateral: remoteCollateral,
+      localCollateral: localCol,
+      remoteCollateral: remoteCol,
       outcomes: props.data,
       state: ContractState.Initial,
       id: '',
@@ -121,9 +133,6 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     }
     props.onPublish(contract)
   }
-
-  console.log('HOHO')
-  console.log(maturityDate)
 
   useEffect(() => {
     setTabIndex(props.tab)
@@ -143,9 +152,6 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               {'General term'}
             </Typography>
             <div className={classes.titleBorder}></div>
-            <Typography color="textPrimary" variant="caption">
-              {'Your work is auto-saved.'}
-            </Typography>
             <Grid className={classes.formGrid} container direction="column">
               <TextInput
                 label={'Remote Party'}
@@ -162,19 +168,28 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                   ),
                 }}
               ></TextInput>
-              <BitcoinInput
+              <TextInput
+                type="number"
                 value={feeRate}
-                onChange={(value: number): void => setFeeRate(value)}
+                onChange={(event: React.ChangeEvent<{ value: string }>): void =>
+                  setFeeRate(parseFloat(event.target.value))
+                }
                 label={'Fee rate'}
               />
               <BitcoinInput
-                value={localCollateral}
-                onChange={(value: number): void => setLocalCollateral(value)}
+                value={localCollateral.value}
+                isBitcoin={localCollateral.isBitcoin}
+                onChange={(value: number, isBitcoin: boolean): void =>
+                  setLocalCollateral({ value, isBitcoin })
+                }
                 label={'Local collateral'}
               />
               <BitcoinInput
-                value={remoteCollateral}
-                onChange={(value: number): void => setRemoteCollateral(value)}
+                value={remoteCollateral.value}
+                isBitcoin={remoteCollateral.isBitcoin}
+                onChange={(value: number, isBitcoin: boolean): void =>
+                  setRemoteCollateral({ value, isBitcoin })
+                }
                 label={'Remote collateral'}
               />
               <FormControl>
