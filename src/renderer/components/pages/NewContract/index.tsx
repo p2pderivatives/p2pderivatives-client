@@ -41,7 +41,10 @@ const NewContractPage: FC = () => {
   }
 
   const handlePublish = (contract: ContractSimple): void => {
+    console.log('AJJAJAJ')
+    console.log(contract)
     dispatch(offerRequest(contract))
+    dispatch(goBack())
   }
 
   const handleCancel = (): void => {

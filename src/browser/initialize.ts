@@ -48,6 +48,9 @@ async function InitializeDB(userName: string): Promise<void> {
       valueEncoding: 'json',
     }
 
+    console.log('USERDBPATH')
+    console.log(userDbPath)
+
     db = levelup(encoding(leveldown(path.join(userDbPath, 'leveldb')), options))
   }
 }

@@ -62,7 +62,15 @@ export class AcceptedContract extends OfferedContract
   ToAcceptMessage(): AcceptMessage {
     return new AcceptMessage(
       this.id,
-      this.remotePartyInputs,
+      {
+        ...this.remotePartyInputs,
+        utxos: this.remotePartyInputs.utxos.map(x => {
+          return {
+            ...x,
+            amount: x.amount.GetSatoshiAmount(),
+          }
+        }),
+      },
       this.cetSignatures,
       this.refundRemoteSignature
     )

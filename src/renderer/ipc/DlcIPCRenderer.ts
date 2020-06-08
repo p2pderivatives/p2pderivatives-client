@@ -1,6 +1,10 @@
 import { DlcRendererAPI } from './DlcRendererAPI'
 import { ContractState } from '../../common/models/dlc/ContractState'
-import { GET_CONTRACTS, DLC_EVENT, OFFER_CONTRACT } from '../../common/constants/IPC'
+import {
+  GET_CONTRACTS,
+  DLC_EVENT,
+  OFFER_CONTRACT,
+} from '../../common/constants/IPC'
 import { GetContractsCall } from '../../common/models/ipc/GetContractsCall'
 import {
   GetContractsAnswer,
@@ -15,10 +19,12 @@ const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 export class DlcIPCRenderer implements DlcRendererAPI {
   dlcCall(type: DlcEventType, contractId: string): Promise<ContractSimple> {
     const dlcCall: DlcCall = { type: type, contractId: contractId }
-    return ipc.callMain(DLC_EVENT, dlcCall) as Promise<ContractSimple>  //TODO get answer instead of ContractSimple
+    return ipc.callMain(DLC_EVENT, dlcCall) as Promise<ContractSimple> //TODO get answer instead of ContractSimple
   }
 
   offerContract(contract: ContractSimple): Promise<ContractSimple> {
+    console.log('CONTRACT')
+    console.log(contract)
     const offerCall: ContractOfferCall = { contract: contract }
     return ipc.callMain(OFFER_CONTRACT, offerCall) as Promise<ContractSimple> //TODO get answer instead of ContractSimple
   }

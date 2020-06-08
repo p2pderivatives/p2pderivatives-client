@@ -20,6 +20,8 @@ import { ConfirmedContract } from './contract/ConfirmedContract'
 import { MutualCloseProposedContract } from './contract/MutualCloseProposedContract'
 import { SignedContract } from './contract/SignedContract'
 import { DateTime } from 'luxon'
+import Amount from '../../../common/models/dlc/Amount'
+import { v4 } from 'uuid'
 
 export class DlcEventHandler {
   private readonly _contractUpdater: ContractUpdater
@@ -32,7 +34,7 @@ export class DlcEventHandler {
 
   async OnSendOffer(contract: Contract): Promise<OfferedContract> {
     const initialContract = InitialContract.CreateInitialContract(
-      contract.id,
+      v4(),
       contract.counterPartyName,
       contract.localCollateral,
       contract.remoteCollateral,
@@ -63,7 +65,15 @@ export class DlcEventHandler {
     await this._dlcService.CreateContract(initialContract)
     const offeredContract = await this._contractUpdater.ToOfferedContract(
       initialContract,
-      offerMessage.localPartyInputs
+      {
+        ...offerMessage.localPartyInputs,
+        utxos: offerMessage.localPartyInputs.utxos.map(x => {
+          return {
+            ...x,
+            amount: Amount.FromSatoshis(x.amount),
+          }
+        }),
+      }
     )
 
     await this._dlcService.UpdateContract(offeredContract)
@@ -112,7 +122,15 @@ export class DlcEventHandler {
 
     const acceptedContract = await this._contractUpdater.ToAcceptContract(
       offeredContract,
-      acceptMessage.remotePartyInputs,
+      {
+        ...acceptMessage.remotePartyInputs,
+        utxos: acceptMessage.remotePartyInputs.utxos.map(x => {
+          return {
+            ...x,
+            amount: Amount.FromSatoshis(x.amount),
+          }
+        }),
+      },
       acceptMessage.refundSignature,
       acceptMessage.cetSignatures
     )

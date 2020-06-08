@@ -6,3 +6,10 @@ export interface Utxo {
   readonly amount: Amount
   readonly address: string
 }
+
+export interface UtxoSimple {
+  readonly txid: string
+  readonly vout: number
+  readonly amount: number
+  readonly address: string
+}

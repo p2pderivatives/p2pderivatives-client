@@ -61,10 +61,16 @@ export class InitialContract implements InitialContractProps {
     return this.CreateInitialContract(
       offerMessage.contractId,
       counterPartyName,
-      offerMessage.localCollateral,
-      offerMessage.remoteCollateral,
-      offerMessage.outcomes,
-      offerMessage.maturityTime,
+      Amount.FromSatoshis(offerMessage.localCollateral),
+      Amount.FromSatoshis(offerMessage.remoteCollateral),
+      offerMessage.outcomes.map(x => {
+        return {
+          message: x.message,
+          local: Amount.FromSatoshis(x.local),
+          remote: Amount.FromSatoshis(x.remote),
+        }
+      }),
+      DateTime.fromISO(offerMessage.maturityTime, { setZone: true }),
       offerMessage.feeRate,
       offerMessage.oracleInfo,
       false,

@@ -46,13 +46,13 @@ function createOfferMessages(nb: number): OfferMessage[] {
 function createOfferMessage(id: number): OfferMessage {
   return {
     contractId: id.toString(),
-    localCollateral: Amount.FromBitcoin(1),
-    remoteCollateral: Amount.FromBitcoin(1),
-    maturityTime: DateTime.utc(2020, 5, 15),
+    localCollateral: Amount.FromBitcoin(1).GetSatoshiAmount(),
+    remoteCollateral: Amount.FromBitcoin(1).GetSatoshiAmount(),
+    maturityTime: DateTime.utc(2020, 5, 15).toISO(),
     outcomes: [
       {
-        local: Amount.FromBitcoin(1),
-        remote: Amount.FromBitcoin(1),
+        local: Amount.FromBitcoin(1).GetSatoshiAmount(),
+        remote: Amount.FromBitcoin(1).GetSatoshiAmount(),
         message: '1',
       },
     ],

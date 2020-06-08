@@ -46,12 +46,26 @@ export class OfferedContract extends InitialContract
   ToOfferMessage(): OfferMessage {
     return new OfferMessage(
       this.id,
-      this.localCollateral,
-      this.remoteCollateral,
-      this.maturityTime,
-      this.outcomes,
+      this.localCollateral.GetSatoshiAmount(),
+      this.remoteCollateral.GetSatoshiAmount(),
+      this.maturityTime.toISO(),
+      this.outcomes.map(x => {
+        return {
+          message: x.message,
+          local: x.local.GetSatoshiAmount(),
+          remote: x.local.GetSatoshiAmount(),
+        }
+      }),
       this.oracleInfo,
-      this.localPartyInputs,
+      {
+        ...this.localPartyInputs,
+        utxos: this.localPartyInputs.utxos.map(x => {
+          return {
+            ...x,
+            amount: x.amount.GetSatoshiAmount(),
+          }
+        }),
+      },
       this.feeRate,
       this.premiumInfo
     )

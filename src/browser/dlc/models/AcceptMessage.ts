@@ -1,4 +1,4 @@
-import { PartyInputs } from './PartyInputs'
+import { PartyInputsSimple } from './PartyInputs'
 import { DlcTypedMessage, DlcMessageType } from './DlcTypedMessage'
 
 export class AcceptMessage implements DlcTypedMessage {
@@ -6,7 +6,7 @@ export class AcceptMessage implements DlcTypedMessage {
 
   constructor(
     readonly contractId: string,
-    readonly remotePartyInputs: PartyInputs,
+    readonly remotePartyInputs: PartyInputsSimple,
     readonly cetSignatures: string[],
     readonly refundSignature: string
   ) {}

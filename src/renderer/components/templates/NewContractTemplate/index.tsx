@@ -90,7 +90,6 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     const date = DateTime.utc()
       .plus({ minutes: i })
       .set({ second: 0, millisecond: 0 })
-    console.log(date.toMillis())
     return date
   })
 
