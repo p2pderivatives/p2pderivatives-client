@@ -33,6 +33,7 @@ export function* handleOffer(
   action: ReturnType<typeof offerRequest>
 ): SagaIterator {
   try {
+    console.log("Everyday I'm shuddling")
     const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
     const contract = yield call(dlcAPI.offerContract, action.payload)
     yield put(dlcActionSuccess(contract))

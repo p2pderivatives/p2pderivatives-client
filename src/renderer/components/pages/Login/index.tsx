@@ -33,16 +33,23 @@ const LoginPage: FC = () => {
 
   const handleClose = (): void => {
     if (isLoggedIn) {
+      console.log('Requesting config')
       dispatch(configRequest())
       setConfigRequested(true)
     }
   }
 
   useEffect(() => {
+    console.log('HAHAHA')
+    console.log(isLoggedIn)
+    console.log(configRequested)
+    console.log(configProcessing)
     if (isLoggedIn && configRequested && !configProcessing) {
       if (!(bitcoinConfig === undefined || bitcoinConfig === {})) {
+        console.log('Pushing main')
         dispatch(push('/main'))
       } else {
+        console.log('Pushing initial settings')
         dispatch(push('/initial-settings'))
       }
     }

@@ -1,8 +1,8 @@
-import { DlcEventHandler } from './DlcEventHandler'
+import { DlcEventHandler, DlcError } from './DlcEventHandler'
 import { DlcService } from '../service/DlcService'
 import BitcoinDClient from '../../api/bitcoind'
 import { SignedContract } from './contract/SignedContract'
-import { DlcIPCBrowserAPI } from '../../ipc/DlcBrowserAPI'
+import { DlcBrowserAPI } from '../../ipc/DlcBrowserAPI'
 import { DlcEventType } from '../../../common/constants/DlcEventType'
 import { MutualCloseProposedContract } from './contract/MutualCloseProposedContract'
 import { DateTime } from 'luxon'
@@ -23,6 +23,12 @@ import { AcceptedContract } from './contract/AcceptedContract'
 import { OfferedContract } from './contract/OfferedContract'
 import { OracleClientApi } from '../../api/oracle/oracleClient'
 import { Mutex } from 'await-semaphore'
+import {
+  fromContract,
+  toContract,
+  ContractSimple,
+} from '../../../common/models/ipc/ContractSimple'
+import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
 
 export class DlcManager {
   private readonly timeoutHandle: NodeJS.Timeout
@@ -32,7 +38,7 @@ export class DlcManager {
     private readonly eventHandler: DlcEventHandler,
     private readonly dlcService: DlcService,
     private readonly bitcoindClient: BitcoinDClient,
-    private readonly ipcClient: DlcIPCBrowserAPI,
+    private readonly ipcClient: DlcBrowserAPI,
     private readonly oracleClient: OracleClientApi,
     private readonly dlcMessageService: DlcMessageServiceApi,
     private readonly logger: Logger,
@@ -53,9 +59,37 @@ export class DlcManager {
     this.timeoutHandle.unref()
   }
 
-  async SendContractOffer(contract: Contract): Promise<OfferedContract> {
+  async SendContractOffer(
+    contractSimple: ContractSimple
+  ): Promise<OfferedContract> {
     try {
+      console.log(contractSimple.maturityTime)
+      const maturityTime = DateTime.fromISO(contractSimple.maturityTime, {
+        setZone: true,
+      })
+      console.log(1)
+      const result = await this.oracleClient.getRvalue('btcusd', maturityTime)
+      console.log(2)
+      if (!isSuccessful(result)) {
+        throw new DlcError(`Could not get rValue: ${result.error}`)
+      }
+      const result2 = await this.oracleClient.getOraclePublicKey()
+      console.log(3)
+      if (!isSuccessful(result2)) {
+        throw new DlcError(`Could not get rValue: ${result2.error}`)
+      }
+      console.log(4)
+      const values = result.value
+      const oracleInfo: OracleInfo = {
+        name: 'super oracle',
+        publicKey: result2.value,
+        rValue: values.rvalue,
+        assetId: values.assetID,
+      }
+      const contract = toContract(contractSimple, oracleInfo)
+      console.log(5)
       const offeredContract = await this.eventHandler.OnSendOffer(contract)
+      console.log(6)
       const offerMessage = offeredContract.ToOfferMessage()
       await this.dlcMessageService.sendDlcMessage(
         offerMessage,
@@ -64,7 +98,9 @@ export class DlcManager {
 
       return offeredContract
     } catch (error) {
-      this.logger.error(`Could not offer contract ${contract.id}: ${error}`)
+      this.logger.error(
+        `Could not offer contract ${contractSimple.id}: ${error}`
+      )
       throw error
     }
   }
@@ -183,7 +219,7 @@ export class DlcManager {
             contract.id
           )
           // TODO(tibo): refactor ipc call to remove eventtype
-          await this.ipcClient.dlcCall(DlcEventType.Accept, confirmedContract)
+          await this.ipcClient.dlcUpdate(fromContract(confirmedContract))
         }
       } catch (error) {
         this.logger.error(
@@ -208,15 +244,12 @@ export class DlcManager {
           const closedContract = await this.eventHandler.OnUnilateralClose(
             contract.id
           )
-          await this.ipcClient.dlcCall(DlcEventType.Accept, closedContract)
+          await this.ipcClient.dlcUpdate(fromContract(closedContract))
         } else if (confirmations >= 6) {
           const mutualClosedContract = await this.eventHandler.OnMutualCloseConfirmed(
             contract.id
           )
-          await this.ipcClient.dlcCall(
-            DlcEventType.Accept,
-            mutualClosedContract
-          )
+          await this.ipcClient.dlcUpdate(fromContract(mutualClosedContract))
         }
       } catch (error) {
         this.logger.error(
@@ -303,14 +336,13 @@ export class DlcManager {
     )
 
     // TODO(Wesley): change call here
-    await this.ipcClient.dlcCall(DlcEventType.Accept, mutualClosedContract)
+    await this.ipcClient.dlcUpdate(fromContract(mutualClosedContract))
   }
 
   private async HandleOffer(from: string, message: OfferMessage) {
     const offerContract = await this.eventHandler.OnOfferMessage(message, from)
 
-    // TODO(Wesley): refactor ipc call.
-    await this.ipcClient.dlcCall(DlcEventType.Accept, offerContract)
+    await this.ipcClient.dlcUpdate(fromContract(offerContract))
   }
 
   private async HandleSign(from: string, message: SignMessage) {
@@ -319,8 +351,7 @@ export class DlcManager {
       message
     )
 
-    // TODO(Wesley): refactor ipc call
-    await this.ipcClient.dlcCall(DlcEventType.Accept, broadcastContract)
+    await this.ipcClient.dlcUpdate(fromContract(broadcastContract))
   }
 
   private async HandleReject(from: string, message: RejectMessage) {
@@ -330,6 +361,6 @@ export class DlcManager {
     )
 
     // TODO(Wesley): refactor ipc call
-    await this.ipcClient.dlcCall(DlcEventType.Accept, rejectedContract)
+    await this.ipcClient.dlcUpdate(fromContract(rejectedContract))
   }
 }

@@ -24,10 +24,13 @@ import { ContractUpdater } from './dlc/models/ContractUpdater'
 import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
 import { DlcMessageService } from './api/grpc/DlcMessageService'
 import winston from 'winston'
+import { BitcoinDConfig } from '../common/models/ipc/BitcoinDConfig'
+import BitcoinDClient from './api/bitcoind'
 
 let db: LevelUp | null = null
 let oracleClient: OracleClient | null = null
 let client: GrpcClient | null = null
+let dlcManager: DlcManager | null = null
 
 async function InitializeDB(userName: string): Promise<void> {
   const userPath = electron.app.getPath('userData')
@@ -57,34 +60,32 @@ async function FinalizeDB(): Promise<void> {
   }
 }
 
-async function LoginCallBack(userName: string): Promise<void> {
-  await InitializeDB(userName)
-  const bitcoinEvents = new BitcoinDEvents(
-    new LevelConfigRepository(db as LevelUp)
-  )
-  bitcoinEvents.registerReplies()
-
+function BitcoindConfigCallback(
+  config: BitcoinDConfig,
+  bitcoinDClient: BitcoinDClient
+) {
+  console.log('BITCOIND CONFIG CALLBACK!!!!!')
+  if (oracleClient === null || client === null || db == null) {
+    throw Error()
+  }
   const contractRepository = new LevelContractRepository(db as LevelUp)
   const dlcService = new DlcService(contractRepository)
-  // TODO(tibo): would make more sense to do outside of event object
-  await bitcoinEvents.Initialize()
-  const bitcoindConfig = bitcoinEvents.getConfig()
-  if (bitcoindConfig == null) {
-    throw Error()
-  }
   const contractUpdater = new ContractUpdater(
-    bitcoinEvents.getClient(),
-    bitcoindConfig.walletPassphrase ? bitcoindConfig.walletPassphrase : ''
+    bitcoinDClient,
+    config.walletPassphrase ? config.walletPassphrase : ''
   )
-  if (oracleClient == null || client == null) {
-    throw Error()
+
+  if (dlcManager !== null) {
+    dlcManager.finalize()
+    dlcManager = null
   }
+
   const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
 
-  const dlcManager = new DlcManager(
+  dlcManager = new DlcManager(
     eventHandler,
     dlcService,
-    bitcoinEvents.getClient(),
+    bitcoinDClient,
     new DlcIPCBrowser(),
     oracleClient,
     client.getDlcService(),
@@ -94,6 +95,23 @@ async function LoginCallBack(userName: string): Promise<void> {
 
   const dlcEvents = new DlcEvents(dlcManager, dlcService)
   dlcEvents.registerReplies()
+}
+
+async function LoginCallBack(userName: string): Promise<void> {
+  console.log("Hi I'm login callback how are you?")
+  try {
+    await InitializeDB(userName)
+    const bitcoinEvents = new BitcoinDEvents(
+      new LevelConfigRepository(db as LevelUp),
+      (config, client) => BitcoindConfigCallback(config, client)
+    )
+    bitcoinEvents.registerReplies()
+    await bitcoinEvents.Initialize()
+    console.log("I'm all initialized!")
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
 }
 
 async function LogoutCallback(): Promise<void> {
@@ -120,6 +138,8 @@ export function Initialize(): void {
   fileEvents.registerReplies()
 
   const oracleConfig = appConfig.parse<OracleConfig>('oracle')
+  console.log('ORACLE CONFIG')
+  console.log(oracleConfig)
   oracleClient = new OracleClient(oracleConfig)
   const oracleEvents = new OracleEvents(oracleClient)
   oracleEvents.registerReplies()

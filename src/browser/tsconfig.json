@@ -18,5 +18,5 @@
     "outDir": "../../build",
     "rootDir": "../"
   },
-  "exclude": ["./**/*.test.ts"]
+  "exclude": ["./**/*test.ts"]
 }

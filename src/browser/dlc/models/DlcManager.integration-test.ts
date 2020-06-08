@@ -20,9 +20,10 @@ import { DlcIPCBrowser } from '../../ipc/DlcIPCBrowser'
 import { OracleClientMock } from '../../../../__mocks__/oracleClientApiMock'
 import { DlcMessageServiceMock } from '../../../../__mocks__/dlcMessageServiceMock'
 import { DlcIPCBrowserAPIMock } from '../../../../__mocks__/dlcIPCBrowserAPIMock'
-import { Duplex, Readable } from 'stream'
+import { Readable } from 'stream'
 import winston from 'winston'
 import { Semaphore } from 'await-semaphore'
+import { fromContract } from '../../../common/models/ipc/ContractSimple'
 
 let localParty = 'alice'
 let remoteParty = 'bob'
@@ -154,7 +155,7 @@ describe('dlc-manager', () => {
     const semaphore = new Semaphore(1)
     let release = await semaphore.acquire()
     remotePartyIPC.callback = () => release()
-    await localPartyManager.SendContractOffer(contract)
+    await localPartyManager.SendContractOffer(fromContract(contract))
 
     release = await semaphore.acquire()
     await AssertContractState(

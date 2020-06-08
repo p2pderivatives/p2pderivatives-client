@@ -29,6 +29,7 @@ const userEvents = new UserEvents(client2)
 userMockServer.listen('0.0.0.0:50056')
 userEvents.registerReplies()
 
-const dlcService = new DlcService(new ContractRepositoryMock())
-const dlcEvents = new DlcEvents(dlcService)
-dlcEvents.registerReplies()
+// TODO(tibo): fix this
+// const dlcService = new DlcService(new ContractRepositoryMock())
+// const dlcEvents = new DlcEvents(dlcService)
+// dlcEvents.registerReplies()

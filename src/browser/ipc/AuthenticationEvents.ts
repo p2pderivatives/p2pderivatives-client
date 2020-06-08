@@ -33,7 +33,8 @@ export class AuthenticationEvents implements IPCEvents {
         await this._client
           .getAuthenticationService()
           .login(request.username, request.password)
-        this._loginCallback(request.username)
+        console.log('Calling login callback')
+        await this._loginCallback(request.username)
         return new GeneralAnswer(true)
       } catch (e) {
         return new GeneralAnswer(false, e)

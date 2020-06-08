@@ -5,6 +5,7 @@ import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
 import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
+import { DateTime } from 'luxon'
 
 export default {
   title: 'Components/Templates/ContractDetailTemplate',
@@ -17,7 +18,7 @@ const contract: ContractSimple = {
   counterPartyName: 'UserB',
   feeRate: 1.01,
   localCollateral: 2.01,
-  maturityTime: new Date(),
+  maturityTime: new DateTime().toISODate(),
   remoteCollateral: 2.99,
   outcomes: [
     {

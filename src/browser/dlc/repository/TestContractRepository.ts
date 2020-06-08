@@ -8,6 +8,7 @@ import { Contract } from '../../../common/models/dlc/Contract'
 import { ContractQuery } from '../service/ContractQuery'
 import { ContractState } from '../../../common/models/dlc/ContractState'
 import Amount from '../../../common/models/dlc/Amount'
+import { DateTime } from 'luxon'
 
 export class TestContractRepository implements ContractRepository {
   private _contracts: Contract[] = [
@@ -17,7 +18,7 @@ export class TestContractRepository implements ContractRepository {
       counterPartyName: 'UserB',
       feeRate: 1.01,
       localCollateral: Amount.FromBitcoin(2.01),
-      maturityTime: new Date(),
+      maturityTime: new DateTime(),
       remoteCollateral: Amount.FromBitcoin(2.99),
       outcomes: [
         {
@@ -36,6 +37,12 @@ export class TestContractRepository implements ContractRepository {
           message: 'maybe',
         },
       ],
+      oracleInfo: {
+        rValue: '1',
+        publicKey: '1',
+        assetId: '1',
+        name: '1',
+      },
     },
     {
       id: 'testid2',
@@ -43,7 +50,7 @@ export class TestContractRepository implements ContractRepository {
       counterPartyName: 'UserB',
       feeRate: 1.01,
       localCollateral: Amount.FromBitcoin(2.01),
-      maturityTime: new Date(),
+      maturityTime: new DateTime(),
       remoteCollateral: Amount.FromBitcoin(2.99),
       outcomes: [
         {
@@ -62,6 +69,12 @@ export class TestContractRepository implements ContractRepository {
           message: 'maybe',
         },
       ],
+      oracleInfo: {
+        rValue: '1',
+        publicKey: '1',
+        assetId: '1',
+        name: '1',
+      },
     },
     {
       id: 'testid3',
@@ -69,7 +82,7 @@ export class TestContractRepository implements ContractRepository {
       counterPartyName: 'UserB',
       feeRate: 1.01,
       localCollateral: Amount.FromBitcoin(2.01),
-      maturityTime: new Date(),
+      maturityTime: new DateTime(),
       remoteCollateral: Amount.FromBitcoin(2.99),
       outcomes: [
         {
@@ -88,6 +101,12 @@ export class TestContractRepository implements ContractRepository {
           message: 'maybe',
         },
       ],
+      oracleInfo: {
+        rValue: '1',
+        publicKey: '1',
+        assetId: '1',
+        name: '1',
+      },
     },
   ]
 

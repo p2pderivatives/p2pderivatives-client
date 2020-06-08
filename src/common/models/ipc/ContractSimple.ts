@@ -2,6 +2,8 @@ import { Contract } from '../dlc/Contract'
 import { ContractState } from '../dlc/ContractState'
 import Amount from '../dlc/Amount'
 import { Outcome } from '../dlc/Outcome'
+import { DateTime } from 'luxon'
+import { OracleInfo } from '../dlc/OracleInfo'
 
 export interface OutcomeSimple {
   readonly message: string
@@ -21,7 +23,7 @@ export interface ContractSimple {
   readonly localCollateral: number
   readonly remoteCollateral: number
   readonly outcomes: OutcomeSimple[]
-  readonly maturityTime: Date
+  readonly maturityTime: string
   readonly feeRate: number
   readonly premiumInfo?: PremiumInfoSimple
 }
@@ -40,7 +42,7 @@ export const fromContract = (contract: Contract): ContractSimple => {
         remote: o.remote.GetSatoshiAmount(),
       } as OutcomeSimple
     }),
-    maturityTime: contract.maturityTime,
+    maturityTime: contract.maturityTime.toISO(),
     feeRate: contract.feeRate,
     premiumInfo: contract.premiumInfo
       ? {
@@ -51,7 +53,10 @@ export const fromContract = (contract: Contract): ContractSimple => {
   }
 }
 
-export const toContract = (contract: ContractSimple): Contract => {
+export const toContract = (
+  contract: ContractSimple,
+  oracleInfo: OracleInfo
+): Contract => {
   return {
     state: contract.state,
     id: contract.id,
@@ -65,7 +70,7 @@ export const toContract = (contract: ContractSimple): Contract => {
         remote: Amount.FromSatoshis(o.remote),
       } as Outcome
     }),
-    maturityTime: contract.maturityTime,
+    maturityTime: DateTime.fromISO(contract.maturityTime),
     feeRate: contract.feeRate,
     premiumInfo: contract.premiumInfo
       ? {
@@ -75,5 +80,6 @@ export const toContract = (contract: ContractSimple): Contract => {
           ),
         }
       : undefined,
+    oracleInfo,
   }
 }

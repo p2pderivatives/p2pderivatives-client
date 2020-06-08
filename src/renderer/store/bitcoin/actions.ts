@@ -14,5 +14,5 @@ export const balanceSuccess = (balance: number) =>
 export const balanceError = (error: string) =>
   action(BitcoinActionTypes.BALANCE_ERROR, error)
 export const configRequest = () => action(BitcoinActionTypes.CONFIG_REQUEST)
-export const configRetrieved = (config: BitcoinDConfig) =>
+export const configRetrieved = (config: BitcoinDConfig | undefined) =>
   action(BitcoinActionTypes.CONFIG_RETRIEVED, config)

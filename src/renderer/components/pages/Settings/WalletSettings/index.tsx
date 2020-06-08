@@ -23,6 +23,7 @@ type WalletSettingsProps = LoadingProps & {
 const WalletSettings: FC<WalletSettingsProps> = (
   props: WalletSettingsProps
 ) => {
+  console.log('HEHEHE')
   const snackbar = useSnackbar()
   const dispatch = useDispatch()
 

@@ -38,11 +38,11 @@ export interface OracleClientApi {
   ): Promise<FailableOracle<OracleAssetConfiguration>>
   getRvalue(
     assetID: string,
-    date: Date | DateTime
+    date: DateTime
   ): Promise<FailableOracle<OracleRvalue>>
   getSignature(
     assetID: string,
-    date: Date | DateTime
+    date: DateTime
   ): Promise<FailableOracle<OracleSignature>>
 }
 
@@ -104,7 +104,7 @@ export default class OracleClient implements OracleClientApi {
       return {
         success: true,
         value: {
-          publishDate: DateTime.fromISO(apiResp.publishDate).toUTC(),
+          publishDate: DateTime.fromISO(apiResp.publishDate, { setZone: true }),
           rvalue: apiResp.rvalue,
           assetID: apiResp.assetID,
         },
@@ -125,7 +125,7 @@ export default class OracleClient implements OracleClientApi {
       return {
         success: true,
         value: {
-          publishDate: DateTime.fromISO(apiResp.publishDate).toUTC(),
+          publishDate: DateTime.fromISO(apiResp.publishDate, { setZone: true }),
           rvalue: apiResp.rvalue,
           assetID: apiResp.assetID,
           signature: apiResp.signature,
@@ -142,16 +142,20 @@ export default class OracleClient implements OracleClientApi {
     assetID: string,
     date: DateTime
   ): Promise<FailableOracle<T>> {
-    const utcDate = date.toUTC()
+    const utcDate = date
     const options: ToISOTimeOptions = {
       suppressMilliseconds: true,
     }
+    console.log('HAHAHA')
     return this.get<T>(`asset/${assetID}/${route}/${utcDate.toISO(options)}`)
   }
 
   private async get<T>(url: string): Promise<FailableOracle<T>> {
     try {
-      const resp = await this._httpClient.get<T>(url)
+      console.log(url)
+      console.log('Base url:')
+      console.log(this._httpClient.defaults.baseURL)
+      const resp = await axios.get(url, { baseURL: 'http://3.115.1.105:443/' })
       return { success: true, value: resp.data }
     } catch (err) {
       if (!err.isAxiosError) {

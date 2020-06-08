@@ -52,6 +52,7 @@ export function* handleConfig(): SagaIterator {
     yield put(configRetrieved(config))
   } catch (err) {
     // nothing to be done, no config loaded
+    yield put(configRetrieved(undefined))
   }
 }
 

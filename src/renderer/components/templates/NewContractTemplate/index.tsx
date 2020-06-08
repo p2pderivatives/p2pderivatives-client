@@ -80,12 +80,13 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const [feeRate, setFeeRate] = useState(0)
   const [maturityDate, setMaturityDate] = useState(0)
 
-
-  const oracleDates = [
-    DateTime.utc().plus({ days: 1 }),
-    DateTime.utc().plus({ days: 2 }),
-    DateTime.utc().plus({ days: 3 }),
-  ]
+  const oracleDates = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((x, i) => {
+    const date = DateTime.utc()
+      .plus({ minutes: i })
+      .set({ second: 0, millisecond: 0 })
+    console.log(date.toMillis())
+    return date
+  })
 
   const handleTabChange = (index: number): void => {
     setTabIndex(index)
@@ -100,8 +101,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const handleMaturityChange = (
     event: React.ChangeEvent<{ value: unknown }>
   ): void => {
-    const valueString = event.target.value as string
-    setMaturityDate(parseInt(valueString))
+    setMaturityDate(event.target.value as number)
   }
 
   const handlePublish = (): void => {
@@ -113,10 +113,13 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       outcomes: props.data,
       state: ContractState.Initial,
       id: '',
-      maturityTime: new Date(maturityDate),
+      maturityTime: DateTime.fromMillis(maturityDate).toISODate(),
     }
     props.onPublish(contract)
   }
+
+  console.log('HOHO')
+  console.log(maturityDate)
 
   useEffect(() => {
     setTabIndex(props.tab)
@@ -183,8 +186,8 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               <FormControl>
                 <FormLabel color="secondary">Maturity date</FormLabel>
                 <Select value={maturityDate} onChange={handleMaturityChange}>
-                  {oracleDates.map(d => (
-                    <MenuItem key={d.toMillis()} value={d.toMillis()}>
+                  {oracleDates.map((d, i) => (
+                    <MenuItem key={i} value={d.toMillis()}>
                       {d.toString()}
                     </MenuItem>
                   ))}
@@ -193,7 +196,6 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               <div style={{ marginBottom: '1rem' }}>
                 <Button
                   variant="contained"
-                  disabled
                   style={{ marginRight: '1rem' }}
                   onClick={handlePublish}
                 >

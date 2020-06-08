@@ -6,6 +6,7 @@ import { action } from '@storybook/addon-actions'
 import theme from '../../theme'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
 import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
+import { DateTime } from 'luxon'
 
 const contracts: ContractSimple[] = [
   {
@@ -14,7 +15,7 @@ const contracts: ContractSimple[] = [
     counterPartyName: 'UserB',
     feeRate: 1.01,
     localCollateral: 2.01,
-    maturityTime: new Date(),
+    maturityTime: new DateTime().toISODate(),
     remoteCollateral: 2.99,
     outcomes: [
       {
@@ -40,7 +41,7 @@ const contracts: ContractSimple[] = [
     counterPartyName: 'UserB',
     feeRate: 1.01,
     localCollateral: 2.01,
-    maturityTime: new Date(),
+    maturityTime: new DateTime().toISODate(),
     remoteCollateral: 2.99,
     outcomes: [
       {
@@ -66,7 +67,7 @@ const contracts: ContractSimple[] = [
     counterPartyName: 'UserB',
     feeRate: 1.01,
     localCollateral: 2.01,
-    maturityTime: new Date(),
+    maturityTime: new DateTime().toISODate(),
     remoteCollateral: 2.99,
     outcomes: [
       {

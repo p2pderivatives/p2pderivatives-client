@@ -1,6 +1,6 @@
 import {
   OracleClientApi,
-  OracleError,
+  FailableOracle,
 } from '../src/browser/api/oracle/oracleClient'
 import {
   OracleAssetConfiguration,
@@ -19,51 +19,21 @@ export class OracleClientMock implements OracleClientApi {
     readonly outcomeValue: string
   ) {}
 
-  getOraclePublicKey(): Promise<
-    | Readonly<{
-        success: false
-        error: OracleError
-      }>
-    | Readonly<{ success: true; value: string }>
-  > {
+  getOraclePublicKey(): Promise<FailableOracle<string>> {
     return Promise.resolve({ success: true, value: this.publicKey })
   }
-  getAssets(): Promise<
-    | Readonly<{
-        success: false
-        error: OracleError
-      }>
-    | Readonly<{ success: true; value: string[] }>
-  > {
+  getAssets(): Promise<FailableOracle<string[]>> {
     throw new Error('Method not implemented.')
   }
   getOracleConfig(
     assetID: string
-  ): Promise<
-    | Readonly<{
-        success: false
-        error: OracleError
-      }>
-    | Readonly<{
-        success: true
-        value: OracleAssetConfiguration
-      }>
-  > {
+  ): Promise<FailableOracle<OracleAssetConfiguration>> {
     throw new Error('Method not implemented.')
   }
   getRvalue(
     assetID: string,
     date: Date | DateTime
-  ): Promise<
-    | Readonly<{
-        success: false
-        error: OracleError
-      }>
-    | Readonly<{
-        success: true
-        value: OracleRvalue
-      }>
-  > {
+  ): Promise<FailableOracle<OracleRvalue>> {
     return Promise.resolve({
       success: true,
       value: {
@@ -76,16 +46,7 @@ export class OracleClientMock implements OracleClientApi {
   getSignature(
     assetID: string,
     date: Date | DateTime
-  ): Promise<
-    | Readonly<{
-        success: false
-        error: OracleError
-      }>
-    | Readonly<{
-        success: true
-        value: OracleSignature
-      }>
-  > {
+  ): Promise<FailableOracle<OracleSignature>> {
     return Promise.resolve({
       success: true,
       value: {

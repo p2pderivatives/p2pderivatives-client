@@ -7,7 +7,11 @@ import {
 } from '../../common/constants/IPC'
 import { DlcAnswer } from '../../common/models/ipc/DlcAnswer'
 import { GetContractsAnswer } from '../../common/models/ipc/GetContractsAnswer'
-import { fromContract, ContractSimple, toContract } from '../../common/models/ipc/ContractSimple'
+import {
+  fromContract,
+  ContractSimple,
+  toContract,
+} from '../../common/models/ipc/ContractSimple'
 import { ContractState } from '../../common/models/dlc/ContractState'
 import Amount from '../../common/models/dlc/Amount'
 import { DateTime } from 'luxon'
@@ -50,15 +54,17 @@ export class DlcEvents implements IPCEvents {
     })
 
     ipc.answerRenderer(OFFER_CONTRACT, async data => {
+      console.log('HHOHOHOHOHO')
       const call = data as ContractOfferCall
-      const newContract = toContract(call.contract)
       const returnContract = fromContract(
-        await this._dlcManager.SendContractOffer(newContract)
+        await this._dlcManager.SendContractOffer(call.contract)
       )
-      //TODO return answer with new contract
+      const answer = new DlcAnswer(true, returnContract)
+      return answer
     })
 
     ipc.answerRenderer(GET_CONTRACTS, async () => {
+      console.log('JAJSJOIJDAOSIJF')
       const contracts = await this._dlcService.GetAllContracts()
       const simpleContracts = contracts.map(c => fromContract(c))
       return Promise.resolve(new GetContractsAnswer(true, simpleContracts))
