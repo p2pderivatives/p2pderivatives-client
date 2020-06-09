@@ -31,6 +31,7 @@ let db: LevelUp | null = null
 let oracleClient: OracleClient | null = null
 let client: GrpcClient | null = null
 let dlcManager: DlcManager | null = null
+let browserWindow: electron.BrowserWindow | null = null
 
 async function InitializeDB(userName: string): Promise<void> {
   const userPath = electron.app.getPath('userData')
@@ -68,7 +69,12 @@ function BitcoindConfigCallback(
   bitcoinDClient: BitcoinDClient
 ) {
   console.log('BITCOIND CONFIG CALLBACK!!!!!')
-  if (oracleClient === null || client === null || db == null) {
+  if (
+    oracleClient === null ||
+    client === null ||
+    db == null ||
+    browserWindow == null
+  ) {
     throw Error()
   }
   const contractRepository = new LevelContractRepository(db as LevelUp)
@@ -89,11 +95,11 @@ function BitcoindConfigCallback(
     eventHandler,
     dlcService,
     bitcoinDClient,
-    new DlcIPCBrowser(),
+    new DlcIPCBrowser(browserWindow),
     oracleClient,
     client.getDlcService(),
     winston.createLogger(),
-    1
+    5
   )
 
   const dlcEvents = new DlcEvents(dlcManager, dlcService)
@@ -121,7 +127,8 @@ async function LogoutCallback(): Promise<void> {
   await FinalizeDB()
 }
 
-export function Initialize(): void {
+export function Initialize(window: electron.BrowserWindow): void {
+  browserWindow = window
   const appConfig = new AppConfig('./settings.default.yaml')
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')

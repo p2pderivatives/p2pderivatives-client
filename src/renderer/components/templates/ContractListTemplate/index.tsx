@@ -61,9 +61,7 @@ const ContractListTemplate: FC<ContractListTemplateProps> = (
   useEffect(() => {
     setContractData(props.data)
     const newOffered = props.data.filter(
-      c =>
-        c.state === ContractState.Offered &&
-        c.counterPartyName !== props.username
+      c => c.state === ContractState.Offered && !c.isLocalParty
     ).length
     const offeredIndex = tabStatuses.findIndex(arr =>
       arr.some(c => c === ContractState.Offered)

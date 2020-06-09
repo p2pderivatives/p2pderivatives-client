@@ -11,7 +11,7 @@ function createWindow(): void {
     height: 768,
     webPreferences: { nodeIntegration: true },
   })
-  Initialize()
+  Initialize(mainWindow)
   mainWindow.loadURL(
     isDev
       ? 'http://localhost:9000'

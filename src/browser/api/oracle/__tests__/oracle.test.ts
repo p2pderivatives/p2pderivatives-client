@@ -101,12 +101,12 @@ describe('Oracle Client', () => {
     const mockValue: APIRvalue = {
       publishDate: paramDate.toISO(),
       rvalue: 'test-rvalue',
-      assetID: testAsset,
+      asset: testAsset,
     }
     const expected: OracleRvalue = {
       publishDate: paramDate,
       rvalue: mockValue.rvalue,
-      assetID: mockValue.assetID,
+      assetID: mockValue.asset,
     }
     const expectedRoute = `asset/${testAsset}/rvalue/${paramDate.toISO()}`
     mockedAxios.get.mockResolvedValueOnce({ data: mockValue })
@@ -128,7 +128,7 @@ describe('Oracle Client', () => {
     const testAsset = 'assetA'
     const paramDate = DateTime.utc()
     const mockValue: APISignature = {
-      assetID: testAsset,
+      asset: testAsset,
       publishDate: paramDate.toISO(),
       rvalue: 'test-rvalue',
       signature: 'test-signature',
@@ -136,7 +136,7 @@ describe('Oracle Client', () => {
     }
     const expected: OracleSignature = {
       publishDate: paramDate,
-      assetID: mockValue.assetID,
+      assetID: mockValue.asset,
       rvalue: mockValue.rvalue,
       signature: mockValue.signature,
       value: mockValue.value,

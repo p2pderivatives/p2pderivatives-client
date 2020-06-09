@@ -5,7 +5,7 @@ export type APIOraclePublicKey = { publicKey: string }
 export type APIRvalue = {
   publishDate: string
   rvalue: string
-  assetID: string
+  asset: string
 }
 export type APISignature = { signature: string; value: string } & APIRvalue
 export type APIError = {

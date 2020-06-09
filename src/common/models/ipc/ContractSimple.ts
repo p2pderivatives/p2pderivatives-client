@@ -26,6 +26,7 @@ export interface ContractSimple {
   readonly maturityTime: string
   readonly feeRate: number
   readonly premiumInfo?: PremiumInfoSimple
+  readonly isLocalParty?: boolean
 }
 
 export const fromContract = (contract: Contract): ContractSimple => {
@@ -50,6 +51,7 @@ export const fromContract = (contract: Contract): ContractSimple => {
           premiumAmount: contract.premiumInfo.premiumAmount.GetSatoshiAmount(),
         }
       : undefined,
+    isLocalParty: contract.isLocalParty,
   }
 }
 
@@ -57,6 +59,8 @@ export const toContract = (
   contract: ContractSimple,
   oracleInfo: OracleInfo
 ): Contract => {
+  console.log('MATURITY')
+  console.log(contract)
   return {
     state: contract.state,
     id: contract.id,
@@ -81,5 +85,6 @@ export const toContract = (
         }
       : undefined,
     oracleInfo,
+    isLocalParty: contract.isLocalParty,
   }
 }

@@ -14,19 +14,20 @@ import { DlcEventType } from '../../common/constants/DlcEventType'
 import { DlcCall } from '../../common/models/ipc/DlcCall'
 import { ContractSimple } from '../../common/models/ipc/ContractSimple'
 import { ContractOfferCall } from '../../common/models/ipc/ContractOfferCall'
+import { DlcAnswer } from '../../common/models/ipc/DlcAnswer'
 const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class DlcIPCRenderer implements DlcRendererAPI {
-  dlcCall(type: DlcEventType, contractId: string): Promise<ContractSimple> {
+  dlcCall(type: DlcEventType, contractId: string): Promise<DlcAnswer> {
     const dlcCall: DlcCall = { type: type, contractId: contractId }
-    return ipc.callMain(DLC_EVENT, dlcCall) as Promise<ContractSimple> //TODO get answer instead of ContractSimple
+    return ipc.callMain(DLC_EVENT, dlcCall) as Promise<DlcAnswer> //TODO get answer instead of ContractSimple
   }
 
-  offerContract(contract: ContractSimple): Promise<ContractSimple> {
+  offerContract(contract: ContractSimple): Promise<DlcAnswer> {
     console.log('CONTRACT')
     console.log(contract)
     const offerCall: ContractOfferCall = { contract: contract }
-    return ipc.callMain(OFFER_CONTRACT, offerCall) as Promise<ContractSimple> //TODO get answer instead of ContractSimple
+    return ipc.callMain(OFFER_CONTRACT, offerCall) as Promise<DlcAnswer> //TODO get answer instead of ContractSimple
   }
 
   async getContracts(

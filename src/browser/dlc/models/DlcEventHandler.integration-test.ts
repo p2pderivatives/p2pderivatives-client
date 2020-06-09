@@ -48,10 +48,11 @@ describe('dlc-event-handler', () => {
 
   test('mutual-closing', async () => {
     await CommonTests()
-    const mutualClosingMessage = await localPartyContext.eventHandler.OnSendMutualCloseOffer(
+    const mutualClosedOfferContract = await localPartyContext.eventHandler.OnSendMutualCloseOffer(
       contractId,
       outcomes[0]
     )
+    const mutualClosingMessage = mutualClosedOfferContract.ToMutualClosingMessage()
 
     AssertContractState(
       localPartyContext.dlcService,
@@ -208,7 +209,10 @@ describe('dlc-event-handler', () => {
   async function TestOnAcceptMessage(
     acceptMessage: AcceptMessage
   ): Promise<SignMessage> {
-    const signMessage = await localPartyContext.eventHandler.OnAcceptMessage(
+    const {
+      contract,
+      message,
+    } = await localPartyContext.eventHandler.OnAcceptMessage(
       remoteParty,
       acceptMessage
     )
@@ -219,7 +223,7 @@ describe('dlc-event-handler', () => {
       ContractState.Signed
     )
 
-    return signMessage
+    return message
   }
 
   async function TestOnSignMessage(signMessage: SignMessage) {

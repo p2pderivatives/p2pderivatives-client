@@ -42,8 +42,6 @@ const NewContractPage: FC = () => {
   }
 
   const handlePublish = (contract: ContractSimple): void => {
-    console.log('AJJAJAJ')
-    console.log(contract)
     dispatch(offerRequest(contract))
     dispatch(outcomeSuccess([])) // clear outcomes like this for now
     dispatch(push('/main'))

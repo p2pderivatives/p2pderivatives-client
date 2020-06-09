@@ -53,7 +53,7 @@ export class OfferedContract extends InitialContract
         return {
           message: x.message,
           local: x.local.GetSatoshiAmount(),
-          remote: x.local.GetSatoshiAmount(),
+          remote: x.remote.GetSatoshiAmount(),
         }
       }),
       this.oracleInfo,

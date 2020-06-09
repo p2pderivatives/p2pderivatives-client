@@ -106,7 +106,7 @@ export default class OracleClient implements OracleClientApi {
         value: {
           publishDate: DateTime.fromISO(apiResp.publishDate, { setZone: true }),
           rvalue: apiResp.rvalue,
-          assetID: apiResp.assetID,
+          assetID: apiResp.asset,
         },
       }
     } else {
@@ -127,7 +127,7 @@ export default class OracleClient implements OracleClientApi {
         value: {
           publishDate: DateTime.fromISO(apiResp.publishDate, { setZone: true }),
           rvalue: apiResp.rvalue,
-          assetID: apiResp.assetID,
+          assetID: apiResp.asset,
           signature: apiResp.signature,
           value: apiResp.value,
         },
@@ -146,15 +146,11 @@ export default class OracleClient implements OracleClientApi {
     const options: ToISOTimeOptions = {
       suppressMilliseconds: true,
     }
-    console.log('HAHAHA')
     return this.get<T>(`asset/${assetID}/${route}/${utcDate.toISO(options)}`)
   }
 
   private async get<T>(url: string): Promise<FailableOracle<T>> {
     try {
-      console.log(url)
-      console.log('Base url:')
-      console.log(this._httpClient.defaults.baseURL)
       const resp = await axios.get(url, { baseURL: 'http://3.115.1.105:443/' })
       return { success: true, value: resp.data }
     } catch (err) {

@@ -13,6 +13,7 @@ import { SagaIterator } from 'redux-saga'
 import { DlcRendererAPI } from '../../ipc/DlcRendererAPI'
 import { IPCError } from '../../../common/models/ipc/IPCError'
 import { DlcEventType } from '../../../common/constants/DlcEventType'
+import { DlcAnswer, DlcAnswerProps } from '../../../common/models/ipc/DlcAnswer'
 
 export function* handleContracts(): SagaIterator {
   try {
@@ -35,9 +36,18 @@ export function* handleOffer(
   try {
     console.log("Everyday I'm shuddling")
     const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const contract = yield call(dlcAPI.offerContract, action.payload)
-    yield put(dlcActionSuccess(contract))
+    const answer = (yield call(
+      dlcAPI.offerContract,
+      action.payload
+    )) as DlcAnswerProps
+    console.log(answer)
+    if (!answer._success) {
+      throw answer._error
+    }
+    yield put(dlcActionSuccess(answer._contract))
   } catch (err) {
+    console.log('GOT ERROR:')
+    console.log(err)
     if (err instanceof IPCError && err.getMessage()) {
       yield put(dlcActionError(err.getMessage()))
     } else {
@@ -51,12 +61,15 @@ export function* handleAccept(
 ): SagaIterator {
   try {
     const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const contract = yield call(
+    const answer = (yield call(
       dlcAPI.dlcCall,
       DlcEventType.Accept,
       action.payload
-    )
-    yield put(dlcActionSuccess(contract))
+    )) as DlcAnswerProps
+    if (!answer._success) {
+      throw answer._error
+    }
+    yield put(dlcActionSuccess(answer._contract))
   } catch (err) {
     if (err instanceof IPCError && err.getMessage()) {
       yield put(dlcActionError(err.getMessage()))
@@ -71,12 +84,15 @@ export function* handleReject(
 ): SagaIterator {
   try {
     const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const contract = yield call(
+    const answer = (yield call(
       dlcAPI.dlcCall,
       DlcEventType.Reject,
       action.payload
-    )
-    yield put(dlcActionSuccess(contract))
+    )) as DlcAnswerProps
+    if (!answer._success) {
+      throw answer._error
+    }
+    yield put(dlcActionSuccess(answer._contract))
   } catch (err) {
     if (err instanceof IPCError && err.getMessage()) {
       yield put(dlcActionError(err.getMessage()))

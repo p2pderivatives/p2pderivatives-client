@@ -1,6 +1,7 @@
 import { Reducer } from 'redux'
 import { DlcState, DlcActionTypes } from './types'
 import { ContractSimple } from '../../../common/models/ipc/ContractSimple'
+import { DlcAnswer } from '../../../common/models/ipc/DlcAnswer'
 
 export const initialState: DlcState = {
   contracts: [],
@@ -15,7 +16,10 @@ const reducer: Reducer<DlcState> = (state: DlcState = initialState, action) => {
       return { ...state, processing: true }
     }
     case DlcActionTypes.CONTRACT_SUCCESS: {
-      return { ...state, processing: false, contracts: action.payload }
+      console.log('Getting contracts')
+      console.log(action.payload)
+      const newState = Object.assign({}, state)
+      return { ...newState, processing: false, contracts: action.payload }
     }
     case DlcActionTypes.CONTRACT_ERROR: {
       return {
@@ -31,18 +35,26 @@ const reducer: Reducer<DlcState> = (state: DlcState = initialState, action) => {
     }
     case DlcActionTypes.DLC_ACTION_SUCCESS: {
       const updatedContract = action.payload as ContractSimple
-      const newContracts = state.contracts
+      const newContracts = Object.assign(
+        [],
+        state.contracts
+      ) as ContractSimple[]
+      console.log(newContracts)
       const contractIndex = state.contracts.findIndex(
         c => c.id === updatedContract.id
       )
       if (contractIndex >= 0) newContracts[contractIndex] = updatedContract
       else newContracts.push(updatedContract)
-      return {
-        ...state,
+      console.log(newContracts)
+      console.log('RETURNING')
+      console.log(state)
+      const newState = Object.assign({}, state, {
         contracts: newContracts,
         processing: false,
         actionSuccess: true,
-      }
+      })
+      console.log(newState)
+      return newState
     }
     case DlcActionTypes.DLC_ACTION_ERROR: {
       return {
@@ -54,7 +66,10 @@ const reducer: Reducer<DlcState> = (state: DlcState = initialState, action) => {
     }
     case DlcActionTypes.DLC_UPDATE: {
       const updatedContract = action.payload as ContractSimple
-      const newContracts = state.contracts
+      const newContracts = Object.assign(
+        [],
+        state.contracts
+      ) as ContractSimple[]
       const contractIndex = state.contracts.findIndex(
         c => c.id === updatedContract.id
       )

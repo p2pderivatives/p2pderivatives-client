@@ -6,18 +6,32 @@ import { ipcMain as ipc } from 'electron-better-ipc'
 import { DlcBrowserAPI } from './DlcBrowserAPI'
 import { DLC_UPDATE } from '../../common/constants/IPC'
 import { ContractSimple } from '../../common/models/ipc/ContractSimple'
+import electron from 'electron'
 
 export class DlcIPCBrowser implements DlcBrowserAPI {
+  constructor(private readonly window: electron.BrowserWindow) {}
+
   async dlcUpdate(contract: ContractSimple): Promise<void> {
     const call = { contract: contract }
-    const answerProps = (await ipc.callFocusedRenderer(DLC_UPDATE, {
-      call,
-    })) as GeneralAnswerProps
-    const answer = GeneralAnswer.parse(answerProps)
+    console.log('CALL')
+    console.log(call)
+    console.log(electron.BrowserWindow.getFocusedWindow())
+    try {
+      const answerProps = (await ipc.callRenderer(
+        this.window,
+        DLC_UPDATE,
+        call
+      )) as GeneralAnswerProps
+      console.log('After IPC')
+      const answer = GeneralAnswer.parse(answerProps)
 
-    if (!answer.isSuccess()) {
-      const error = answer.getError()
-      throw error
+      if (!answer.isSuccess()) {
+        const error = answer.getError()
+        throw error
+      }
+    } catch (e) {
+      console.log(e)
+      throw e
     }
   }
 }

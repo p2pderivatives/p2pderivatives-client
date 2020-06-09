@@ -22,6 +22,7 @@ import { SignedContract } from './contract/SignedContract'
 import { DateTime } from 'luxon'
 import Amount from '../../../common/models/dlc/Amount'
 import { v4 } from 'uuid'
+import { UnilateralClosedContract } from './contract/UnilateralClosedContract'
 
 export class DlcEventHandler {
   private readonly _contractUpdater: ContractUpdater
@@ -62,6 +63,8 @@ export class DlcEventHandler {
     from: string
   ): Promise<OfferedContract> {
     const initialContract = InitialContract.FromOfferMessage(offerMessage, from)
+    console.log('INITIAL')
+    console.log(initialContract)
     await this._dlcService.CreateContract(initialContract)
     const offeredContract = await this._contractUpdater.ToOfferedContract(
       initialContract,
@@ -77,6 +80,8 @@ export class DlcEventHandler {
     )
 
     await this._dlcService.UpdateContract(offeredContract)
+
+    console.log(offeredContract)
 
     return offeredContract
   }
@@ -95,6 +100,7 @@ export class DlcEventHandler {
     }
 
     const offeredContract = retrievedContract as OfferedContract
+    console.log(offeredContract)
     const acceptedContract = await this._contractUpdater.ToAcceptContract(
       offeredContract
     )
@@ -107,7 +113,7 @@ export class DlcEventHandler {
   async OnAcceptMessage(
     from: string,
     acceptMessage: AcceptMessage
-  ): Promise<SignMessage> {
+  ): Promise<{ contract: SignedContract; message: SignMessage }> {
     const contract = await this.TryGetContractOrThrow(
       acceptMessage.contractId,
       [ContractState.Offered],
@@ -155,7 +161,10 @@ export class DlcEventHandler {
       signedContract.localPartyInputs
     )
 
-    return signedContract.ToSignMessage(cetSignatures)
+    return {
+      contract: signedContract,
+      message: signedContract.ToSignMessage(cetSignatures),
+    }
   }
 
   async OnSignMessage(
@@ -190,7 +199,7 @@ export class DlcEventHandler {
   async OnSendMutualCloseOffer(
     contractId: string,
     outcome: Outcome
-  ): Promise<MutualClosingMessage> {
+  ): Promise<MutualCloseProposedContract> {
     const contract = (await this.TryGetContractOrThrow(contractId, [
       ContractState.Mature,
     ])) as MaturedContract
@@ -202,7 +211,7 @@ export class DlcEventHandler {
 
     await this._dlcService.UpdateContract(mutualCloseProposedContract)
 
-    return mutualCloseProposedContract.ToMutualClosingMessage()
+    return mutualCloseProposedContract
   }
 
   async OnMutualCloseOffer(
@@ -244,7 +253,9 @@ export class DlcEventHandler {
     return mutualClosed
   }
 
-  async OnMutualCloseConfirmed(contractId: string): Promise<Contract> {
+  async OnMutualCloseConfirmed(
+    contractId: string
+  ): Promise<MutualClosedContract> {
     const contract = (await this.TryGetContractOrThrow(contractId, [
       ContractState.MutualCloseProposed,
     ])) as MutualCloseProposedContract
@@ -258,7 +269,9 @@ export class DlcEventHandler {
     return mutualClosedContract
   }
 
-  async OnUnilateralClose(contractId: string): Promise<Contract> {
+  async OnUnilateralClose(
+    contractId: string
+  ): Promise<UnilateralClosedContract> {
     const contract = (await this.TryGetContractOrThrow(contractId, [
       ContractState.Mature,
       ContractState.MutualCloseProposed,
@@ -309,10 +322,11 @@ export class DlcEventHandler {
     contractId: string,
     outcomeValue: string,
     oracleSignature: string
-  ): Promise<Contract> {
+  ): Promise<MaturedContract> {
     const contract = (await this.TryGetContractOrThrow(contractId, [
       ContractState.Confirmed,
     ])) as ConfirmedContract
+    console.log('Got contract!')
 
     const matureContract = this._contractUpdater.ToMatureContract(
       contract,
@@ -320,6 +334,7 @@ export class DlcEventHandler {
       oracleSignature
     )
 
+    console.log('Made mature')
     await this._dlcService.UpdateContract(matureContract)
 
     return matureContract

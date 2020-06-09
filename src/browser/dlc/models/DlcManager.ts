@@ -3,7 +3,6 @@ import { DlcService } from '../service/DlcService'
 import BitcoinDClient from '../../api/bitcoind'
 import { SignedContract } from './contract/SignedContract'
 import { DlcBrowserAPI } from '../../ipc/DlcBrowserAPI'
-import { DlcEventType } from '../../../common/constants/DlcEventType'
 import { MutualCloseProposedContract } from './contract/MutualCloseProposedContract'
 import { DateTime } from 'luxon'
 import { isSuccessful } from '../../../common/utils/failable'
@@ -67,18 +66,14 @@ export class DlcManager {
       const maturityTime = DateTime.fromISO(contractSimple.maturityTime, {
         setZone: true,
       })
-      console.log(1)
       const result = await this.oracleClient.getRvalue('btcusd', maturityTime)
-      console.log(2)
       if (!isSuccessful(result)) {
         throw new DlcError(`Could not get rValue: ${result.error.message}`)
       }
       const result2 = await this.oracleClient.getOraclePublicKey()
-      console.log(3)
       if (!isSuccessful(result2)) {
         throw new DlcError(`Could not get public key: ${result2.error.message}`)
       }
-      console.log(4)
       const values = result.value
       const oracleInfo: OracleInfo = {
         name: 'super oracle',
@@ -87,9 +82,8 @@ export class DlcManager {
         assetId: values.assetID,
       }
       const contract = toContract(contractSimple, oracleInfo)
-      console.log(5)
+      console.log(contract.outcomes)
       const offeredContract = await this.eventHandler.OnSendOffer(contract)
-      console.log(6)
       const offerMessage = offeredContract.ToOfferMessage()
       await this.dlcMessageService.sendDlcMessage(
         offerMessage,
@@ -147,35 +141,46 @@ export class DlcManager {
   }
 
   private async GetTxConfirmations(txId: string): Promise<number> {
-    const transaction = await this.bitcoindClient.getTransaction(txId)
+    try {
+      console.log('TXID')
+      console.log(txId)
+      const transaction = await this.bitcoindClient.getTransaction(txId)
 
-    return transaction.confirmations
+      return transaction.confirmations
+    } catch (err) {
+      console.log(err)
+      return 0
+    }
   }
 
   private async TrySendMutualCloseOffer(
     contract: Contract,
     outcome: Outcome
   ): Promise<boolean> {
-    const mutualCloseMessage = await this.eventHandler.OnSendMutualCloseOffer(
+    const mutualCloseProposeContract = await this.eventHandler.OnSendMutualCloseOffer(
       contract.id,
       outcome
     )
+    const mutualCloseMessage = mutualCloseProposeContract.ToMutualClosingMessage()
+    await this.ipcClient.dlcUpdate(fromContract(mutualCloseProposeContract))
 
     try {
       await this.dlcMessageService.sendDlcMessage(
         mutualCloseMessage,
         contract.counterPartyName
       )
+      console.log('Send mutual close no problem')
       return true
     } catch {
+      console.log('Could not send mutual close')
       return false
     }
   }
 
   private async checkForConfirmedThatMaturedContracts() {
     const matureContracts = await this.dlcService.GetConfirmedContractsToMature()
-
     for (const contract of matureContracts) {
+      console.log('MATURE1')
       try {
         const result = await this.oracleClient.getSignature(
           contract.oracleInfo.assetId,
@@ -183,6 +188,7 @@ export class DlcManager {
         )
 
         if (isSuccessful(result)) {
+          console.log('Successfully got signature')
           const value = result.value
           const outcome = contract.outcomes.find(x => x.message == value.value)
           if (!outcome) {
@@ -190,14 +196,19 @@ export class DlcManager {
             // Not much to do, contract will need to be closed with refund
             continue
           }
-          await this.eventHandler.OnContractMature(
+          console.log('Outcome found')
+          const maturedContract = await this.eventHandler.OnContractMature(
             contract.id,
             value.value,
             value.signature
           )
-          const offered = this.TrySendMutualCloseOffer(contract, outcome)
+          await this.ipcClient.dlcUpdate(fromContract(maturedContract))
+          const offered = await this.TrySendMutualCloseOffer(contract, outcome)
           if (!offered) {
-            await this.eventHandler.OnUnilateralClose(contract.id)
+            const unilateralClosed = await this.eventHandler.OnUnilateralClose(
+              contract.id
+            )
+            await this.ipcClient.dlcUpdate(fromContract(unilateralClosed))
           }
         }
       } catch (error) {
@@ -234,18 +245,22 @@ export class DlcManager {
     const utcNow = DateTime.utc()
 
     for (const contract of contracts) {
+      console.log('CHECKING')
       try {
         const confirmations = await this.GetTxConfirmations(
           contract.mutualCloseTxId
         )
-        if (confirmations == 0 && contract.proposeTimeOut >= utcNow) {
+        console.log(confirmations)
+        if (confirmations == 0 && contract.proposeTimeOut <= utcNow) {
           // TODO(tibo): Should move to intermediary state and later verify
           // that cet and closeTx are confirmed.
+          console.log('Going for unilateral close')
           const closedContract = await this.eventHandler.OnUnilateralClose(
             contract.id
           )
           await this.ipcClient.dlcUpdate(fromContract(closedContract))
         } else if (confirmations >= 6) {
+          console.log('Going for mutual close')
           const mutualClosedContract = await this.eventHandler.OnMutualCloseConfirmed(
             contract.id
           )
@@ -274,8 +289,12 @@ export class DlcManager {
   }
 
   private async OnDlcMessage(abstractMessage: DlcAbstractMessage) {
-    const realease = await this.mutex.acquire()
+    const release = await this.mutex.acquire()
     try {
+      console.log('AbstractMessage')
+      console.log(abstractMessage)
+      console.log('Message')
+      console.log(abstractMessage.payload)
       const message = abstractMessage.payload
       const from = abstractMessage.from
       switch (message.messageType) {
@@ -303,19 +322,27 @@ export class DlcManager {
         `Error processing message from ${abstractMessage.from}: ${error}`
       )
     } finally {
-      realease()
+      release()
     }
   }
 
-  private async HandleAcceptMessage(from: string, message: AcceptMessage) {
-    const signMessage = await this.eventHandler.OnAcceptMessage(from, message)
-    this.dlcMessageService.sendDlcMessage(signMessage, from)
+  private async HandleAcceptMessage(
+    from: string,
+    acceptMessage: AcceptMessage
+  ) {
+    const { contract, message } = await this.eventHandler.OnAcceptMessage(
+      from,
+      acceptMessage
+    )
+    this.dlcMessageService.sendDlcMessage(message, from)
+    await this.ipcClient.dlcUpdate(fromContract(contract))
   }
 
   private async HandleMutualCloseOffer(
     from: string,
     message: MutualClosingMessage
   ) {
+    console.log('Handling mutual close')
     const mutualClosedContract = await this.eventHandler.OnMutualCloseOffer(
       from,
       message,
@@ -335,13 +362,14 @@ export class DlcManager {
       }
     )
 
-    // TODO(Wesley): change call here
     await this.ipcClient.dlcUpdate(fromContract(mutualClosedContract))
   }
 
   private async HandleOffer(from: string, message: OfferMessage) {
     const offerContract = await this.eventHandler.OnOfferMessage(message, from)
 
+    console.log('HERE?')
+    message.outcomes.forEach(x => console.log(x))
     await this.ipcClient.dlcUpdate(fromContract(offerContract))
   }
 

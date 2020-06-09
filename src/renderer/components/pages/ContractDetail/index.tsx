@@ -32,10 +32,16 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
 
   const handleAccept = (): void => {
     if (contract) dispatch(acceptRequest(contract.id))
+    dispatch(goBack())
   }
 
   const handleReject = (): void => {
     if (contract) dispatch(rejectRequest(contract.id))
+    dispatch(goBack())
+  }
+
+  const handleCancel = (): void => {
+    dispatch(goBack())
   }
 
   return (
@@ -44,11 +50,11 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
         <ContractDetailTemplate
           data={contract}
           isProposal={
-            contract.state === ContractState.Offered &&
-            contract.counterPartyName === username
+            contract.state === ContractState.Offered && !contract.isLocalParty
           }
           acceptContract={handleAccept}
           rejectContract={handleReject}
+          cancel={handleCancel}
         />
       )}
     </div>

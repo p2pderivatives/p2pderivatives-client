@@ -136,7 +136,9 @@ export class ContractUpdater {
       localChangeAddress: contract.localPartyInputs.changeAddress,
       remoteChangeAddress: remotePartyInputs.changeAddress,
       feeRate: contract.feeRate,
-      maturityTime: Math.floor(contract.maturityTime.toMillis() / 1000),
+      maturityTime: Math.floor(
+        contract.maturityTime.minus({ hours: 2 }).toMillis() / 1000
+      ),
       refundLocktime: Math.floor(
         contract.maturityTime.plus({ days: 7 }).toMillis() / 1000
       ),
@@ -156,6 +158,12 @@ export class ContractUpdater {
     const localCetsHex = dlcTransactions.localCetsHex
     const remoteCetsHex = dlcTransactions.remoteCetsHex
 
+    console.log('HAHA')
+    console.dir(contract, { depth: 10 })
+    console.log(localCetsHex)
+    console.log(fundTxId)
+    console.log(fundTxOutAmount)
+    console.log(remotePartyInputs)
     remoteCetSignatures = remoteCetSignatures
       ? remoteCetSignatures
       : this.GetCetSignatures(
@@ -394,7 +402,7 @@ export class ContractUpdater {
       mutualClosingTxHex,
       mutualClosingTx.txid,
       signature,
-      DateTime.utc()
+      DateTime.utc().plus({ seconds: 30 })
     )
   }
 
@@ -405,8 +413,8 @@ export class ContractUpdater {
     const mutualClosingRequest = {
       localFinalAddress: contract.localPartyInputs.finalAddress,
       remoteFinalAddress: contract.remotePartyInputs.finalAddress,
-      localAmount: mutualClosingMessage.outcome.local.GetSatoshiAmount(),
-      remoteAmount: mutualClosingMessage.outcome.remote.GetSatoshiAmount(),
+      localAmount: mutualClosingMessage.outcome.local,
+      remoteAmount: mutualClosingMessage.outcome.remote,
       fundTxId: contract.fundTxId,
       feeRate: contract.feeRate,
     }
@@ -443,6 +451,8 @@ export class ContractUpdater {
 
     const mutualClosingTx = Utils.decodeRawTransaction(mutualClosingTxHex)
 
+    console.log('SENDING MUTUAL CLOSE')
+    console.log(mutualClosingTx.txid)
     await this.walletClient.sendRawTransaction(mutualClosingTxHex)
 
     return MutualClosedContract.CreateMutualClosedContract(

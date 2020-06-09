@@ -1,12 +1,12 @@
-import { Outcome } from '../../../common/models/dlc/Outcome'
 import { DlcTypedMessage, DlcMessageType } from './DlcTypedMessage'
+import { OutcomeSimple } from '../../../common/models/ipc/ContractSimple'
 
 export class MutualClosingMessage implements DlcTypedMessage {
   readonly messageType: DlcMessageType = DlcMessageType.MutualCloseOffer
 
   constructor(
     readonly contractId: string,
-    readonly outcome: Outcome,
+    readonly outcome: OutcomeSimple,
     readonly signature: string
   ) {}
 }

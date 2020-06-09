@@ -17,6 +17,9 @@ const ContractOverviewPage: FC = () => {
   const contracts = useSelector(state => state.dlc.contracts)
   const username = useSelector(state => state.login.username)
 
+  console.log('RELOADING with contracts')
+  console.log(contracts)
+
   useEffect(() => {
     console.log('dispatching contract request')
     dispatch(contractRequest())

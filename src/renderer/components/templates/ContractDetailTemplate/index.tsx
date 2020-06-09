@@ -14,6 +14,7 @@ type ContractDetailTemplateProps = {
   isProposal: boolean
   acceptContract?: () => void
   rejectContract?: () => void
+  cancel?: () => void
 }
 
 const useStyles = makeStyles({
@@ -86,6 +87,11 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
   const handleReject = (): void => {
     if (props.rejectContract) props.rejectContract()
   }
+
+  const handleCancel = (): void => {
+    if (props.cancel) props.cancel()
+  }
+  console.log(contract)
 
   return (
     <div className={classes.rootContainer}>
@@ -211,6 +217,24 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
                     onClick={handleReject}
                   >
                     Reject
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleCancel}
+                  >
+                    Back
+                  </Button>
+                </div>
+              )}
+              {!props.isProposal && (
+                <div className={classes.buttonDiv}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleCancel}
+                  >
+                    Back
                   </Button>
                 </div>
               )}

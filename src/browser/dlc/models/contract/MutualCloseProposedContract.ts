@@ -43,7 +43,11 @@ export class MutualCloseProposedContract extends MaturedContract {
   ToMutualClosingMessage(): MutualClosingMessage {
     return new MutualClosingMessage(
       this.id,
-      this.finalOutcome,
+      {
+        message: this.finalOutcome.message,
+        local: this.finalOutcome.local.GetSatoshiAmount(),
+        remote: this.finalOutcome.remote.GetSatoshiAmount(),
+      },
       this.ownMutualClosingSignature
     )
   }

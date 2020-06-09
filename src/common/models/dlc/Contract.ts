@@ -16,4 +16,5 @@ export interface Contract {
   readonly maturityTime: DateTime
   readonly feeRate: number
   readonly premiumInfo?: PremiumInfo
+  readonly isLocalParty?: boolean
 }
