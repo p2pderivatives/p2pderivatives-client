@@ -70,6 +70,14 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
   const [feeRate, setFeeRate] = useState<number>()
+  const [localCollateral, setLocalCollateral] = useState({
+    value: 0,
+    isBitcoin: true,
+  })
+  const [remoteCollateral, setRemoteCollateral] = useState({
+    value: 0,
+    isBitcoin: true,
+  })
 
   const oracleDates = [
     DateTime.utc().plus({ days: 1 }),
@@ -132,8 +140,40 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                 }
                 label={'Fee rate'}
               />
-              <BitcoinInput label={'Local collateral'} />
-              <BitcoinInput label={'Remote collateral'} />
+              <BitcoinInput
+                value={localCollateral.value}
+                isBitcoin={localCollateral.isBitcoin}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  setLocalCollateral({
+                    value: localCollateral.value,
+                    isBitcoin,
+                  })
+                }}
+                onChange={(value: number): void =>
+                  setLocalCollateral({
+                    value,
+                    isBitcoin: localCollateral.isBitcoin,
+                  })
+                }
+                label={'Local collateral'}
+              />
+              <BitcoinInput
+                value={remoteCollateral.value}
+                isBitcoin={remoteCollateral.isBitcoin}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  setRemoteCollateral({
+                    value: remoteCollateral.value,
+                    isBitcoin,
+                  })
+                }}
+                onChange={(value: number): void =>
+                  setRemoteCollateral({
+                    value,
+                    isBitcoin: remoteCollateral.isBitcoin,
+                  })
+                }
+                label={'Remote collateral'}
+              />
               <FormControl>
                 <FormLabel color="secondary">Outcomes</FormLabel>
                 <Button
