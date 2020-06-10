@@ -8,9 +8,10 @@ import {
 
 import NewContractTemplate from '../../templates/NewContractTemplate'
 import { ApplicationState } from '../../../store'
-import { outcomeRequest } from '../../../store/file/actions'
 import { goBack } from 'connected-react-router'
 import { userListRequest } from '../../../store/user/actions'
+import FileIPC from '../../../ipc/FileIPC'
+import Outcome from '../../../../common/models/ipc/Outcome'
 
 const { dialog } = window.require('electron').remote
 
@@ -20,20 +21,16 @@ const NewContractPage: FC = () => {
   const dispatch = useDispatch()
 
   const [tab, setTab] = useState(0)
-  const outcomesList = useSelector(state => state.file.parsedOutcomes)
-  const parsed = useSelector(state => state.file.parsed)
-  const processing = useSelector(state => state.file.processing)
+  const [outcomesList, setOutcomesList] = useState<Outcome[]>([])
   const userList = useSelector(state => state.user.userList)
-
-  const dispatchOutcomeRequest = (filepath: string): void => {
-    dispatch(outcomeRequest(filepath))
-  }
 
   const handleCSVImport = (): void => {
     dialog.showOpenDialog({ properties: ['openFile'] }).then(async files => {
       if (files !== undefined) {
         const filepath = files.filePaths[0]
-        dispatchOutcomeRequest(filepath)
+        const outcomes = await new FileIPC().parseOutcomes(filepath)
+        setOutcomesList(outcomes)
+        setTab(1)
       }
     })
   }
@@ -46,12 +43,6 @@ const NewContractPage: FC = () => {
     dispatch(userListRequest())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  useEffect(() => {
-    if (parsed && !processing) {
-      setTab(1)
-    }
-  }, [parsed, processing, outcomesList])
 
   return (
     <div style={{ position: 'absolute', height: '100%', width: '100%' }}>

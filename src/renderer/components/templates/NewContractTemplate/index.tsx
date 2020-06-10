@@ -69,6 +69,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const classes = useStyles()
   const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
+  const [feeRate, setFeeRate] = useState<number>()
 
   const oracleDates = [
     DateTime.utc().plus({ days: 1 }),
@@ -123,6 +124,14 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                   ),
                 }}
               ></TextInput>
+              <TextInput
+                type="number"
+                value={feeRate}
+                onChange={(event: React.ChangeEvent<{ value: string }>): void =>
+                  setFeeRate(parseInt(event.target.value))
+                }
+                label={'Fee rate'}
+              />
               <BitcoinInput label={'Local collateral'} />
               <BitcoinInput label={'Remote collateral'} />
               <FormControl>
