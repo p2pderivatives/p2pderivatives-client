@@ -54,7 +54,8 @@ export class BitcoinIPC implements BitcoinAPI {
     if (answer.isSuccess() && config) {
       return config
     } else {
-      throw new Error('No config exists.')
+      const error = answer.getError()
+      throw error
     }
   }
 }

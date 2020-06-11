@@ -9,6 +9,7 @@ export enum BitcoinActionTypes {
   BALANCE_ERROR = '@@bitcoin/BALANCE_ERROR',
   CONFIG_REQUEST = '@@bitcoin/CONFIG_REQUEST',
   CONFIG_RETRIEVED = '@@bitcoin/CONFIG_RETRIEVED',
+  CONFIG_NONE = '@@bitcoin/CONFIG_NONE',
 }
 
 export interface BitcoinState {

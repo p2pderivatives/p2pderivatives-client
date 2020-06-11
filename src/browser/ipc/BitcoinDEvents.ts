@@ -11,6 +11,7 @@ import {
 } from '../../common/constants/IPC'
 import BitcoinDClient from '../api/bitcoind'
 import Storage from '../storage/storage'
+import { IPCError } from '../../common/models/ipc/IPCError'
 
 export class BitcoinDEvents implements IPCEvents {
   private _client = new BitcoinDClient()
@@ -56,7 +57,11 @@ export class BitcoinDEvents implements IPCEvents {
       if (this._config) {
         return new ConfigAnswer(true, this._config)
       } else {
-        return new ConfigAnswer(false, null)
+        return new ConfigAnswer(
+          false,
+          null,
+          new IPCError('general', -1, 'No valid config found', 'NoValidConfig')
+        )
       }
     })
   }
