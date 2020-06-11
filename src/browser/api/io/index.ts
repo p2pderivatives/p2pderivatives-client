@@ -31,7 +31,7 @@ export default class IOAPI {
           outcomes.push({
             aReward: parseFloat(row.partyA),
             bReward: parseFloat(row.partyB),
-            fixingPrice: parseFloat(row.price),
+            fixingPrice: row.price,
           })
         })
         .on('end', () => resolve(outcomes))
