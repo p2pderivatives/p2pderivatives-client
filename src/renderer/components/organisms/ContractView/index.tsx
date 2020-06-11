@@ -115,7 +115,7 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
               variant="body2"
               color="textPrimary"
             >
-              Fee rate (Satoshi)
+              Fee rate (satoshi/vbyte)
             </Typography>
             <Typography variant="body2" color="textPrimary">
               {contract.feeRate}
@@ -175,9 +175,12 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
                 >
                   Local payout
                 </Typography>
+                <PnLDisplay
+                  value={contract.finalOutcome.local}
+                  variant="body2"
+                />
                 <Typography variant="body2" color="textPrimary">
-                  {contract.finalOutcome.local}{' '}
-                  {contract.isLocalParty ? '(own)' : ''}
+                  {contract.isLocalParty ? '' : '(own)'}
                 </Typography>
               </div>
             </Grid>
@@ -190,9 +193,12 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
                 >
                   Remote payout
                 </Typography>
+                <PnLDisplay
+                  value={contract.finalOutcome.remote}
+                  variant="body2"
+                />
                 <Typography variant="body2" color="textPrimary">
-                  {contract.finalOutcome.remote}{' '}
-                  {contract.isLocalParty ? '' : '(own)'}
+                  {!contract.isLocalParty ? '' : '(own)'}
                 </Typography>
               </div>
             </Grid>
@@ -205,7 +211,11 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
                 >
                   PnL payout
                 </Typography>
-                <PnLDisplay value={computePnL(contract)} variant="body2" />
+                <PnLDisplay
+                  pnlColors={true}
+                  value={computePnL(contract)}
+                  variant="body2"
+                />
               </div>
             </Grid>
           </>

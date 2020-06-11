@@ -7,7 +7,7 @@ import {
 import { ApplicationState } from '../../../store'
 
 import ContractDetailTemplate from '../../templates/ContractDetailTemplate'
-import { goBack } from 'connected-react-router'
+import { push } from 'connected-react-router'
 import { RouteChildrenProps } from 'react-router'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
 import { acceptRequest, rejectRequest } from '../../../store/dlc/actions'
@@ -25,23 +25,23 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
 
   useEffect(() => {
     if (!contract) {
-      dispatch(goBack())
+      dispatch(push('/main'))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contract])
 
   const handleAccept = (): void => {
     if (contract) dispatch(acceptRequest(contract.id))
-    dispatch(goBack())
+    dispatch(push('/main'))
   }
 
   const handleReject = (): void => {
     if (contract) dispatch(rejectRequest(contract.id))
-    dispatch(goBack())
+    dispatch(push('/main'))
   }
 
   const handleCancel = (): void => {
-    dispatch(goBack())
+    dispatch(push('/main'))
   }
 
   return (
