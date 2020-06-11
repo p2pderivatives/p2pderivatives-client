@@ -158,12 +158,6 @@ export class ContractUpdater {
     const localCetsHex = dlcTransactions.localCetsHex
     const remoteCetsHex = dlcTransactions.remoteCetsHex
 
-    console.log('HAHA')
-    console.dir(contract, { depth: 10 })
-    console.log(localCetsHex)
-    console.log(fundTxId)
-    console.log(fundTxOutAmount)
-    console.log(remotePartyInputs)
     remoteCetSignatures = remoteCetSignatures
       ? remoteCetSignatures
       : this.GetCetSignatures(
@@ -451,8 +445,6 @@ export class ContractUpdater {
 
     const mutualClosingTx = Utils.decodeRawTransaction(mutualClosingTxHex)
 
-    console.log('SENDING MUTUAL CLOSE')
-    console.log(mutualClosingTx.txid)
     await this.walletClient.sendRawTransaction(mutualClosingTxHex)
 
     return MutualClosedContract.CreateMutualClosedContract(

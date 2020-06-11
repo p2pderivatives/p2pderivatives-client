@@ -63,8 +63,6 @@ export class DlcEventHandler {
     from: string
   ): Promise<OfferedContract> {
     const initialContract = InitialContract.FromOfferMessage(offerMessage, from)
-    console.log('INITIAL')
-    console.log(initialContract)
     await this._dlcService.CreateContract(initialContract)
     const offeredContract = await this._contractUpdater.ToOfferedContract(
       initialContract,
@@ -80,8 +78,6 @@ export class DlcEventHandler {
     )
 
     await this._dlcService.UpdateContract(offeredContract)
-
-    console.log(offeredContract)
 
     return offeredContract
   }
@@ -100,7 +96,6 @@ export class DlcEventHandler {
     }
 
     const offeredContract = retrievedContract as OfferedContract
-    console.log(offeredContract)
     const acceptedContract = await this._contractUpdater.ToAcceptContract(
       offeredContract
     )
@@ -326,7 +321,6 @@ export class DlcEventHandler {
     const contract = (await this.TryGetContractOrThrow(contractId, [
       ContractState.Confirmed,
     ])) as ConfirmedContract
-    console.log('Got contract!')
 
     const matureContract = this._contractUpdater.ToMatureContract(
       contract,
@@ -334,7 +328,6 @@ export class DlcEventHandler {
       oracleSignature
     )
 
-    console.log('Made mature')
     await this._dlcService.UpdateContract(matureContract)
 
     return matureContract
@@ -376,8 +369,6 @@ export class DlcEventHandler {
       (from && contract.counterPartyName != from) ||
       (expectedStates.length > 0 && !expectedStates.includes(contract.state))
     ) {
-      console.log(expectedStates)
-      console.log(contract.state)
       throw new DlcError(
         `Invalid contract expected one of ${expectedStates} but got ${contract.state}`
       )

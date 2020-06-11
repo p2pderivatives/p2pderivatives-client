@@ -62,7 +62,6 @@ export class DlcManager {
     contractSimple: ContractSimple
   ): Promise<OfferedContract> {
     try {
-      console.log(contractSimple.maturityTime)
       const maturityTime = DateTime.fromISO(contractSimple.maturityTime, {
         setZone: true,
       })
@@ -82,7 +81,6 @@ export class DlcManager {
         assetId: values.assetID,
       }
       const contract = toContract(contractSimple, oracleInfo)
-      console.log(contract.outcomes)
       const offeredContract = await this.eventHandler.OnSendOffer(contract)
       const offerMessage = offeredContract.ToOfferMessage()
       await this.dlcMessageService.sendDlcMessage(
@@ -142,14 +140,11 @@ export class DlcManager {
 
   private async GetTxConfirmations(txId: string): Promise<number> {
     try {
-      console.log('TXID')
-      console.log(txId)
       const transaction = await this.bitcoindClient.getTransaction(txId)
 
       return transaction.confirmations
     } catch (err) {
-      console.log(err)
-      return 0
+      return -1
     }
   }
 
@@ -169,10 +164,8 @@ export class DlcManager {
         mutualCloseMessage,
         contract.counterPartyName
       )
-      console.log('Send mutual close no problem')
       return true
     } catch {
-      console.log('Could not send mutual close')
       return false
     }
   }
@@ -180,7 +173,6 @@ export class DlcManager {
   private async checkForConfirmedThatMaturedContracts() {
     const matureContracts = await this.dlcService.GetConfirmedContractsToMature()
     for (const contract of matureContracts) {
-      console.log('MATURE1')
       try {
         const result = await this.oracleClient.getSignature(
           contract.oracleInfo.assetId,
@@ -188,7 +180,6 @@ export class DlcManager {
         )
 
         if (isSuccessful(result)) {
-          console.log('Successfully got signature')
           const value = result.value
           const outcome = contract.outcomes.find(x => x.message == value.value)
           if (!outcome) {
@@ -196,7 +187,6 @@ export class DlcManager {
             // Not much to do, contract will need to be closed with refund
             continue
           }
-          console.log('Outcome found')
           const maturedContract = await this.eventHandler.OnContractMature(
             contract.id,
             value.value,
@@ -245,22 +235,20 @@ export class DlcManager {
     const utcNow = DateTime.utc()
 
     for (const contract of contracts) {
-      console.log('CHECKING')
       try {
         const confirmations = await this.GetTxConfirmations(
           contract.mutualCloseTxId
         )
-        console.log(confirmations)
-        if (confirmations == 0 && contract.proposeTimeOut <= utcNow) {
+        if (confirmations < 0 && contract.proposeTimeOut <= utcNow) {
           // TODO(tibo): Should move to intermediary state and later verify
           // that cet and closeTx are confirmed.
-          console.log('Going for unilateral close')
           const closedContract = await this.eventHandler.OnUnilateralClose(
             contract.id
           )
           await this.ipcClient.dlcUpdate(fromContract(closedContract))
-        } else if (confirmations >= 6) {
-          console.log('Going for mutual close')
+        } else if (confirmations >= 0) {
+          // TOD(tibo): Should have an intermediary to distinguished between
+          // mutual close broadcast and confirmed.
           const mutualClosedContract = await this.eventHandler.OnMutualCloseConfirmed(
             contract.id
           )
@@ -291,10 +279,6 @@ export class DlcManager {
   private async OnDlcMessage(abstractMessage: DlcAbstractMessage) {
     const release = await this.mutex.acquire()
     try {
-      console.log('AbstractMessage')
-      console.log(abstractMessage)
-      console.log('Message')
-      console.log(abstractMessage.payload)
       const message = abstractMessage.payload
       const from = abstractMessage.from
       switch (message.messageType) {
@@ -342,7 +326,6 @@ export class DlcManager {
     from: string,
     message: MutualClosingMessage
   ) {
-    console.log('Handling mutual close')
     const mutualClosedContract = await this.eventHandler.OnMutualCloseOffer(
       from,
       message,
@@ -368,8 +351,6 @@ export class DlcManager {
   private async HandleOffer(from: string, message: OfferMessage) {
     const offerContract = await this.eventHandler.OnOfferMessage(message, from)
 
-    console.log('HERE?')
-    message.outcomes.forEach(x => console.log(x))
     await this.ipcClient.dlcUpdate(fromContract(offerContract))
   }
 

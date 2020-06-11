@@ -15,7 +15,7 @@ const contracts: ContractSimple[] = [
     counterPartyName: 'UserB',
     feeRate: 1.01,
     localCollateral: 2.01,
-    maturityTime: new DateTime().toISODate(),
+    maturityTime: 'dsad', //new DateTime().toISODate(),
     remoteCollateral: 2.99,
     outcomes: [
       {
@@ -41,7 +41,7 @@ const contracts: ContractSimple[] = [
     counterPartyName: 'UserB',
     feeRate: 1.01,
     localCollateral: 2.01,
-    maturityTime: new DateTime().toISODate(),
+    maturityTime: 'dasda', //new DateTime().toISODate(),
     remoteCollateral: 2.99,
     outcomes: [
       {
@@ -67,7 +67,7 @@ const contracts: ContractSimple[] = [
     counterPartyName: 'UserB',
     feeRate: 1.01,
     localCollateral: 2.01,
-    maturityTime: new DateTime().toISODate(),
+    maturityTime: 'kpok', //new DateTime().toISODate(),
     remoteCollateral: 2.99,
     outcomes: [
       {

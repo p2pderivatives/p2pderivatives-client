@@ -8,6 +8,7 @@ import OutcomesGrid from '../../organisms/OutcomesGrid'
 import Button from '../../atoms/Button'
 import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
+import ContractView from '../../organisms/ContractView'
 
 type ContractDetailTemplateProps = {
   data: ContractSimple
@@ -68,6 +69,8 @@ const useStyles = makeStyles({
 
 const tabItems: TabItem[] = [{ label: 'General' }, { label: 'Outcomes' }]
 
+function ContractTab(contract: ContractSimple) {}
+
 const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
   props: ContractDetailTemplateProps
 ) => {
@@ -91,7 +94,6 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
   const handleCancel = (): void => {
     if (props.cancel) props.cancel()
   }
-  console.log(contract)
 
   return (
     <div className={classes.rootContainer}>
@@ -111,134 +113,12 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
             onTabChange={(idx): void => handleTabChange(idx)}
           />
           {tabIndex === 0 && (
-            <div className={classes.contractDiv}>
-              <Typography variant="h4" color="textPrimary">
-                {contract.id}
-              </Typography>
-              <div className={classes.titleBorder}></div>
-              <Grid container spacing={3}>
-                <Grid item xs={4}>
-                  <div>
-                    <Typography
-                      className={classes.dataTitle}
-                      variant="body2"
-                      color="textPrimary"
-                    >
-                      State
-                    </Typography>
-                    <Typography variant="body2" color="textPrimary">
-                      {ContractState[contract.state]}
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item xs={4}>
-                  <div>
-                    <Typography
-                      className={classes.dataTitle}
-                      variant="body2"
-                      color="textPrimary"
-                    >
-                      Maturity Date (GMT)
-                    </Typography>
-                    <Typography variant="body2" color="textPrimary">
-                      {contract.maturityTime}
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item xs={4}>
-                  <div>
-                    <Typography
-                      className={classes.dataTitle}
-                      variant="body2"
-                      color="textPrimary"
-                    >
-                      Counter Party
-                    </Typography>
-                    <Typography variant="body2" color="textPrimary">
-                      {contract.counterPartyName}
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item xs={4}>
-                  <div>
-                    <Typography
-                      className={classes.dataTitle}
-                      variant="body2"
-                      color="textPrimary"
-                    >
-                      Fee rate (Satoshi)
-                    </Typography>
-                    <Typography variant="body2" color="textPrimary">
-                      {contract.feeRate}
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item xs={4}>
-                  <div>
-                    <Typography
-                      className={classes.dataTitle}
-                      variant="body2"
-                      color="textPrimary"
-                    >
-                      Local Collateral (Satoshi)
-                    </Typography>
-                    <Typography variant="body2" color="textPrimary">
-                      {contract.localCollateral}
-                    </Typography>
-                  </div>
-                </Grid>
-                <Grid item xs={4}>
-                  <div>
-                    <Typography
-                      className={classes.dataTitle}
-                      variant="body2"
-                      color="textPrimary"
-                    >
-                      Remote Collateral (Satoshi)
-                    </Typography>
-                    <Typography variant="body2" color="textPrimary">
-                      {contract.remoteCollateral}
-                    </Typography>
-                  </div>
-                </Grid>
-              </Grid>
-              {props.isProposal && (
-                <div className={classes.buttonDiv}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAccept}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleReject}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleCancel}
-                  >
-                    Back
-                  </Button>
-                </div>
-              )}
-              {!props.isProposal && (
-                <div className={classes.buttonDiv}>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleCancel}
-                  >
-                    Back
-                  </Button>
-                </div>
-              )}
-            </div>
+            <ContractView
+              data={contract}
+              cancel={() => handleCancel()}
+              acceptContract={() => handleAccept()}
+              rejectContract={() => handleReject()}
+            />
           )}
           {tabIndex === 1 && (
             <Box display={tabIndex === 1 ? 'inline' : 'none'}>

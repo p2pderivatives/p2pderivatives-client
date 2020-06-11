@@ -1,15 +1,16 @@
 import React, { ReactElement } from 'react'
-import StoryRouter from 'storybook-react-router'
-import ContractDetailTemplate from './'
+import { Container } from '@material-ui/core'
+import ContractView from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
 import { ContractSimple } from '../../../../common/models/ipc/ContractSimple'
-import { DateTime } from 'luxon'
 
 export default {
-  title: 'Components/Templates/ContractDetailTemplate',
-  decorators: [StoryRouter()],
+  title: 'Components/Organisms/ContractView',
+  parameters: {
+    backgrounds: [{ name: 'p2pd', value: '#303855' }],
+  },
 }
 
 const contract: ContractSimple = {
@@ -18,7 +19,7 @@ const contract: ContractSimple = {
   counterPartyName: 'UserB',
   feeRate: 1.01,
   localCollateral: 2.01,
-  maturityTime: 'dasdkasp',
+  maturityTime: 'JAJA', //new DateTime().toISODate(),
   remoteCollateral: 2.99,
   outcomes: [
     {
@@ -37,12 +38,19 @@ const contract: ContractSimple = {
       message: 'maybe',
     },
   ],
+  finalOutcome: {
+    message: 'yes',
+    local: 5,
+    remote: 0,
+  },
 }
 
-export const contractDetail = (): ReactElement => (
-  <div style={{ width: 1366, height: 768 }}>
-    <MuiThemeProvider theme={theme}>
-      <ContractDetailTemplate data={contract} isProposal={false} />
-    </MuiThemeProvider>
-  </div>
+export const sampleTable = (): ReactElement => (
+  <MuiThemeProvider theme={theme}>
+    <div style={{ width: 1366, height: 768 }}>
+      <div style={{ height: '100%' }}>
+        <ContractView data={contract} />
+      </div>
+    </div>
+  </MuiThemeProvider>
 )

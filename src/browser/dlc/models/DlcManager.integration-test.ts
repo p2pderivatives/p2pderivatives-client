@@ -37,7 +37,7 @@ let remotePartyContext: PartyContext
 let localPartyIPC = new DlcIPCBrowserAPIMock()
 let remotePartyIPC = new DlcIPCBrowserAPIMock()
 
-const contractId = '1'
+let contractId = ''
 const outcomes = [
   {
     message: 'bull',
@@ -113,7 +113,7 @@ describe('dlc-manager', () => {
         oracleClientMock,
         localDlcMessageService,
         logger,
-        1
+        10
       )
       remotePartyManager = new DlcManager(
         remotePartyContext.eventHandler,
@@ -123,18 +123,25 @@ describe('dlc-manager', () => {
         oracleClientMock,
         remoteDlcMessageService,
         logger,
-        1
+        11
       )
     } catch (error) {
       fail(error)
     }
   })
 
-  test('mutual-closing', async () => {
+  test('mutual-closing-both-send', async () => {
     await CommonTests()
+    await BothReceiveMutualClose()
+  })
+
+  test('mutual-closing-local-send', async () => {
+    await CommonTests()
+    await OnlyLocalSendsMutualClosing()
   })
 
   async function CommonTests() {
+    const semaphore = new Semaphore(1)
     const contract: Contract = {
       state: ContractState.Initial,
       id: contractId,
@@ -152,10 +159,12 @@ describe('dlc-manager', () => {
       feeRate: 2,
     }
 
-    const semaphore = new Semaphore(1)
     let release = await semaphore.acquire()
     remotePartyIPC.callback = () => release()
-    await localPartyManager.SendContractOffer(fromContract(contract))
+    const offeredContract = await localPartyManager.SendContractOffer(
+      fromContract(contract)
+    )
+    contractId = offeredContract.id
 
     release = await semaphore.acquire()
     await AssertContractState(
@@ -170,7 +179,7 @@ describe('dlc-manager', () => {
       ContractState.Offered
     )
 
-    localPartyIPC.callback = () => release()
+    remotePartyIPC.callback = () => release()
     await remotePartyManager.AcceptContractOffer(contractId)
     release = await semaphore.acquire()
 
@@ -190,7 +199,7 @@ describe('dlc-manager', () => {
 
     localPartyIPC.callback = () => release()
     remotePartyIPC.callback = () => release()
-    jest.runTimersToTime(1000)
+    jest.runTimersToTime(11000)
 
     release = await semaphore.acquire()
     release = await semaphore.acquire()
@@ -205,11 +214,19 @@ describe('dlc-manager', () => {
       contractId,
       ContractState.Confirmed
     )
+  }
 
+  async function BothReceiveMutualClose() {
+    const semaphore = new Semaphore(1)
+    let release = await semaphore.acquire()
     localPartyIPC.callback = () => release()
     remotePartyIPC.callback = () => release()
-    jest.runTimersToTime(1000)
+    jest.runTimersToTime(11000)
 
+    release = await semaphore.acquire()
+    release = await semaphore.acquire()
+    release = await semaphore.acquire()
+    release = await semaphore.acquire()
     release = await semaphore.acquire()
     release = await semaphore.acquire()
 
@@ -221,6 +238,40 @@ describe('dlc-manager', () => {
 
     await AssertContractState(
       remotePartyContext.dlcService,
+      contractId,
+      ContractState.MutualClosed
+    )
+  }
+
+  async function OnlyLocalSendsMutualClosing() {
+    const semaphore = new Semaphore(1)
+    let release = await semaphore.acquire()
+    localPartyIPC.callback = () => release()
+    remotePartyIPC.callback = () => release()
+    jest.runTimersToTime(10000)
+
+    release = await semaphore.acquire()
+    release = await semaphore.acquire()
+    release = await semaphore.acquire()
+
+    await AssertContractState(
+      localPartyContext.dlcService,
+      contractId,
+      ContractState.MutualCloseProposed
+    )
+
+    await AssertContractState(
+      remotePartyContext.dlcService,
+      contractId,
+      ContractState.MutualClosed
+    )
+
+    jest.runTimersToTime(10000)
+
+    release = await semaphore.acquire()
+
+    await AssertContractState(
+      localPartyContext.dlcService,
       contractId,
       ContractState.MutualClosed
     )

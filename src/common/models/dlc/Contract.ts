@@ -17,4 +17,5 @@ export interface Contract {
   readonly feeRate: number
   readonly premiumInfo?: PremiumInfo
   readonly isLocalParty?: boolean
+  readonly finalOutcome?: Outcome
 }

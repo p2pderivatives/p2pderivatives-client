@@ -27,6 +27,7 @@ export interface ContractSimple {
   readonly feeRate: number
   readonly premiumInfo?: PremiumInfoSimple
   readonly isLocalParty?: boolean
+  readonly finalOutcome?: OutcomeSimple
 }
 
 export const fromContract = (contract: Contract): ContractSimple => {
@@ -52,6 +53,13 @@ export const fromContract = (contract: Contract): ContractSimple => {
         }
       : undefined,
     isLocalParty: contract.isLocalParty,
+    finalOutcome: contract.finalOutcome
+      ? {
+          message: contract.finalOutcome.message,
+          local: contract.finalOutcome.local.GetSatoshiAmount(),
+          remote: contract.finalOutcome.remote.GetSatoshiAmount(),
+        }
+      : undefined,
   }
 }
 
@@ -59,8 +67,6 @@ export const toContract = (
   contract: ContractSimple,
   oracleInfo: OracleInfo
 ): Contract => {
-  console.log('MATURITY')
-  console.log(contract)
   return {
     state: contract.state,
     id: contract.id,

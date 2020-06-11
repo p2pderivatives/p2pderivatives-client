@@ -68,6 +68,8 @@ export class AuthenticationEvents implements IPCEvents {
           .changePassword(request.oldPassword, request.newPassword)
         return new GeneralAnswer(true)
       } catch (e) {
+        console.log('ERROR changing password')
+        console.log(e)
         return new GeneralAnswer(false, e)
       }
     })
