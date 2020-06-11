@@ -12,6 +12,7 @@ import { goBack } from 'connected-react-router'
 import { userListRequest } from '../../../store/user/actions'
 import FileIPC from '../../../ipc/FileIPC'
 import Outcome from '../../../../common/models/ipc/Outcome'
+import { merge } from '../../../util/outcome-merger'
 
 const { dialog } = window.require('electron').remote
 
@@ -28,7 +29,8 @@ const NewContractPage: FC = () => {
     dialog.showOpenDialog({ properties: ['openFile'] }).then(async files => {
       if (files !== undefined) {
         const filepath = files.filePaths[0]
-        const outcomes = await new FileIPC().parseOutcomes(filepath)
+        const parsedOutcomes = await new FileIPC().parseOutcomes(filepath)
+        const outcomes = merge(parsedOutcomes)
         setOutcomesList(outcomes)
         setTab(1)
       }

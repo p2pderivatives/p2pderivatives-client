@@ -1,5 +1,5 @@
 export default interface Outcome {
-  fixingPrice: number
+  fixingPrice: string
   aReward: number
   bReward: number
 }
