@@ -8,6 +8,7 @@ import {
   balanceSuccess,
   balanceError,
   configRetrieved,
+  configNone,
 } from './actions'
 import { BitcoinAPI } from '../../ipc/BitcoinAPI'
 import { IPCError } from '../../../common/models/ipc/IPCError'
@@ -51,7 +52,7 @@ export function* handleConfig(): SagaIterator {
     const config = yield call(bitcoinAPI.getConfig)
     yield put(configRetrieved(config))
   } catch (err) {
-    // nothing to be done, no config loaded
+    yield put(configNone())
   }
 }
 

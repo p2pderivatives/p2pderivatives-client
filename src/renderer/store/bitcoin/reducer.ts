@@ -61,6 +61,13 @@ export const bitcoinReducer: Reducer<BitcoinState> = (
         config: action.payload,
       }
     }
+    case BitcoinActionTypes.CONFIG_NONE: {
+      return {
+        ...state,
+        processing: false,
+        config: undefined,
+      }
+    }
     default: {
       return state
     }
