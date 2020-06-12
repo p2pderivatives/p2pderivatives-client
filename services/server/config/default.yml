@@ -1,0 +1,20 @@
+server:
+  address: '0.0.0.0:8080'
+log:
+  dir: _log
+  output_stdout: true
+  basename: unittest.log.%Y-%m-%d
+  rotation_interval: 24h
+  rotation_counts: 7
+  format: text
+  level: debug
+database:
+  log: false
+  port: 5432
+  dbuser: postgres
+  dbname: db
+app:
+  token:
+    secret: k^Cc#*mdnS9$nTOY6S1#1i7^e*o1ijSl #JWT secret key
+    exp: 30m
+    refresh_exp: 720h
