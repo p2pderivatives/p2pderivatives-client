@@ -1,0 +1,33 @@
+server:
+  address: '0.0.0.0:8080'
+oracle:
+  keyFile: /key/key.pem
+  keyPass:
+    file: /key/pass.txt
+log:
+  dir: _log
+  output_stdout: true
+  basename: unittest.log.%Y-%m-%d
+  rotation_interval: PT24H
+  rotation_counts: 7
+  format: json
+  level: info
+database:
+  log: false
+  port: 5432
+  dbuser: postgres
+  dbname: db
+api:
+  assets:
+    btcusd:
+      startDate: 2020-01-01T00:00:00Z
+      frequency: PT1H
+      range: P10DT
+    btcjpy:
+      startDate: 2020-01-01T00:00:00Z
+      frequency: PT1H
+      range: P2MT
+datafeed:
+  cryptoCompare:
+    baseUrl: https://min-api.cryptocompare.com/data
+    apiKey: 6c8c899bacde7f54b5e312a862d162c36042669dafdb4c75b87feacc3c70c9c4
