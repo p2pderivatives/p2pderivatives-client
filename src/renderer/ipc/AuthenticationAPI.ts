@@ -3,4 +3,5 @@ export interface AuthenticationAPI {
   logout(): Promise<void>
   refresh(): Promise<void>
   changePassword(oldPassword: string, newPassword: string): Promise<void>
+  getUser(): Promise<string>
 }

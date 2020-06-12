@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 
 import { makeStyles } from '@material-ui/core'
@@ -10,11 +10,8 @@ import Fab from '../../atoms/Fab'
 import Paper from '@material-ui/core/Paper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
-import { ApplicationState } from '../../../store'
-import {
-  useSelector as useReduxSelector,
-  TypedUseSelectorHook,
-} from 'react-redux'
+
+import { useUserContext } from '../../../providers/User'
 
 export type LayoutProps = {
   onBack?: () => void
@@ -22,8 +19,6 @@ export type LayoutProps = {
   showSidebar?: boolean
   settingsConfig?: boolean
 }
-
-const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -63,8 +58,19 @@ const useStyles = makeStyles({
 
 const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
   const classes = useStyles()
+  const userContext = useUserContext()
 
-  const username = useSelector(state => state.login.username)
+  const [username, setUsername] = useState('')
+
+  useEffect(() => {
+    getUsername()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const getUsername = async (): Promise<void> => {
+    const user = await userContext.getUser()
+    setUsername(user)
+  }
 
   return (
     <div className={classes.rootContainer}>

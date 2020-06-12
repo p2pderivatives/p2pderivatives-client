@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 export class GrpcAuth {
   public static AuthTokenMeta = 'authorization'
 
+  private _username = ''
   private _authToken = ''
   private _refreshToken = ''
   private _expires: DateTime | null = null
@@ -18,9 +19,18 @@ export class GrpcAuth {
   }
 
   public deauthorize(): void {
+    this._username = ''
     this._authToken = ''
     this._refreshToken = ''
     this._expires = null
+  }
+
+  public setUsername(username: string): void {
+    this._username = username
+  }
+
+  public getUsername(): string {
+    return this._username
   }
 
   public getAuthToken(): string {

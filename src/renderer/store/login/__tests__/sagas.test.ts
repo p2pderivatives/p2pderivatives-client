@@ -44,6 +44,10 @@ class MockAuthAPI implements AuthenticationAPI {
   changePassword(oldPassword: string, newPassword: string): Promise<void> {
     return Promise.resolve()
   }
+
+  getUser(): Promise<string> {
+    return Promise.resolve('John Doe')
+  }
 }
 
 describe('login saga', () => {
