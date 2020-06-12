@@ -1,30 +1,30 @@
-import electron from 'electron'
+import electron, { app } from 'electron'
 import encoding from 'encoding-down'
 import { promises as fs } from 'fs'
 import leveldown from 'leveldown'
 import levelup, { LevelUp } from 'levelup'
 import * as path from 'path'
+import winston from 'winston'
+import { BitcoinDConfig } from '../common/models/ipc/BitcoinDConfig'
+import BitcoinDClient from './api/bitcoind'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
 import { GrpcConfig } from './api/grpc/GrpcConfig'
 import { OracleClient, OracleConfig } from './api/oracle'
 import { AppConfig } from './config/config'
 import { LevelConfigRepository } from './config/LevelConfigRepository'
+import { ContractUpdater } from './dlc/models/ContractUpdater'
+import { DlcEventHandler } from './dlc/models/DlcEventHandler'
+import { DlcManager } from './dlc/models/DlcManager'
 import { LevelContractRepository } from './dlc/repository/LevelContractRepository'
 import { DlcService } from './dlc/service/DlcService'
 import { AuthenticationEvents } from './ipc/AuthenticationEvents'
 import { BitcoinDEvents } from './ipc/BitcoinDEvents'
 import { DlcEvents } from './ipc/DlcEvents'
+import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
 import { FileEvents } from './ipc/FileEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
-import { DlcManager } from './dlc/models/DlcManager'
-import { DlcEventHandler } from './dlc/models/DlcEventHandler'
-import { ContractUpdater } from './dlc/models/ContractUpdater'
-import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
-import winston from 'winston'
-import { BitcoinDConfig } from '../common/models/ipc/BitcoinDConfig'
-import BitcoinDClient from './api/bitcoind'
 
 let db: LevelUp | null = null
 let oracleClient: OracleClient | null = null
@@ -125,7 +125,14 @@ async function logoutCallback(): Promise<void> {
 
 export function initialize(window: electron.BrowserWindow): void {
   browserWindow = window
-  const appConfig = new AppConfig('./settings.default.yaml')
+  let resourcesPath: string
+  if (!app.isPackaged) {
+    resourcesPath = app.getAppPath()
+  } else {
+    resourcesPath = path.join(app.getAppPath(), '..')
+  }
+  const configPath = path.join(resourcesPath, 'settings.default.yml')
+  const appConfig = new AppConfig(configPath)
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
   client = new GrpcClient(grpcConfig, auth)

@@ -1,8 +1,42 @@
 version: 2.1
+executors:
+  client-runner:
+    docker:
+      - image: cryptogarageinc/p2pderivatives-client-ci
+  client-browsers-runner:
+    docker:
+      - image: cryptogarageinc/p2pderivatives-client-ci:latest-browser
+  macos-packager:
+    macos:
+      xcode: 11.3.0
+    environment:
+      BUILD_ARG: -m
+      PKG_SUFFIX: dmg
+  win-packager:
+    docker:
+      - image: electronuserland/builder:wine
+    environment:
+      BUILD_ARG: -w
+      PKG_SUFFIX: exe
+  linux-packager:
+    docker:
+      - image: electronuserland/builder
+    environment:
+      BUILD_ARG: -l snap
+      PKG_SUFFIX: snap
+
+tag_only: &tag_only
+  filters:
+    tags:
+      only: /.*/
+    branches:
+      ignore: /.*/
+
 workflows:
   lint-build-test:
     jobs:
-      - dependencies
+      - dependencies:
+          name: dependencies
       - lint:
           requires:
             - dependencies
@@ -20,11 +54,42 @@ workflows:
           requires:
             - jest-tests
             - mocha-tests
+  tagged:
+    jobs:
+      - dependencies:
+          name: dependencies
+          run-preci: false
+          <<: *tag_only
+      - packaging:
+          name: macos-packaging
+          runner:
+            name: macos-packager
+          <<: *tag_only
+          requires:
+            - dependencies
+      - packaging:
+          name: windows-packaging
+          runner:
+            name: win-packager
+          <<: *tag_only
+          requires:
+            - dependencies
+      - packaging:
+          name: linux-packaging
+          runner:
+            name: linux-packager
+          <<: *tag_only
+          requires:
+            - dependencies
 
 jobs:
   dependencies:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    parameters:
+      run-preci:
+        description: 'Should run the preci hook ? (link global packages)'
+        type: boolean
+        default: true
+    executor: client-runner
     steps:
       - checkout
       - run:
@@ -43,7 +108,9 @@ jobs:
             if [ -d "node_modules" ]; then
               export HAS_NPM_CACHE="true"
             fi
-            npm run-script preci && (cd gen-grpc && npm run-script preci)
+            if << parameters.run-preci >>;then
+              npm run-script preci && (cd gen-grpc && npm run-script preci)
+            fi
             if [ -z "$HAS_NPM_CACHE" ]; then
               npm ci
             fi
@@ -76,8 +143,7 @@ jobs:
             - .
 
   lint:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    executor: client-runner
     steps:
       - attach_workspace:
           at: .
@@ -88,8 +154,7 @@ jobs:
           path: ./reports/linter
 
   build:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    executor: client-runner
     steps:
       - attach_workspace:
           at: .
@@ -98,8 +163,7 @@ jobs:
           command: CI=false npm run build # ci to false avoid linter warnings as errors
 
   jest-tests:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    executor: client-runner
     steps:
       - attach_workspace:
           at: .
@@ -115,8 +179,7 @@ jobs:
           path: ./reports/jest
 
   mocha-tests:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci:latest-browser
+    executor: client-browsers-runner
     steps:
       - attach_workspace:
           at: .
@@ -130,6 +193,7 @@ jobs:
           path: ./reports/mocha
       - store_artifacts:
           path: ./reports/mocha
+
   integration-tests:
     docker:
       - image: cimg/base:stable
@@ -194,3 +258,24 @@ jobs:
           when: always
       - store_test_results:
           path: ./reports
+
+  packaging:
+    parameters:
+      runner:
+        type: executor
+      pre-pkg:
+        description: 'Steps that will run before packaging the app'
+        type: steps
+        default: []
+    executor: << parameters.runner >>
+    steps:
+      - attach_workspace:
+          at: .
+      - steps: << parameters.pre-pkg >>
+      - run:
+          name: Packaging
+          command: |
+            npm run dist -- ${BUILD_ARG}
+            mkdir pkg && cp dist/*.${PKG_SUFFIX}* pkg
+      - store_artifacts:
+          path: ./pkg
