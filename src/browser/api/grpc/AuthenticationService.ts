@@ -34,6 +34,7 @@ export class AuthenticationService {
     return loginAsync(loginRequest).then(response => {
       const token = response.getToken()
       if (token) {
+        this._auth.setUsername(username)
         this._auth.authorize(
           token.getAccessToken(),
           token.getExpiresIn(),

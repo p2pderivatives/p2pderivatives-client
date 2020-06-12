@@ -2,6 +2,7 @@ export const LOGIN = 'login'
 export const LOGOUT = 'logout'
 export const REFRESH = 'refresh'
 export const CHANGE_PASSWORD = 'change-password'
+export const GET_USER = 'get-user'
 
 export const REGISTER_USER = 'register-user'
 export const UNREGISTER_USER = 'unregister-user'

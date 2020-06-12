@@ -35,6 +35,10 @@ export class GrpcClient {
     this._userService = new UserService(userClient, this._auth)
   }
 
+  public getAuthObject(): GrpcAuth {
+    return this._auth
+  }
+
   public getAuthenticationService(): AuthenticationService {
     return this._authService
   }

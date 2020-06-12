@@ -9,7 +9,10 @@ import {
   LOGOUT,
   REFRESH,
   CHANGE_PASSWORD,
+  GET_USER,
 } from '../../common/constants/IPC'
+import { UserAnswer } from '../../common/models/ipc/UserAnswerProps'
+import { IPCError } from '../../common/models/ipc/IPCError'
 
 export class AuthenticationEvents implements IPCEvents {
   private _client: GrpcClient
@@ -58,6 +61,19 @@ export class AuthenticationEvents implements IPCEvents {
         return new GeneralAnswer(true)
       } catch (e) {
         return new GeneralAnswer(false, e)
+      }
+    })
+
+    ipc.answerRenderer(GET_USER, async data => {
+      const username = this._client.getAuthObject().getUsername()
+      if (username) {
+        return new UserAnswer(true, username)
+      } else {
+        return new UserAnswer(
+          false,
+          '',
+          new IPCError('general', -1, 'Not logged in!', 'AuthenticationError')
+        )
       }
     })
   }
