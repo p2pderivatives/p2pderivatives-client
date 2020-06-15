@@ -1,34 +1,37 @@
-import { IPCEvents } from './IPCEvents'
 import { ipcMain as ipc } from 'electron-better-ipc'
-import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
-import { BalanceAnswer } from '../../common/models/ipc/BalanceAnswer'
-import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
-import { ConfigAnswer } from '../../common/models/ipc/ConfigAnswer'
 import {
   CHECK_BITCOIND,
   GET_BALANCE,
   GET_CONFIG,
 } from '../../common/constants/IPC'
+import { BalanceAnswer } from '../../common/models/ipc/BalanceAnswer'
+import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
+import { ConfigAnswer } from '../../common/models/ipc/ConfigAnswer'
+import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
+import { IPCEvents } from './IPCEvents'
+import { isSuccessful } from '../../common/utils/failable'
 import BitcoinDClient from '../api/bitcoind'
-import Storage from '../storage/storage'
 import { IPCError } from '../../common/models/ipc/IPCError'
+import ConfigRepository from '../config/ConfigRepository'
 
 export class BitcoinDEvents implements IPCEvents {
   private _client = new BitcoinDClient()
-  private _storage: Storage
+  private _storage: ConfigRepository
   private _config: BitcoinDConfig | null = null
 
-  constructor(storage: Storage) {
+  constructor(storage: ConfigRepository) {
     this._storage = storage
-    try {
-      const bitcoinConfig = this._storage.readBitcoinDConfig()
-      if (bitcoinConfig) {
-        this._client.configure(bitcoinConfig)
-        this._config = bitcoinConfig
-      }
-    } catch (e) {
-      // pretend nothing happened
+  }
+
+  public async Initialize(): Promise<void> {
+    const result = await this._storage.ReadBitcoinDConfig()
+    if (!isSuccessful(result)) {
+      // No config
+      return
     }
+
+    this._config = result.value
+    await this._client.configure(this._config)
   }
 
   public registerReplies(): void {
@@ -36,7 +39,7 @@ export class BitcoinDEvents implements IPCEvents {
       const config = data as BitcoinDConfig
       try {
         await this._client.configure(config)
-        this._storage.writeBitcoinDConfig(config)
+        await this._storage.WriteBitcoinDConfig(config)
         this._config = config
         return new GeneralAnswer(true)
       } catch (e) {
