@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { test, suite, skip } from '@testdeck/mocha'
+import { test, suite } from '@testdeck/mocha'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import {
   GeneralAnswer,
@@ -67,7 +67,7 @@ class Main {
     const answer = UserListAnswer.parse(result)
     const users = answer.getUserList().map(userJson => new User(userJson._name))
 
-    expect(users.length).eq(4)
+    expect(users.length).eq(3)
     expect(users[0].getName()).eq('user1')
   }
 }

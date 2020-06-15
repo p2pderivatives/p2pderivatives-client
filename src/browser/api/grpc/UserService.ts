@@ -50,4 +50,11 @@ export class UserService {
 
     return this._client.getUserList(new Empty(), metaData)
   }
+
+  public getConnectedUsers(): ClientReadableStream<UserInfo> {
+    const metaData = new Metadata()
+    metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
+
+    return this._client.getConnectedUsers(new Empty(), metaData)
+  }
 }
