@@ -56,7 +56,7 @@ export class UserEvents implements IPCEvents {
 
       return new Promise((resolve, reject) => {
         try {
-          this._listStream = this._client.getUserService().getUserListStream()
+          this._listStream = this._client.getUserService().getConnectedUsers()
           this._listStream.on('data', (data: UserInfo) => {
             userList.push(new User(data.getName()))
           })
