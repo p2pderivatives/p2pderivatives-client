@@ -119,6 +119,6 @@ export class AuthenticationService {
     const changePasswordAsync = promisify<UpdatePasswordRequest, Empty>(
       this._client.updatePassword.bind(this._client)
     )
-    return changePasswordAsync(cpRequest)
+    return changePasswordAsync(cpRequest, metaData)
   }
 }
