@@ -1,4 +1,26 @@
 version: 2.1
+workflows:
+  lint-build-test:
+    jobs:
+      - dependencies
+      - lint:
+          requires:
+            - dependencies
+      - build:
+          requires:
+            - dependencies
+      - jest-tests:
+          requires:
+            - build
+      - mocha-tests:
+          requires:
+            - build
+      - integration-tests:
+          context: github-packages-docker-credentials
+          requires:
+            - jest-tests
+            - mocha-tests
+
 jobs:
   dependencies:
     docker:
@@ -107,20 +129,67 @@ jobs:
           path: ./reports/mocha
       - store_artifacts:
           path: ./reports/mocha
+  integration-tests:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Login to docker repository
+          command: |
+            echo "$DOCKER_HUB_PASS" | docker login ${DOCKER_HUB_URL} -u "$DOCKER_HUB_USER" --password-stdin
+      - attach_workspace:
+          at: .
+      - run:
+          name: Configure and start services
+          command: |
+            docker create \
+              -v oracle-key:/oracle-key \
+              -v oracle-config:/oracle-config \
+              -v server-config:/server-config \
+              -v server-scripts:/server-scripts \
+              -v bitcoind-config:/bitcoind-config \
+              -v bitcoind-scripts:/bitcoind-scripts \
+              -v bitcoind-vectors:/bitcoind-vectors \
+              -v reports:/reports \
+              -v dev:/dev \
+              --name helper alpine /bin/true
+            docker cp ./services/oracle/config/. helper:/oracle-config
+            docker cp ./services/oracle/key/. helper:/oracle-key
+            docker cp ./services/server/config/. helper:/server-config
+            docker cp ./services/server/scripts/. helper:/server-scripts
+            docker cp ./services/bitcoind/config/. helper:/bitcoind-config
+            docker cp ./services/bitcoind/scripts/. helper:/bitcoind-scripts
+            docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+      - run:
+          name: Wait for services availability
+          command: |
+            docker-compose -f docker-compose.yml -f docker-compose.ci.yml run dockerize \
+             -wait http://oracle:8080/asset \
+             -wait tcp://server:8080 \
+             -wait tcp://bitcoind:18443
+      - run:
+          name: Apply migration
+          command: |
+            # need additional permissions
+            docker-compose exec bitcoind /bin/sh -c "chown -R bitcoin /vectors"
 
-workflows:
-  lint-build-test:
-    jobs:
-      - dependencies
-      - lint:
-          requires:
-            - dependencies
-      - build:
-          requires:
-            - dependencies
-      - jest-tests:
-          requires:
-            - build
-      - mocha-tests:
-          requires:
-            - build
+            ./services/seed-services.sh
+            echo "recovering generated test vectors"
+            docker cp helper:/bitcoind-vectors/. ./services/bitcoind/vectors
+            docker cp ./. helper:/dev
+
+      - run:
+          name: Run Integration tests
+          command: |
+            docker-compose -f docker-compose.yml -f docker-compose.ci.yml run dev \
+              npm run integration:ci
+      - run:
+          name: Recover tests results
+          command: |
+            docker cp  helper:/reports/. ./reports
+            docker rm helper --force --volumes
+          when: always
+      - store_test_results:
+          path: ./reports

@@ -1,18 +1,18 @@
+import { IAuthenticationClient } from '@internal/gen-grpc/authentication_grpc_pb'
 import {
-  LoginResponse,
-  LoginRequest,
-  LogoutRequest,
-  RefreshResponse,
-  RefreshRequest,
   Empty,
+  LoginRequest,
+  LoginResponse,
+  LogoutRequest,
+  RefreshRequest,
+  RefreshResponse,
   UpdatePasswordRequest,
 } from '@internal/gen-grpc/authentication_pb'
-import { IAuthenticationClient } from '@internal/gen-grpc/authentication_grpc_pb'
 import { Metadata } from 'grpc'
-import { promisify } from './grpcPromisify'
+import AuthenticationError from './AuthenticationError'
 import { GrpcAuth } from './GrpcAuth'
 import { GrpcError } from './GrpcError'
-import AuthenticationError from './AuthenticationError'
+import { promisify } from './grpcPromisify'
 
 export class AuthenticationService {
   private _client: IAuthenticationClient
@@ -73,7 +73,7 @@ export class AuthenticationService {
 
   public refresh(): Promise<void> {
     if (!this._auth.isExpired()) {
-      return new Promise(resolve => resolve())
+      return Promise.resolve()
     }
 
     const refreshToken = this._auth.getRefreshToken()

@@ -8,7 +8,7 @@ node_modules
 # testing
 /coverage
 /reports
-
+services/*/vectors
 # production
 /build
 /dist
