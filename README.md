@@ -1,4 +1,5 @@
 # p2pderivatives-client
+
 Repository for the P2PDerivatives client
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -13,8 +14,7 @@ In the project directory, you can run:
 
 ### `npm run electron-dev`
 
-Starts up the webapp on `localhost:3000` and creates an Electron instance that is pointed at the webapp. 
-
+Starts up the webapp on `localhost:3000` and creates an Electron instance that is pointed at the webapp.
 
 ### `npm run dist`
 
@@ -43,8 +43,17 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 
 ## Integration Tests
 
-### Bitcoind Tests
+The client integration tests requires multiple services to run:
 
-The Bitcoind integration test requires the bitcoind to be using `regtest` and to be running on the default `regtest` port, 18443.
+- Rest Oracle [documentation](https://github.com/cryptogarageinc/p2pderivatives-oracle)
+- Grpc Server [documentation](https://github.com/cryptogarageinc/p2pderivatives-server)
+- BitcoinD instance running on `regtest`
 
-It also requires that a wallet is created ( besides the default one ), named `test` with wallet passphrase `test123!`.
+You can run all of those services on your local machine using `docker-compose up`
+
+The services will need some migration to run the integration tests.
+You can seed the services for integration tests using `./services/seed-services.sh`
+or by service using a specific script  
+`docker-compose exec <service-name> /bin/sh /scripts/<my-script-name>`
+
+You can then run all the integration tests using `npm run integration`

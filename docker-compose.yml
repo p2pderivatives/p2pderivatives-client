@@ -74,6 +74,7 @@ services:
       - bitcoind-data:/home/bitcoin/.bitcoin
       - ./services/bitcoind/config:/config
       - ./services/bitcoind/scripts:/scripts
+      - ./services/bitcoind/vectors:/vectors
 
 volumes:
   oracle-db-data:

@@ -1,0 +1,59 @@
+version: '3.4'
+services:
+  ### ORACLE
+  oracle:
+    volumes:
+      - oracle-key:/key
+      - oracle-config:/config
+
+  ### SERVER
+  server:
+    volumes:
+      - server-config:/config
+      - server-scripts:/scripts
+
+  ### BITCOIND
+  bitcoind:
+    volumes:
+      - bitcoind-config:/config
+      - bitcoind-scripts:/scripts
+      - bitcoind-vectors:/vectors
+
+  ### UTILS
+  dockerize:
+    image: jwilder/dockerize
+
+  dev:
+    image: cryptogarageinc/p2pderivatives-client-ci
+    user: root
+    working_dir: /home/circleci/project
+    environment:
+      SERVER_HOST: server
+      SERVER_PORT: 8080
+      BITCOIND_HOST: bitcoind
+      BITCOIND_PORT: 18443
+    volumes:
+      - reports:/home/circleci/project/reports
+      - dev:/home/circleci/project
+
+volumes:
+  oracle-key:
+    external: true
+  oracle-config:
+    external: true
+  server-config:
+    external: true
+  server-scripts:
+    external: true
+  bitcoind-config:
+    external: true
+  bitcoind-scripts:
+    external: true
+  bitcoind-vectors:
+    external: true
+
+  # DEV
+  reports:
+    external: true
+  dev:
+    external: true
