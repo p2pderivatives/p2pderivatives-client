@@ -12,7 +12,9 @@ import { goBack } from 'connected-react-router'
 import { userListRequest } from '../../../store/user/actions'
 import FileIPC from '../../../ipc/FileIPC'
 import { Outcome } from '../../../../common/models/dlc/Outcome'
+import OracleIPC from '../../../ipc/OracleIPC'
 import { merge } from '../../../util/outcome-merger'
+import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
 
 const { dialog } = window.require('electron').remote
 
@@ -23,6 +25,7 @@ const NewContractPage: FC = () => {
 
   const [tab, setTab] = useState(0)
   const [outcomesList, setOutcomesList] = useState<Outcome[]>([])
+  const [oracleInfo, setOracleInfo] = useState<OracleAssetConfiguration>()
   const userList = useSelector(state => state.user.userList)
 
   const handleCSVImport = (): void => {
@@ -41,8 +44,14 @@ const NewContractPage: FC = () => {
     dispatch(goBack())
   }
 
+  const getOracleInfo = async () => {
+    const info = await OracleIPC.getOracleConfig('btcusd')
+    setOracleInfo(info)
+  }
+
   useEffect(() => {
     dispatch(userListRequest())
+    getOracleInfo()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -55,6 +64,7 @@ const NewContractPage: FC = () => {
         tab={tab}
         onTabChange={(index): void => setTab(index)}
         onCancel={handleCancel}
+        oracleInfo={oracleInfo}
       />
     </div>
   )
