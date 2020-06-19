@@ -3,6 +3,7 @@ import { ChangePasswordCall } from '../../common/models/ipc/ChangePasswordCall'
 import { GrpcClient } from '../api/grpc/GrpcClient'
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 import {
   LOGIN,
   LOGOUT,
@@ -12,7 +13,6 @@ import {
 } from '../../common/constants/IPC'
 import { UserAnswer } from '../../common/models/ipc/UserAnswerProps'
 import { IPCError } from '../../common/models/ipc/IPCError'
-import { IPCEvents } from './IPCEvents'
 
 export class AuthenticationEvents implements IPCEvents {
   private _client: GrpcClient
@@ -30,7 +30,9 @@ export class AuthenticationEvents implements IPCEvents {
   }
 
   public registerReplies(): void {
+    console.log('REGISTERING REPLIES')
     ipc.answerRenderer(LOGIN, async data => {
+      console.log('Requesting login')
       const request = data as LoginCall
       try {
         await this._client

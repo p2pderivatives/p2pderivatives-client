@@ -21,6 +21,7 @@ export function* handleLogin(
 ): SagaIterator {
   try {
     const authAPI: AuthenticationAPI = yield getContext('authAPI')
+    console.log('LOGIN')
     yield call(authAPI.login, action.payload.username, action.payload.password)
     yield put(loginSuccess(action.payload.username))
   } catch (err) {

@@ -11,7 +11,7 @@ function createWindow(): void {
     height: 768,
     webPreferences: { nodeIntegration: true },
   })
-  initialize()
+  initialize(mainWindow)
   mainWindow.loadURL(
     isDev
       ? 'http://localhost:9000'
@@ -23,7 +23,8 @@ function createWindow(): void {
 
 app.on('ready', createWindow)
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  await finalize()
   if (process.platform !== 'darwin') {
     finalize()
     app.quit()

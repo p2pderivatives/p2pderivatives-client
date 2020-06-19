@@ -1,0 +1,14 @@
+import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { MaturedContractBase } from './MaturedContract'
+
+export interface MutualCloseProposedContractBase extends MaturedContractBase {
+  readonly mutualCloseTx: string
+  readonly mutualCloseTxId: string
+  readonly ownMutualClosingSignature: string
+  readonly proposeTimeOut: number
+}
+
+export interface MutualCloseProposedContract
+  extends MutualCloseProposedContractBase {
+  readonly state: ContractState.MutualCloseProposed
+}

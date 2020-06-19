@@ -8,22 +8,32 @@ import { BalanceAnswer } from '../../common/models/ipc/BalanceAnswer'
 import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
 import { ConfigAnswer } from '../../common/models/ipc/ConfigAnswer'
 import { GeneralAnswer } from '../../common/models/ipc/GeneralAnswer'
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 import { isSuccessful } from '../../common/utils/failable'
 import BitcoinDClient from '../api/bitcoind'
 import { IPCError } from '../../common/models/ipc/IPCError'
 import ConfigRepository from '../config/ConfigRepository'
 
+export type BitcoinDConfigCallback = (
+  config: BitcoinDConfig,
+  client: BitcoinDClient
+) => void
+
 export class BitcoinDEvents implements IPCEvents {
   private _client = new BitcoinDClient()
   private _storage: ConfigRepository
   private _config: BitcoinDConfig | null = null
+  private _configCallback: BitcoinDConfigCallback
 
-  constructor(storage: ConfigRepository) {
+  constructor(
+    storage: ConfigRepository,
+    configCallback: BitcoinDConfigCallback
+  ) {
     this._storage = storage
+    this._configCallback = configCallback
   }
 
-  public async Initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     const result = await this._storage.ReadBitcoinDConfig()
     if (!isSuccessful(result)) {
       // No config
@@ -32,6 +42,8 @@ export class BitcoinDEvents implements IPCEvents {
 
     this._config = result.value
     await this._client.configure(this._config)
+    console.log('CALLING CONFIG CALLBACK')
+    this._configCallback(this._config, this._client)
   }
 
   public registerReplies(): void {
@@ -41,6 +53,7 @@ export class BitcoinDEvents implements IPCEvents {
         await this._client.configure(config)
         await this._storage.WriteBitcoinDConfig(config)
         this._config = config
+        this._configCallback(config, this._client)
         return new GeneralAnswer(true)
       } catch (e) {
         return new GeneralAnswer(false, e)

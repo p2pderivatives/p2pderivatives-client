@@ -1,10 +1,10 @@
-import Outcome from '../../common/models/ipc/Outcome'
 import OutcomeCall from '../../common/models/ipc/OutcomeCall'
 import { PARSE_OUTCOME } from '../../common/constants/IPC'
 import OutcomeAnswer, {
   OutcomeAnswerProps,
 } from '../../common/models/ipc/OutcomeAnswer'
 import { FileAPI } from './FileAPI'
+import { Outcome } from '../../common/models/dlc/Outcome'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 

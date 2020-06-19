@@ -14,6 +14,7 @@ import { ApplicationState, createRootReducer, rootSaga } from './store'
 import { AuthenticationIPC } from './ipc/AuthenticationIPC'
 import { UserIPC } from './ipc/UserIPC'
 import { BitcoinIPC } from './ipc/BitcoinIPC'
+import { DlcIPCRenderer } from './ipc/DlcIPCRenderer'
 
 export const history = createBrowserHistory()
 
@@ -28,6 +29,7 @@ export default function configureStore(
       authAPI: new AuthenticationIPC(),
       userAPI: new UserIPC(),
       bitcoinAPI: new BitcoinIPC(),
+      dlcAPI: new DlcIPCRenderer(),
     },
   })
 

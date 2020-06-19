@@ -10,6 +10,7 @@ import {
   MenuItem,
   FormControl,
   FormLabel,
+  FormHelperText,
 } from '@material-ui/core'
 import Contacts from '@material-ui/icons/Contacts'
 
@@ -21,8 +22,10 @@ import Button from '../../atoms/Button'
 import BitcoinInput from '../../atoms/BitcoinInput'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
-import Outcome from '../../../../common/models/ipc/Outcome'
 import { User } from '../../../../common/models/user/User'
+import { Contract } from '../../../../common/models/dlc/Contract'
+import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { Outcome } from '../../../../common/models/dlc/Outcome'
 
 type NewContractTemplateProps = {
   tab: number
@@ -30,7 +33,9 @@ type NewContractTemplateProps = {
   onCSVImport: () => void
   data: Outcome[]
   onCancel: () => void
+  onPublish: (contract: Contract) => void
   users: User[]
+  contract?: Contract
 }
 
 const useStyles = makeStyles({
@@ -63,23 +68,218 @@ const useStyles = makeStyles({
 
 const tabItems: TabItem[] = [{ label: 'General' }, { label: 'Outcomes' }]
 
+const blankContract: Contract = {
+  state: ContractState.Initial,
+  localCollateral: 0,
+  remoteCollateral: 0,
+  feeRate: 0,
+  outcomes: [],
+  maturityTime: 0,
+  counterPartyName: '',
+}
+
+function validationBase(
+  isValid: boolean,
+  setError: (e: boolean) => void,
+  setMessage: (m: string) => void,
+  message: string
+): boolean {
+  if (!isValid) {
+    setError(true)
+    setMessage(message)
+    return false
+  }
+
+  setError(false)
+  setMessage('')
+  return true
+}
+
 const NewContractListTemplate: FC<NewContractTemplateProps> = (
   props: NewContractTemplateProps
 ) => {
+  const contract = props.contract ? props.contract : blankContract
   const classes = useStyles()
   const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
-  const [feeRate, setFeeRate] = useState<number>()
+  const [remoteParty, setRemoteParty] = useState(contract.counterPartyName)
+  const [localCollateral, setLocalCollateral] = useState({
+    value: contract.localCollateral,
+    isBitcoin: false,
+  })
+  const [remoteCollateral, setRemoteCollateral] = useState({
+    value: contract.remoteCollateral,
+    isBitcoin: false,
+  })
+  const [feeRate, setFeeRate] = useState(contract.feeRate)
+  const [maturityDate, setMaturityDate] = useState(contract.maturityTime)
 
-  const oracleDates = [
-    DateTime.utc().plus({ days: 1 }),
-    DateTime.utc().plus({ days: 2 }),
-    DateTime.utc().plus({ days: 3 }),
-  ]
+  const [feeRateError, setFeeRateError] = useState(false)
+  const [feeRateMessage, setFeeRateMessage] = useState('')
+
+  const [localCollateralError, setLocalCollateralError] = useState(false)
+  const [localCollateralMessage, setLocalCollateralMessage] = useState('')
+
+  const [remoteCollateralError, setRemoteCollateralError] = useState(false)
+  const [remoteCollateralMessage, setRemoteCollateralMessage] = useState('')
+
+  const [remotePartyError, setRemotePartyError] = useState(false)
+  const [remotePartyMessage, setRemotePartyMessage] = useState('')
+
+  const [outcomesError, setOutcomesError] = useState(false)
+  const [outcomesMessage, setOutcomesMessage] = useState('')
+
+  const [maturityError, setMaturityError] = useState(false)
+  const [maturityMessage, setMaturityMessage] = useState('')
+
+  const validateFeeRate: (feeRateVal?: number) => boolean = (
+    feeRateVal: number = feeRate
+  ) => {
+    const isValid = Number.isInteger(feeRateVal) && feeRateVal > 0
+    return validationBase(
+      isValid,
+      setFeeRateError,
+      setFeeRateMessage,
+      'Must be an integer number greater than zero'
+    )
+  }
+
+  const validateRemoteParty: (remotePartyVal?: string) => boolean = (
+    remotePartyVal: string = remoteParty
+  ) => {
+    return validationBase(
+      remotePartyVal !== '',
+      setRemotePartyError,
+      setRemotePartyMessage,
+      'Must select a counter party'
+    )
+  }
+
+  const validateCollaterals: (
+    localCollateralValue?: number,
+    remoteCollateralValue?: number
+  ) => boolean = (
+    localCollateralValue: number = localCollateral.value,
+    remoteCollateralValue: number = remoteCollateral.value
+  ) => {
+    console.log(localCollateralValue)
+    let isValid = localCollateralValue !== 0 || remoteCollateralValue !== 0
+    const message = 'One collateral needs to be non zero'
+    validationBase(
+      isValid,
+      setLocalCollateralError,
+      setLocalCollateralMessage,
+      message
+    )
+    validationBase(
+      isValid,
+      setRemoteCollateralError,
+      setRemoteCollateralMessage,
+      message
+    )
+    const nanMessage = 'Please input a number'
+    isValid =
+      isValid &&
+      validationBase(
+        !isNaN(localCollateralValue),
+        setLocalCollateralError,
+        setLocalCollateralMessage,
+        nanMessage
+      )
+    isValid =
+      isValid &&
+      validationBase(
+        !isNaN(remoteCollateralValue),
+        setRemoteCollateralError,
+        setRemoteCollateralMessage,
+        nanMessage
+      )
+    return isValid
+  }
+
+  const validateOutcomes: (outcomes?: Outcome[]) => boolean = (
+    outcomes: Outcome[] = props.data
+  ) => {
+    return validationBase(
+      outcomes.length > 0,
+      setOutcomesError,
+      setOutcomesMessage,
+      'Needs at least one outcome'
+    )
+  }
+
+  const validateMaturity: (maturity?: number) => boolean = (
+    maturity: number = maturityDate
+  ) => {
+    return validationBase(
+      maturity > 0,
+      setMaturityError,
+      setMaturityMessage,
+      'Please select a maturity date'
+    )
+  }
+
+  if (outcomesError && props.data.length > 0) {
+    validateOutcomes()
+  }
+
+  const validate: () => boolean = () => {
+    const validations: (() => boolean)[] = [
+      validateFeeRate,
+      validateRemoteParty,
+      validateCollaterals,
+      validateOutcomes,
+      validateMaturity,
+    ]
+
+    return validations.map(x => x()).reduce((acc, cur) => acc && cur)
+  }
+
+  const oracleDates = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((x, i) => {
+    const date = DateTime.utc()
+      .plus({ minutes: i })
+      .set({ second: 0, millisecond: 0 })
+    return date
+  })
 
   const handleTabChange = (index: number): void => {
     setTabIndex(index)
     props.onTabChange(index)
+  }
+
+  const handleUserSelect = (username: string): void => {
+    setRemoteParty(username)
+    validateRemoteParty(username)
+    setOpenAddressBook(false)
+  }
+
+  const handleMaturityChange = (
+    event: React.ChangeEvent<{ value: unknown }>
+  ): void => {
+    setMaturityDate(event.target.value as number)
+  }
+
+  const handlePublish = (): void => {
+    if (!validate()) {
+      return
+    }
+    const localCol = localCollateral.isBitcoin
+      ? localCollateral.value * 100000000
+      : localCollateral.value
+    const remoteCol = remoteCollateral.isBitcoin
+      ? remoteCollateral.value * 100000000
+      : remoteCollateral.value
+    const publishContract: Contract = {
+      id: contract.id,
+      counterPartyName: remoteParty,
+      feeRate: feeRate,
+      localCollateral: localCol,
+      remoteCollateral: remoteCol,
+      outcomes: props.data,
+      state: ContractState.Initial,
+      maturityTime: maturityDate,
+    }
+    props.onPublish(publishContract)
   }
 
   useEffect(() => {
@@ -100,20 +300,14 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               {'General term'}
             </Typography>
             <div className={classes.titleBorder}></div>
-            <Typography color="textPrimary" variant="caption">
-              {'Your work is auto-saved.'}
-            </Typography>
             <Grid className={classes.formGrid} container direction="column">
               <TextInput
-                label={'Local Party'}
-                inputProps={{ readOnly: true }}
-                value={'John Doe'}
-                helperText={'Read only'}
-              ></TextInput>
-              <TextInput
                 label={'Remote Party'}
-                value={'Nice company, Inc'}
+                value={remoteParty}
+                error={remotePartyError}
+                helperText={remotePartyMessage}
                 InputProps={{
+                  readOnly: true,
                   endAdornment: (
                     <IconButton
                       style={{ color: '#67B1F6' }}
@@ -127,15 +321,58 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               <TextInput
                 type="number"
                 value={feeRate}
-                onChange={(event: React.ChangeEvent<{ value: string }>): void =>
-                  setFeeRate(parseInt(event.target.value))
-                }
+                error={feeRateError}
+                helperText={feeRateMessage}
+                onKeyPress={(event: React.KeyboardEvent): void => {
+                  if (event.key === '.' || event.key === 'e') {
+                    event.preventDefault()
+                  }
+                }}
+                onChange={(
+                  event: React.ChangeEvent<{ value: string }>
+                ): void => {
+                  const value = parseInt(event.target.value)
+                  setFeeRate(value)
+                  validateFeeRate(value)
+                }}
                 label={'Fee rate'}
               />
-              <BitcoinInput label={'Local collateral'} />
-              <BitcoinInput label={'Remote collateral'} />
+              <BitcoinInput
+                value={localCollateral.value}
+                error={localCollateralError}
+                helperText={localCollateralMessage}
+                isBitcoin={localCollateral.isBitcoin}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  const collat = localCollateral
+                  collat.isBitcoin = isBitcoin
+                  setLocalCollateral(collat)
+                }}
+                onChange={(value: number, isBitcoin: boolean): void => {
+                  setLocalCollateral({ value, isBitcoin })
+                  validateCollaterals(value)
+                }}
+                label={'Local collateral'}
+              />
+              <BitcoinInput
+                value={remoteCollateral.value}
+                isBitcoin={remoteCollateral.isBitcoin}
+                error={remoteCollateralError}
+                helperText={remoteCollateralMessage}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  const collat = localCollateral
+                  collat.isBitcoin = isBitcoin
+                  setRemoteCollateral(collat)
+                }}
+                onChange={(value: number, isBitcoin: boolean): void => {
+                  setRemoteCollateral({ value, isBitcoin })
+                  validateCollaterals(localCollateral.value, value)
+                }}
+                label={'Remote collateral'}
+              />
               <FormControl>
-                <FormLabel color="secondary">Outcomes</FormLabel>
+                <FormLabel error={outcomesError} color="secondary">
+                  Outcomes
+                </FormLabel>
                 <Button
                   style={{ margin: '0.5rem 0rem' }}
                   variant="contained"
@@ -143,22 +380,36 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                 >
                   {'CSV File import'}
                 </Button>
+                {outcomesError && (
+                  <FormHelperText error>{outcomesMessage}</FormHelperText>
+                )}
               </FormControl>
               <FormControl>
-                <FormLabel color="secondary">Maturity date</FormLabel>
-                <Select>
-                  {oracleDates.map(d => (
-                    <MenuItem key={d.toMillis()} value={d.toMillis()}>
+                <FormLabel error={maturityError} color="secondary">
+                  Maturity date
+                </FormLabel>
+                <Select
+                  value={maturityDate}
+                  onChange={value => {
+                    handleMaturityChange(value)
+                    validateMaturity(value.target.value as number)
+                  }}
+                >
+                  {oracleDates.map((d, i) => (
+                    <MenuItem key={i} value={d.toMillis()}>
                       {d.toString()}
                     </MenuItem>
                   ))}
                 </Select>
+                {maturityError && (
+                  <FormHelperText error>{maturityMessage}</FormHelperText>
+                )}
               </FormControl>
               <div style={{ marginBottom: '1rem' }}>
                 <Button
                   variant="contained"
-                  disabled
                   style={{ marginRight: '1rem' }}
+                  onClick={handlePublish}
                 >
                   Publish
                 </Button>
@@ -183,6 +434,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
         users={props.users}
         open={openAddressBook}
         onClose={(): void => setOpenAddressBook(false)}
+        onSelect={handleUserSelect}
       />
     </div>
   )

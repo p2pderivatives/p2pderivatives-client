@@ -33,7 +33,23 @@ type APIDLCRoute<T extends APIRvalue | APISignature> = T extends APISignature
   ? 'signature'
   : 'rvalue'
 
-export default class OracleClient {
+export interface OracleClientApi {
+  getOraclePublicKey(): Promise<FailableOracle<string>>
+  getAssets(): Promise<FailableOracle<string[]>>
+  getOracleConfig(
+    assetID: string
+  ): Promise<FailableOracle<OracleAssetConfiguration>>
+  getRvalue(
+    assetID: string,
+    date: DateTime
+  ): Promise<FailableOracle<OracleRvalue>>
+  getSignature(
+    assetID: string,
+    date: DateTime
+  ): Promise<FailableOracle<OracleSignature>>
+}
+
+export default class OracleClient implements OracleClientApi {
   private readonly _httpClient: AxiosInstance
 
   constructor(config: OracleConfig) {
@@ -132,7 +148,7 @@ export default class OracleClient {
     assetID: string,
     date: DateTime
   ): Promise<FailableOracle<T>> {
-    const utcDate = date.toUTC()
+    const utcDate = date
     const options: ToISOTimeOptions = {
       suppressMilliseconds: true,
     }
@@ -141,7 +157,7 @@ export default class OracleClient {
 
   private async get<T>(url: string): Promise<FailableOracle<T>> {
     try {
-      const resp = await this._httpClient.get<T>(url)
+      const resp = await axios.get(url, { baseURL: 'http://3.115.1.105:443/' })
       return { success: true, value: resp.data }
     } catch (err) {
       if (!err.isAxiosError) {

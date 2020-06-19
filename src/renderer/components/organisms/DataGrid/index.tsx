@@ -1,18 +1,20 @@
-import React, { useState, FC, ReactElement } from 'react'
-import { DateTime } from 'luxon'
-import MUIDataTable, { MUIDataTableProps, Responsive } from 'mui-datatables'
+import React, { useState, FC, ReactElement, useEffect } from 'react'
+import MUIDataTable, {
+  MUIDataTableProps,
+  Responsive,
+  SelectableRows,
+} from 'mui-datatables'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
-import Toolbar from './DatePickerToolbar'
+import { Contract } from '../../../../common/models/dlc/Contract'
+import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { DateTime } from 'luxon'
 
-export type DataGridProps = Omit<MUIDataTableProps, 'options' | 'columns'>
-
-interface DataType {
-  contractId: string
-  product: string
-  status: string
-  sendAddress: string
-  tradeDate: string
-  expirationDate: string
+export type DataGridProps = Omit<
+  MUIDataTableProps,
+  'options' | 'columns' | 'data'
+> & {
+  data: Contract[]
+  onRowClick?: (rowData: string[]) => void
 }
 
 const theme = createMuiTheme({
@@ -57,6 +59,15 @@ const theme = createMuiTheme({
         },
       },
     },
+    MUIDataTable: {
+      paper: {
+        height: 'inherit',
+      },
+      responsiveScrollMaxHeight: {
+        maxHeight: 'calc(100% - 116px)',
+        height: 'calc(100% - 116px)',
+      },
+    },
     MUIDataTableSelectCell: {
       root: {
         display: 'none',
@@ -72,57 +83,83 @@ const theme = createMuiTheme({
   },
 })
 
+type ContractDisplay = Omit<Contract, 'maturityTime'> & {
+  maturityTime: string
+}
+
 const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
-  const [fromDate, setFromDate] = useState<Date>()
-  const [toDate, setToDate] = useState<Date>()
-  let localData = props.data
+  // const [fromDate, setFromDate] = useState<Date>()
+  // const [toDate, setToDate] = useState<Date>()
+  const [localData, setLocalData] = useState<ContractDisplay[]>([])
 
-  const handleFromDateChange = (date: Date): void => {
-    setFromDate(date)
-    filterByDate()
-  }
+  useEffect(() => {
+    setLocalData(
+      props.data.map(x => {
+        return {
+          ...x,
+          maturityTime: DateTime.fromMillis(x.maturityTime).toLocaleString(
+            DateTime.DATETIME_FULL_WITH_SECONDS
+          ),
+        }
+      })
+    )
+  }, [props.data])
 
-  const handleToDateChange = (date: Date): void => {
-    setToDate(date)
-    filterByDate()
-  }
+  // const handleFromDateChange = (date: Date): void => {
+  //   console.log('state from change: ', date)
+  //   setFromDate(date)
+  //   filterByDate()
+  // }
 
-  const filterByDate = (): void => {
-    localData = props.data.filter((d: unknown): boolean => {
-      const data = d as DataType
-      const tradeDate = DateTime.fromISO(data.tradeDate)
-      const from = fromDate ? DateTime.fromJSDate(fromDate) : null
-      const to = toDate ? DateTime.fromJSDate(toDate) : null
-      if (from && to) {
-        return tradeDate >= from && tradeDate <= to
-      } else if (from) {
-        return tradeDate >= from
-      } else if (to) {
-        return tradeDate <= to
-      }
-      return false
-    })
-  }
+  // const handleToDateChange = (date: Date): void => {
+  //   console.log('state to change: ', date)
+  //   setToDate(date)
+  //   filterByDate()
+  // }
+
+  // const filterByDate = (): void => {
+  //   localData = props.data.filter((d: unknown): boolean => {
+  //     const data = d as DataType
+  //     const tradeDate = DateTime.fromISO(data.tradeDate)
+  //     const from = fromDate ? DateTime.fromJSDate(fromDate) : null
+  //     const to = toDate ? DateTime.fromJSDate(toDate) : null
+  //     if (from && to) {
+  //       return tradeDate >= from && tradeDate <= to
+  //     } else if (from) {
+  //       return tradeDate >= from
+  //     } else if (to) {
+  //       return tradeDate <= to
+  //     }
+  //     return false
+  //   })
+  // }
 
   const options = {
-    selectableRowsOnClick: true,
+    selectableRows: 'none' as SelectableRows,
     responsive: 'scrollMaxHeight' as Responsive,
-    // eslint-disable-next-line react/display-name
-    customToolbar: (): ReactElement => {
-      return (
-        <Toolbar
-          fromDate={fromDate}
-          setFromDate={handleFromDateChange}
-          toDate={toDate}
-          setToDate={handleToDateChange}
-        />
-      )
+    denseTable: false,
+    onRowClick: (
+      rowData: string[],
+      rowMeta: { dataIndex: number; rowIndex: number }
+    ): void => {
+      if (props.onRowClick) props.onRowClick(rowData)
     },
+    // eslint-disable-next-line react/display-name
+    // customToolbar: (): ReactElement => {
+    //   return (
+    //     <Toolbar
+    //       fromDate={fromDate}
+    //       setFromDate={handleFromDateChange}
+    //       toDate={toDate}
+    //       setToDate={handleToDateChange}
+    //     />
+    //   )
+    // },
   }
 
   const columns = [
     {
-      name: 'contractId',
+      name: 'id',
       label: 'Contract ID',
       options: {
         filter: true,
@@ -130,40 +167,48 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       },
     },
     {
-      name: 'product',
-      label: 'Product',
-      options: {
-        filter: false,
-        sort: true,
-      },
-    },
-    {
-      name: 'status',
+      name: 'state',
       label: 'Status',
       options: {
         filter: false,
         sort: true,
+        // eslint-disable-next-line react/display-name
+        customBodyRender: (value: ContractState): ReactElement => (
+          <span>{ContractState[value]}</span>
+        ),
       },
     },
     {
-      name: 'sendAddress',
-      label: 'Send Address',
+      name: 'counterPartyName',
+      label: 'Counter Party',
       options: {
         filter: false,
         sort: true,
       },
     },
     {
-      name: 'tradeDate',
-      label: 'Trade Date',
+      name: 'localCollateral',
+      label: 'Local Collateral',
+      options: {
+        filter: false,
+        sort: true,
+        // eslint-disable-next-line react/display-name
+        customBodyRender: (value: number): ReactElement => (
+          <span>{Math.round(value)}</span>
+        ),
+      },
+    },
+    {
+      name: 'remoteCollateral',
+      label: 'Remote Collateral',
       options: {
         sort: true,
         filter: true,
       },
     },
     {
-      name: 'expirationDate',
-      label: 'Expiration Date',
+      name: 'maturityTime',
+      label: 'Maturity Time',
       options: {
         filter: false,
         sort: true,

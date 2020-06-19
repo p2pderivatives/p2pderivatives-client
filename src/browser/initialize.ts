@@ -10,13 +10,27 @@ import { GrpcConfig } from './api/grpc/GrpcConfig'
 import { OracleClient, OracleConfig } from './api/oracle'
 import { AppConfig } from './config/config'
 import { LevelConfigRepository } from './config/LevelConfigRepository'
+import { LevelContractRepository } from './dlc/repository/LevelContractRepository'
+import { DlcService } from './dlc/service/DlcService'
 import { AuthenticationEvents } from './ipc/AuthenticationEvents'
 import { BitcoinDEvents } from './ipc/BitcoinDEvents'
+import { DlcEvents } from './ipc/DlcEvents'
 import { FileEvents } from './ipc/FileEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
+import { DlcManager } from './dlc/models/DlcManager'
+import { DlcEventHandler } from './dlc/models/DlcEventHandler'
+import { ContractUpdater } from './dlc/models/ContractUpdater'
+import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
+import winston from 'winston'
+import { BitcoinDConfig } from '../common/models/ipc/BitcoinDConfig'
+import BitcoinDClient from './api/bitcoind'
 
 let db: LevelUp | null = null
+let oracleClient: OracleClient | null = null
+let client: GrpcClient | null = null
+let dlcManager: DlcManager | null = null
+let browserWindow: electron.BrowserWindow | null = null
 
 async function initializeDB(userName: string): Promise<void> {
   const userPath = electron.app.getPath('userData')
@@ -46,24 +60,75 @@ async function finalizeDB(): Promise<void> {
   }
 }
 
-async function loginCallBack(userName: string): Promise<void> {
-  await initializeDB(userName)
-  const bitcoinEvents = new BitcoinDEvents(
-    new LevelConfigRepository(db as LevelUp)
+function bitcoindConfigCallback(
+  config: BitcoinDConfig,
+  bitcoinDClient: BitcoinDClient
+) {
+  console.log('CONFIG CALLBACK')
+  if (
+    oracleClient === null ||
+    client === null ||
+    db == null ||
+    browserWindow == null
+  ) {
+    throw Error()
+  }
+  const contractRepository = new LevelContractRepository(db as LevelUp)
+  const dlcService = new DlcService(contractRepository)
+  const contractUpdater = new ContractUpdater(
+    bitcoinDClient,
+    config.walletPassphrase ? config.walletPassphrase : ''
   )
-  bitcoinEvents.registerReplies()
-  await bitcoinEvents.Initialize()
+
+  if (dlcManager !== null) {
+    dlcManager.finalize()
+    dlcManager = null
+  }
+
+  const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
+
+  dlcManager = new DlcManager(
+    eventHandler,
+    dlcService,
+    bitcoinDClient,
+    new DlcIPCBrowser(browserWindow),
+    oracleClient,
+    client.getDlcService(),
+    winston.createLogger(),
+    5
+  )
+
+  console.log('CONFIG CALLBACK2')
+  const dlcEvents = new DlcEvents(dlcManager, dlcService)
+  dlcEvents.registerReplies()
+}
+
+async function loginCallBack(userName: string): Promise<void> {
+  console.log('LOGIN CALLBACK')
+  try {
+    await initializeDB(userName)
+    const bitcoinEvents = new BitcoinDEvents(
+      new LevelConfigRepository(db as LevelUp),
+      (config, client) => bitcoindConfigCallback(config, client)
+    )
+    bitcoinEvents.registerReplies()
+    await bitcoinEvents.initialize()
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
 }
 
 async function logoutCallback(): Promise<void> {
   await finalizeDB()
 }
 
-export function initialize(): void {
+export function initialize(window: electron.BrowserWindow): void {
+  browserWindow = window
   const appConfig = new AppConfig('./settings.default.yaml')
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
-  const client = new GrpcClient(grpcConfig, auth)
+  client = new GrpcClient(grpcConfig, auth)
 
   const authEvents = new AuthenticationEvents(
     client,
@@ -79,7 +144,7 @@ export function initialize(): void {
   fileEvents.registerReplies()
 
   const oracleConfig = appConfig.parse<OracleConfig>('oracle')
-  const oracleClient = new OracleClient(oracleConfig)
+  oracleClient = new OracleClient(oracleConfig)
   const oracleEvents = new OracleEvents(oracleClient)
   oracleEvents.registerReplies()
 }

@@ -11,10 +11,10 @@ export default {
 }
 
 const items: TabItem[] = [
-  { label: 'All' },
-  { label: 'Approved' },
-  { label: 'Confirmed' },
-  { label: 'Requested' },
+  { label: 'All', new: 0 },
+  { label: 'Approved', new: 99 },
+  { label: 'Confirmed', new: 0 },
+  { label: 'Requested', new: 2 },
 ]
 
 export const tabs = (): ReactElement => (

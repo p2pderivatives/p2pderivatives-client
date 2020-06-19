@@ -1,0 +1,110 @@
+import getMockServer from '../__mocks__/grpcUserMockServer'
+import { GrpcClient } from './browser/api/grpc/GrpcClient'
+import { GrpcConfig } from './browser/api/grpc/GrpcConfig'
+import { GrpcAuth } from './browser/api/grpc/GrpcAuth'
+import { OfferMessage } from './browser/dlc/models/messages/OfferMessage'
+import {
+  DlcMessageType,
+  DlcTypedMessage,
+} from './browser/dlc/models/messages/DlcTypedMessage'
+import { DlcMessage } from '@internal/gen-grpc/user_pb'
+import { DateTime } from 'luxon'
+
+const port = '50052'
+const offerMessages = createOfferMessages(3)
+const serOfferMessages = offerMessages.map(m => {
+  return {
+    output: createDlcMessage(m),
+  }
+})
+const mockServer = getMockServer(serOfferMessages)
+const config: GrpcConfig = { host: '127.0.0.1:' + port, secure: false }
+const auth = new GrpcAuth()
+const client = new GrpcClient(config, auth)
+
+function createDlcMessage(unserMessage: DlcTypedMessage) {
+  const serMessage = msgpack.pack(unserMessage)
+  const dlcMessage = new DlcMessage()
+  dlcMessage.setOrgName('alice')
+  dlcMessage.setDestName('bob')
+  dlcMessage.setPayload(serMessage)
+  return dlcMessage.toObject()
+}
+
+function createOfferMessages(nb: number): OfferMessage[] {
+  let offerMessages: OfferMessage[] = []
+  for (let i = 0; i < nb; i++) {
+    offerMessages.push(createOfferMessage(i))
+  }
+
+  return offerMessages
+}
+
+function createOfferMessage(id: number): OfferMessage {
+  return {
+    contractId: id.toString(),
+    localCollateral: 100000000,
+    remoteCollateral: 100000000,
+    maturityTime: DateTime.utc(2020, 5, 15).toMillis(),
+    outcomes: [
+      {
+        local: 100000000,
+        remote: 100000000,
+        message: '1',
+      },
+    ],
+    oracleInfo: {
+      name: 'Olivia',
+      rValue: '1',
+      publicKey: '1',
+      assetId: 'btcusd',
+    },
+    localPartyInputs: {
+      fundPublicKey: '1',
+      sweepPublicKey: '1',
+      changeAddress: '1',
+      finalAddress: '1',
+      utxos: [],
+    },
+    feeRate: 2,
+    premiumInfo: {
+      premiumAmount: 100000000,
+      localPays: true,
+    },
+    messageType: DlcMessageType.Offer,
+  }
+}
+
+describe('dlc-service-integration-tests', () => {
+  beforeAll(() => {
+    mockServer.listen('0.0.0.0:' + port)
+  })
+
+  afterAll(() => {
+    mockServer.close(true)
+  })
+
+  test('grpc-dlc-send-message', async () => {
+    await client.getDlcService().sendDlcMessage(offerMessages[0], 'bob')
+  })
+
+  test('grpc-dlc-receive-messages', done => {
+    let stream = client.getDlcService().getDlcMessageStream()
+    const receivedMessages: DlcTypedMessage[] = []
+    stream
+      .on('data', (message: DlcTypedMessage) => {
+        receivedMessages.push(message)
+      })
+      .on('error', error => {
+        fail(error)
+      })
+      .on('end', () => {
+        for (let i = 0; i < offerMessages.length; i++) {
+          expect(receivedMessages[i].contractId).toEqual(
+            offerMessages[i].contractId
+          )
+        }
+        done()
+      })
+  })
+})

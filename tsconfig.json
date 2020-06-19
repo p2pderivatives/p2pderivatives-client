@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "build",
     "allowJs": true,
     "esModuleInterop": true,
@@ -14,10 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
     "experimentalDecorators": true,
-    "rootDirs": [
-      "src",
-      "test"
-    ],
+    "rootDirs": ["src", "test"],
     "skipLibCheck": true,
     "module": "esnext",
     "moduleResolution": "node",
@@ -27,6 +20,7 @@
   },
   "include": [
     "src",
-    "test"
+    "test",
+    "integration-test/DlcMessageService.integration-test.ts"
   ]
 }

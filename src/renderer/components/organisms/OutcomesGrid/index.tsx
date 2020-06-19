@@ -64,23 +64,23 @@ const theme = createMuiTheme({
 const OutcomesGrid: FC<DataGridProps> = (props: DataGridProps) => {
   const columns = [
     {
-      name: 'fixingPrice',
+      name: 'message',
       label: 'Fixing price',
       options: {
         sort: true,
       },
     },
     {
-      name: 'aReward',
-      label: 'Party A receive (BTC)',
+      name: 'local',
+      label: 'Local party receives (Satoshi)',
       options: {
         filter: true,
         sort: true,
       },
     },
     {
-      name: 'bReward',
-      label: 'Party B receive (BTC)',
+      name: 'remote',
+      label: 'Remote party receives (Satoshi)',
       options: {
         filter: true,
         sort: true,

@@ -19,5 +19,5 @@
     "rootDir": "../",
     "types": ["../types/bitcoin-core"]
   },
-  "exclude": ["./**/*.test.ts"]
+  "exclude": ["./**/*test.ts"]
 }

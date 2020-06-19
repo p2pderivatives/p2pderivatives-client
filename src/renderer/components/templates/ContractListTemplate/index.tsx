@@ -1,114 +1,18 @@
-import React, { FC } from 'react'
-import { DateTime } from 'luxon'
+import React, { FC, useState, useEffect } from 'react'
 
 import { makeStyles } from '@material-ui/core'
 
 import Tabs, { TabItem } from '../../molecules/Tabs'
 import DataGrid from '../../organisms/DataGrid'
 import MainLayout from '../../organisms/MainLayout'
+import { Contract } from '../../../../common/models/dlc/Contract'
+import { ContractState } from '../../../../common/models/dlc/ContractState'
 
-const data = [
-  {
-    contractId: 'XX0001',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 1 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0002',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 2 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0003',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 3 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0004',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 4 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0005',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 4 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0006',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 5 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0007',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 6 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0008',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 7 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0009',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 8 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-  {
-    contractId: 'XX0010',
-    product: 'TFC',
-    status: 'Trade broadcast',
-    sendAddress: 'xxxxxx',
-    tradeDate: DateTime.utc()
-      .plus({ days: 9 })
-      .toString(),
-    expirationDate: DateTime.utc().toString(),
-  },
-]
+type ContractListTemplateProps = {
+  username: string
+  data: Contract[]
+  onContractClicked: (contractId: string) => void
+}
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -132,14 +36,62 @@ const useStyles = makeStyles({
 })
 
 const tabItems: TabItem[] = [
-  { label: 'All' },
-  { label: 'Approved' },
-  { label: 'Completed' },
-  { label: 'Published' },
+  { label: 'All', new: 0 },
+  { label: 'Offered', new: 0 },
+  { label: 'Completed', new: 0 },
 ]
 
-const ContractListTemplate: FC = () => {
+const tabStatuses: Array<Array<ContractState>> = [
+  [],
+  [ContractState.Offered] as Array<ContractState>,
+  [
+    ContractState.MutualClosed,
+    ContractState.Refunded,
+    ContractState.UnilateralClosed,
+  ] as Array<ContractState>,
+]
+
+const ContractListTemplate: FC<ContractListTemplateProps> = (
+  props: ContractListTemplateProps
+) => {
   const classes = useStyles()
+  const [contractData, setContractData] = useState<Contract[]>([])
+  const [tabIndex, setTabIndex] = useState(0)
+
+  useEffect(() => {
+    setContractData(props.data)
+    const newOffered = props.data.filter(
+      c => c.state === ContractState.Offered && !c.isLocalParty
+    ).length
+    const offeredIndex = tabStatuses.findIndex(arr =>
+      arr.some(c => c === ContractState.Offered)
+    )
+    tabItems[offeredIndex].new = newOffered
+  }, [props.data])
+
+  const handleTabChange = (tabIdx: number): void => {
+    const statuses = tabStatuses[tabIdx]
+    if (statuses.length === 0) {
+      setContractData(props.data)
+    } else {
+      const filteredData = props.data.filter(c => {
+        let show = statuses.some(state => state === c.state)
+        if (
+          statuses.some(state => state === ContractState.Offered) &&
+          c.state === ContractState.Offered
+        ) {
+          show = show && c.counterPartyName !== props.username
+        }
+        return show
+      })
+      setContractData(filteredData)
+    }
+    setTabIndex(tabIdx)
+  }
+
+  const handleRowClicked = (rowData: string[]): void => {
+    props.onContractClicked(rowData[0])
+  }
 
   return (
     <div className={classes.rootContainer}>
@@ -147,11 +99,15 @@ const ContractListTemplate: FC = () => {
         <div className={classes.contentDiv}>
           <Tabs
             items={tabItems}
-            value={0}
+            value={tabIndex}
             // eslint-disable-next-line @typescript-eslint/no-empty-function
-            onTabChange={(tabIdx): void => {}}
+            onTabChange={handleTabChange}
           />
-          <DataGrid title={'All'} data={data} />
+          <DataGrid
+            title={'All'}
+            data={contractData}
+            onRowClick={handleRowClicked}
+          />
         </div>
       </MainLayout>
     </div>

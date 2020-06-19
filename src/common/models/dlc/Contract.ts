@@ -9,7 +9,7 @@ export interface Contract {
   readonly counterPartyName: string
   readonly localCollateral: number
   readonly remoteCollateral: number
-  readonly outcomes: Outcome[]
+  readonly outcomes: ReadonlyArray<Outcome>
   readonly maturityTime: number
   readonly feeRate: number
   readonly oracleInfo?: OracleInfo

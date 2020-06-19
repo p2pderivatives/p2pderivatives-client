@@ -66,6 +66,7 @@ const LoginPage: FC = () => {
   }, [isLoggingIn, isLoggedIn, loginError, submitted])
 
   const onSubmit = (username: string, password: string): void => {
+    console.log('SUBMITTING')
     dispatch(loginRequest(username, password))
     setSubmitted(true)
   }

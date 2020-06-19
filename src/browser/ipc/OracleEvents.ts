@@ -10,7 +10,7 @@ import {
 } from '../../common/models/ipc/OracleConfigAnswer'
 import { isSuccessful } from '../../common/utils/failable'
 import { OracleClient } from '../api/oracle'
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 
 export class OracleEvents implements IPCEvents {
   private _client: OracleClient

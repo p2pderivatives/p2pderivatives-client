@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { parseFile } from '@fast-csv/parse'
-import Outcome from '../../../common/models/ipc/Outcome'
+import { Outcome } from '../../../common/models/dlc/Outcome'
 
 type UnparsedRow = {
   price: string
@@ -20,18 +20,14 @@ export default class IOAPI {
       })
         .validate(
           (data: UnparsedRow) =>
-            !(
-              isNaN(parseFloat(data.partyA)) ||
-              isNaN(parseFloat(data.partyB)) ||
-              isNaN(parseFloat(data.price))
-            )
+            !(isNaN(parseFloat(data.partyA)) || isNaN(parseFloat(data.partyB)))
         )
         .on('error', error => reject(error))
         .on('data', (row: UnparsedRow) => {
           outcomes.push({
-            aReward: parseFloat(row.partyA),
-            bReward: parseFloat(row.partyB),
-            fixingPrice: row.price,
+            local: parseFloat(row.partyA),
+            remote: parseFloat(row.partyB),
+            message: row.price,
           })
         })
         .on('end', () => resolve(outcomes))

@@ -21,6 +21,7 @@ const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class AuthenticationIPC implements AuthenticationAPI {
   public async login(username: string, password: string): Promise<void> {
+    console.log('LOGIN IPC')
     const answerProps = (await ipc.callMain(
       LOGIN,
       new LoginCall(username, password)
