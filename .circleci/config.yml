@@ -36,7 +36,7 @@ jobs:
       - restore_cache:
           keys:
             ## add vX-debug suffix when debugging cache
-            - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v1
+            - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v2
       - run:
           name: Install nodes modules
           command: |
@@ -48,13 +48,14 @@ jobs:
               npm ci
             fi
       - save_cache:
-          key: npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v1
+          key: npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v2
           paths:
             - node_modules
+            - gen-grpc/node_modules
 
       - restore_cache:
           keys:
-            - gen-grpc-deps-{{checksum "p2pd-proto-hash.txt"}}-v1
+            - gen-grpc-deps-{{checksum "p2pd-proto-hash.txt"}}-v2
       - run:
           name: Generate gen grpc
           command: |
@@ -65,7 +66,7 @@ jobs:
               cd gen-grpc && npm run-script gen
             fi
       - save_cache:
-          key: gen-grpc-deps-{{checksum "p2pd-proto-hash.txt"}}-v1
+          key: gen-grpc-deps-{{checksum "p2pd-proto-hash.txt"}}-v2
           paths:
             - gen-grpc
 
