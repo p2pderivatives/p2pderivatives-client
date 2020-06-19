@@ -23,6 +23,8 @@ import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
 import { Outcome } from '../../../../common/models/dlc/Outcome'
 import { User } from '../../../../common/models/user/User'
+import DateTimeSelect from '../../molecules/DateTimeSelect'
+import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
 
 type NewContractTemplateProps = {
   tab: number
@@ -31,6 +33,7 @@ type NewContractTemplateProps = {
   data: Outcome[]
   onCancel: () => void
   users: User[]
+  oracleInfo: OracleAssetConfiguration | undefined
 }
 
 const useStyles = makeStyles({
@@ -69,6 +72,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const classes = useStyles()
   const [tabIndex, setTabIndex] = useState(props.tab)
   const [openAddressBook, setOpenAddressBook] = useState(false)
+  const [maturityDate, setMaturityDate] = useState<DateTime>()
   const [feeRate, setFeeRate] = useState<number>()
   const [localCollateral, setLocalCollateral] = useState({
     value: 0,
@@ -84,6 +88,10 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     DateTime.utc().plus({ days: 2 }),
     DateTime.utc().plus({ days: 3 }),
   ]
+
+  const handleMaturityChange = (date: DateTime): void => {
+    setMaturityDate(date)
+  }
 
   const handleTabChange = (index: number): void => {
     setTabIndex(index)
@@ -186,13 +194,13 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               </FormControl>
               <FormControl>
                 <FormLabel color="secondary">Maturity date</FormLabel>
-                <Select>
-                  {oracleDates.map(d => (
-                    <MenuItem key={d.toMillis()} value={d.toMillis()}>
-                      {d.toString()}
-                    </MenuItem>
-                  ))}
-                </Select>
+                {props.oracleInfo && (
+                  <DateTimeSelect
+                    date={maturityDate}
+                    oracleInfo={props.oracleInfo}
+                    onChange={handleMaturityChange}
+                  />
+                )}
               </FormControl>
               <div style={{ marginBottom: '1rem' }}>
                 <Button
