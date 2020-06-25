@@ -11,7 +11,7 @@ import Paper from '@material-ui/core/Paper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
 
-import { useUserContext } from '../../../providers/User'
+import { useStatusBarContext } from '../../../providers/StatusBar'
 
 export type LayoutProps = {
   onBack?: () => void
@@ -58,23 +58,38 @@ const useStyles = makeStyles({
 
 const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
   const classes = useStyles()
-  const userContext = useUserContext()
+  const statusBarContext = useStatusBarContext()
 
   const [username, setUsername] = useState('')
+  const [balance, setBalance] = useState(0)
 
   useEffect(() => {
     getUsername()
+    getBalance()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const getUsername = async (): Promise<void> => {
-    const user = await userContext.getUser()
+    const user = await statusBarContext.getUser()
     setUsername(user)
+  }
+
+  const getBalance = async (): Promise<void> => {
+    const balance = await statusBarContext.getBalance()
+    setBalance(balance)
+  }
+
+  const handleRefresh = (): void => {
+    getBalance()
   }
 
   return (
     <div className={classes.rootContainer}>
-      <StatusBar username={username} />
+      <StatusBar
+        username={username}
+        balance={balance}
+        refresh={handleRefresh}
+      />
       <div className={classes.contentRoot}>
         {props.showSidebar && (
           <div className={classes.sidebar}>

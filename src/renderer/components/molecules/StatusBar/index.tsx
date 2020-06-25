@@ -1,18 +1,28 @@
 import React, { FC } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 
-import { makeStyles, createMuiTheme, MuiThemeProvider } from '@material-ui/core'
+import {
+  makeStyles,
+  createMuiTheme,
+  MuiThemeProvider,
+  Typography,
+  IconButton,
+} from '@material-ui/core'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
 import Button from '@material-ui/core/Button'
 import Menu from '@material-ui/core/Menu'
 import MenuItem from '@material-ui/core/MenuItem'
 import AccountCircle from '@material-ui/icons/AccountCircle'
+import Refresh from '@material-ui/icons/Refresh'
 
 import p2plogo from '../../../assets/p2p-logo.png'
+import BtcDisplay from '../../atoms/BtcDisplay'
 
 type StatusBarProps = {
   username: string
+  balance: number
+  refresh: () => void
 }
 
 const theme = createMuiTheme({
@@ -37,6 +47,11 @@ const useStyles = makeStyles({
   appLogo: {
     height: '40px',
     margin: '12px 0',
+  },
+  balanceSection: {
+    display: 'flex',
+    alignItems: 'center',
+    marginRight: '0.5rem',
   },
   loginButton: {
     color: '#E4E7EF',
@@ -102,6 +117,12 @@ const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
                 src={p2plogo}
                 alt="P2P-Derivatives"
               />
+            </div>
+            <div className={classes.balanceSection}>
+              <IconButton color="secondary" onClick={props.refresh}>
+                <Refresh />
+              </IconButton>
+              <BtcDisplay satValue={props.balance * 100000000} currency="BTC" />
             </div>
             <Button
               className={classes.loginButton}

@@ -1,7 +1,7 @@
-import React, { FC, useState, useEffect } from 'react'
+import { Link, Typography, TypographyProps } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
-import { Typography, TypographyProps, Link } from '@material-ui/core'
 import numbro from 'numbro'
+import React, { FC, useEffect, useState } from 'react'
 import theme from '../../theme'
 
 const useStyles = makeStyles(() => ({
@@ -72,7 +72,9 @@ const BtcDisplay: FC<BtcDisplayProps> = (props: BtcDisplayProps) => {
           onClick={handleCurrencyClick}
           style={{ cursor: 'pointer' }}
         >
-          {currencyState === 'sats'
+          {Number.isNaN(props.satValue)
+            ? 'N/A'
+            : currencyState === 'sats'
             ? toSatDisplay(props.satValue)
             : toBtcDisplay(props.satValue)}{' '}
           {currencyState}
