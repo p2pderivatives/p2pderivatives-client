@@ -1,4 +1,4 @@
 import { addDecorator } from '@storybook/react'
-import { withUserProvider } from './decorators'
+import { withStatusBarProvider } from './decorators'
 
-addDecorator(withUserProvider)
+addDecorator(withStatusBarProvider)

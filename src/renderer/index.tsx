@@ -8,8 +8,9 @@ import createStore, { history } from './createStore'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from './components/theme'
 import { SnackbarProvider } from './providers/Snackbar'
-import { UserProvider } from './providers/User'
+import { StatusBarProvider } from './providers/StatusBar'
 import { AuthenticationIPC } from './ipc/AuthenticationIPC'
+import { BitcoinIPC } from './ipc/BitcoinIPC'
 
 const store = createStore()
 
@@ -17,9 +18,12 @@ ReactDOM.render(
   <Provider store={store}>
     <MuiThemeProvider theme={theme}>
       <SnackbarProvider>
-        <UserProvider userFn={new AuthenticationIPC().getUser}>
+        <StatusBarProvider
+          userFn={new AuthenticationIPC().getUser}
+          balanceFn={new BitcoinIPC().getBalance}
+        >
           <ConnectedRouter history={history}>{routes}</ConnectedRouter>
-        </UserProvider>
+        </StatusBarProvider>
       </SnackbarProvider>
     </MuiThemeProvider>
   </Provider>,
