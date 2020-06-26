@@ -21,7 +21,7 @@ import Button from '../../atoms/Button'
 import BitcoinInput from '../../atoms/BitcoinInput'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
-import Outcome from '../../../../common/models/ipc/Outcome'
+import { Outcome } from '../../../../common/models/dlc/Outcome'
 import { User } from '../../../../common/models/user/User'
 
 type NewContractTemplateProps = {

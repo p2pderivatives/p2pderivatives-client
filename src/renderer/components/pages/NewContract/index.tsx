@@ -11,7 +11,7 @@ import { ApplicationState } from '../../../store'
 import { goBack } from 'connected-react-router'
 import { userListRequest } from '../../../store/user/actions'
 import FileIPC from '../../../ipc/FileIPC'
-import Outcome from '../../../../common/models/ipc/Outcome'
+import { Outcome } from '../../../../common/models/dlc/Outcome'
 import { merge } from '../../../util/outcome-merger'
 
 const { dialog } = window.require('electron').remote
