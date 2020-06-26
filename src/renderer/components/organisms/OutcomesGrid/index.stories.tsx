@@ -3,6 +3,7 @@ import { Container } from '@material-ui/core'
 import OutcomesGrid from './'
 import { MuiThemeProvider } from '@material-ui/core'
 import theme from '../../theme'
+import { contracts } from '../../stories-data/contracts'
 
 export default {
   title: 'Components/Organisms/OutcomesGrid',
@@ -14,55 +15,7 @@ export default {
 export const sampleTable = (): ReactElement => (
   <MuiThemeProvider theme={theme}>
     <Container maxWidth="lg">
-      <OutcomesGrid title={'All Contracts'} data={data} />
+      <OutcomesGrid title={'All Contracts'} data={contracts[0].outcomes} />
     </Container>
   </MuiThemeProvider>
 )
-
-const data = [
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.5,
-    partyBrec: 0.0,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.45,
-    partyBrec: 0.05,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.4,
-    partyBrec: 0.1,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.35,
-    partyBrec: 0.15,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.3,
-    partyBrec: 0.2,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.25,
-    partyBrec: 0.25,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.2,
-    partyBrec: 0.3,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.15,
-    partyBrec: 0.35,
-  },
-  {
-    fixingPrice: '3000.001',
-    partyArec: 0.1,
-    partyBrec: 0.4,
-  },
-]

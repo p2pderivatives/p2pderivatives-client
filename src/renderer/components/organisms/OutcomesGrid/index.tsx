@@ -1,8 +1,15 @@
-import React, { FC } from 'react'
+import React, { FC, ReactElement, useState, useEffect } from 'react'
 import MUIDataTable, { MUIDataTableProps } from 'mui-datatables'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import BtcDisplay from '../../atoms/BtcDisplay'
+import { Outcome } from '../../../../common/models/dlc/Outcome'
 
-export type DataGridProps = Omit<MUIDataTableProps, 'options' | 'columns'>
+export type DataGridProps = Omit<
+  MUIDataTableProps,
+  'options' | 'columns' | 'data'
+> & {
+  data: ReadonlyArray<Outcome>
+}
 
 const theme = createMuiTheme({
   palette: {
@@ -62,35 +69,57 @@ const theme = createMuiTheme({
 })
 
 const OutcomesGrid: FC<DataGridProps> = (props: DataGridProps) => {
+  const [data, setData] = useState(props.data)
+
+  useEffect(() => {
+    setData(props.data)
+  }, [setData, props.data])
+
   const columns = [
     {
-      name: 'fixingPrice',
+      name: 'message',
       label: 'Fixing price',
       options: {
         sort: true,
       },
     },
     {
-      name: 'aReward',
-      label: 'Party A receive (BTC)',
+      name: 'local',
+      label: 'Local party receives',
       options: {
         filter: true,
         sort: true,
+        // eslint-disable-next-line react/display-name
+        customBodyRenderLite: (dataIndex: number): ReactElement => (
+          <BtcDisplay
+            variant="inherit"
+            satValue={data[dataIndex].local}
+            currency="BTC"
+          />
+        ),
       },
     },
     {
-      name: 'bReward',
-      label: 'Party B receive (BTC)',
+      name: 'remote',
+      label: 'Remote party receives',
       options: {
         filter: true,
         sort: true,
+        // eslint-disable-next-line react/display-name
+        customBodyRenderLite: (dataIndex: number): ReactElement => (
+          <BtcDisplay
+            variant="inherit"
+            satValue={data[dataIndex].remote}
+            currency="BTC"
+          />
+        ),
       },
     },
   ]
 
   return (
     <MuiThemeProvider theme={theme}>
-      <MUIDataTable title={props.title} data={props.data} columns={columns} />
+      <MUIDataTable title={props.title} data={[...data]} columns={columns} />
     </MuiThemeProvider>
   )
 }
