@@ -1,6 +1,6 @@
 import { GeneralAnswer, GeneralAnswerProps } from './GeneralAnswer'
 import { IPCError } from './IPCError'
-import Outcome from './Outcome'
+import { Outcome } from '../dlc/Outcome'
 
 export interface OutcomeAnswerProps extends GeneralAnswerProps {
   _outcomes: Outcome[]

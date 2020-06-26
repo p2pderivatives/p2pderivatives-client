@@ -1,37 +1,37 @@
-import Outcome from '../../common/models/ipc/Outcome'
+import { Outcome } from '../../common/models/dlc/Outcome'
 
 interface RangeOutcome {
   range: {
     start: number
     end: number
   }
-  outcomeA: number
-  outcomeB: number
+  local: number
+  remote: number
 }
 
 export const merge = (outcomes: Outcome[]): Outcome[] => {
   const stringOutcomes: Outcome[] = []
   const numericalOutcomes: Outcome[] = []
   outcomes.forEach(o => {
-    if (isNaN(parseInt(o.fixingPrice))) {
+    if (isNaN(parseInt(o.message))) {
       stringOutcomes.push(o)
     } else {
       numericalOutcomes.push(o)
     }
   })
-  if (numericalOutcomes.length === 0) return outcomes
+  if (numericalOutcomes.length === 0) return stringOutcomes
 
   let resultOutcomes: Outcome[] = []
 
-  numericalOutcomes.sort(o => parseInt(o.fixingPrice))
+  numericalOutcomes.sort(o => parseInt(o.message))
   let tempOutcome = outcomeToRangeOutcome(numericalOutcomes[0])
 
   for (let i = 1; i < numericalOutcomes.length; i++) {
     const o = numericalOutcomes[i]
-    const intFixPrice = parseInt(o.fixingPrice)
+    const intFixPrice = parseInt(o.message)
     const shouldMerge =
-      o.aReward === tempOutcome.outcomeA &&
-      o.bReward === tempOutcome.outcomeB &&
+      o.local === tempOutcome.local &&
+      o.remote === tempOutcome.remote &&
       tempOutcome.range.end + 1 === intFixPrice
     if (shouldMerge) {
       tempOutcome.range.end = intFixPrice
@@ -50,27 +50,27 @@ export const merge = (outcomes: Outcome[]): Outcome[] => {
 const rangeOutcomeToOutcome: (rangeOutcome: RangeOutcome) => Outcome = (
   rangeOutcome: RangeOutcome
 ) => {
-  const fixingPrice =
+  const message =
     rangeOutcome.range.end === rangeOutcome.range.start
       ? rangeOutcome.range.start.toString()
       : `${rangeOutcome.range.start}-${rangeOutcome.range.end}`
   return {
-    aReward: rangeOutcome.outcomeA,
-    bReward: rangeOutcome.outcomeB,
-    fixingPrice,
+    local: rangeOutcome.local,
+    remote: rangeOutcome.remote,
+    message,
   }
 }
 
 const outcomeToRangeOutcome: (outcome: Outcome) => RangeOutcome = (
   outcome: Outcome
 ) => {
-  const fixPrice = parseInt(outcome.fixingPrice)
+  const message = parseInt(outcome.message)
   return {
-    outcomeA: outcome.aReward,
-    outcomeB: outcome.bReward,
+    local: outcome.local,
+    remote: outcome.remote,
     range: {
-      start: fixPrice,
-      end: fixPrice,
+      start: message,
+      end: message,
     },
   }
 }

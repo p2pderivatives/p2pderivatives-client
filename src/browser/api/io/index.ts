@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { parseFile } from '@fast-csv/parse'
-import Outcome from '../../../common/models/ipc/Outcome'
+import { Outcome } from '../../../common/models/dlc/Outcome'
 
 type UnparsedRow = {
-  price: string
-  partyA: string
-  partyB: string
+  message: string
+  local: string
+  remote: string
 }
 
 export default class IOAPI {
@@ -14,24 +14,24 @@ export default class IOAPI {
       const outcomes: Outcome[] = []
 
       parseFile<UnparsedRow, UnparsedRow>(path, {
-        headers: ['price', 'partyA', 'partyB'],
+        headers: ['message', 'local', 'remote'],
         ignoreEmpty: true,
         strictColumnHandling: true,
       })
         .validate(
           (data: UnparsedRow) =>
             !(
-              isNaN(parseFloat(data.partyA)) ||
-              isNaN(parseFloat(data.partyB)) ||
-              isNaN(parseFloat(data.price))
+              isNaN(parseFloat(data.local)) ||
+              isNaN(parseFloat(data.remote)) ||
+              isNaN(parseFloat(data.message))
             )
         )
         .on('error', error => reject(error))
         .on('data', (row: UnparsedRow) => {
           outcomes.push({
-            aReward: parseFloat(row.partyA),
-            bReward: parseFloat(row.partyB),
-            fixingPrice: row.price,
+            local: parseFloat(row.local),
+            remote: parseFloat(row.remote),
+            message: row.message,
           })
         })
         .on('end', () => resolve(outcomes))

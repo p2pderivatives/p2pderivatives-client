@@ -1,4 +1,4 @@
-import Outcome from '../../common/models/ipc/Outcome'
+import { Outcome } from '../../common/models/dlc/Outcome'
 import OutcomeCall from '../../common/models/ipc/OutcomeCall'
 import { PARSE_OUTCOME } from '../../common/constants/IPC'
 import OutcomeAnswer, {
