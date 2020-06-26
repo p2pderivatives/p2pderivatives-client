@@ -1,6 +1,19 @@
-import React, { FC } from 'react'
-import { makeStyles, Typography, Grid, Link } from '@material-ui/core'
+import React, { FC, useState } from 'react'
+import { makeStyles } from '@material-ui/core'
+import Box from '@material-ui/core/Box'
 import MainLayout from '../../organisms/MainLayout'
+import Tabs, { TabItem } from '../../molecules/Tabs'
+import OutcomesGrid from '../../organisms/OutcomesGrid'
+import { Contract } from '../../../../common/models/dlc/Contract'
+import ContractView from '../../organisms/ContractView'
+import { merge } from '../../../util/outcome-merger'
+
+type ContractDetailTemplateProps = {
+  data: Contract
+  acceptContract: () => void
+  rejectContract: () => void
+  cancel: () => void
+}
 
 const useStyles = makeStyles({
   rootContainer: {
@@ -17,6 +30,7 @@ const useStyles = makeStyles({
   },
   contractDiv: {
     width: '60%',
+    marginTop: '1.5rem',
   },
   titleBorder: {
     width: '48rem',
@@ -43,148 +57,64 @@ const useStyles = makeStyles({
   dataTitle: {
     fontWeight: 'bold',
   },
+  buttonDiv: {
+    display: 'flex',
+    justifyContent: 'space-evenly',
+    marginTop: '3rem',
+  },
 })
 
-const ContractDetailTemplate: FC = () => {
+const tabItems: TabItem[] = [{ label: 'General' }, { label: 'Outcomes' }]
+
+const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
+  props: ContractDetailTemplateProps
+) => {
   const classes = useStyles()
+  const contract = props.data
+
+  const [tabIndex, setTabIndex] = useState(0)
+
+  const handleTabChange = (index: number): void => {
+    setTabIndex(index)
+  }
+
+  const handleAccept = (): void => {
+    props.acceptContract()
+  }
+
+  const handleReject = (): void => {
+    props.rejectContract()
+  }
+
+  const handleCancel = (): void => {
+    props.cancel()
+  }
 
   return (
     <div className={classes.rootContainer}>
       <MainLayout>
         <div className={classes.contentDiv}>
-          <Link className={classes.backLink} variant="body2">
-            🠐 ALL CONTRACTS
-          </Link>
-          <div className={classes.contractDiv}>
-            <Typography variant="h4" color="textPrimary">
-              {'XX00001'}
-            </Typography>
-            <div className={classes.titleBorder}></div>
-            <Grid container spacing={3}>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    State
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    Published
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Created at (GMT)
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    2020-02-02 20:00:02
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Approved at (GMT)
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    -
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Published from
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    John Doe
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={4}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Published to
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    Nice company, Inc.
-                  </Typography>
-                </div>
-              </Grid>
-            </Grid>
-            <Typography
-              className={classes.dataSubtitle}
-              variant="h6"
-              color="textPrimary"
-            >
-              {'General term'}
-            </Typography>
-            <div className={classes.subtitleBorder}></div>
-            <Grid container spacing={3}>
-              <Grid item xs={8}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Local Party
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    John Doe
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={8}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Remote Party
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    Nice company, Inc.
-                  </Typography>
-                </div>
-              </Grid>
-              <Grid item xs={8}>
-                <div>
-                  <Typography
-                    className={classes.dataTitle}
-                    variant="body2"
-                    color="textPrimary"
-                  >
-                    Contract ID
-                  </Typography>
-                  <Typography variant="body2" color="textPrimary">
-                    TFC0123-01
-                  </Typography>
-                </div>
-              </Grid>
-            </Grid>
-          </div>
+          <Tabs
+            items={tabItems}
+            value={tabIndex}
+            onTabChange={(idx): void => handleTabChange(idx)}
+          />
+          {tabIndex === 0 && (
+            <ContractView
+              data={contract}
+              cancel={handleCancel}
+              acceptContract={handleAccept}
+              rejectContract={handleReject}
+            />
+          )}
+          {tabIndex === 1 && (
+            <Box display="inline">
+              <OutcomesGrid
+                title={'Contract Outcomes'}
+                data={merge([...contract.outcomes])}
+              />
+            </Box>
+          )}
         </div>
       </MainLayout>
     </div>
