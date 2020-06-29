@@ -1,5 +1,5 @@
 {
-  "extends": [ 
+  "extends": [
     "react-app",
     "eslint:recommended",
     "plugin:react/recommended",
@@ -16,6 +16,7 @@
   },
   "rules": {
     "prettier/prettier": ["error"],
+    "react/display-name": ["off"],
     "semi": [2, "never"],
     "no-console": "error"
   },
