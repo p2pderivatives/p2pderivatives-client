@@ -3,12 +3,17 @@ import MUIDataTable, {
   MUIDataTableProps,
   Responsive,
   SelectableRows,
+  FilterType,
 } from 'mui-datatables'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import { Contract } from '../../../../common/models/dlc/Contract'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
 import { DateTime } from 'luxon'
 import numbro from 'numbro'
+import { FormLabel, FormGroup, FormControl } from '@material-ui/core'
+import LuxonUtils from '@date-io/luxon'
+import { MuiPickersUtilsProvider, DateTimePicker } from '@material-ui/pickers'
+import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date'
 
 export type DataGridProps = Omit<
   MUIDataTableProps,
@@ -95,6 +100,8 @@ function toCollateralString(collateral: number, addOwn?: boolean): string {
 }
 
 const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
+  const [fromDate, setFromDate] = useState<DateTime>()
+  const [toDate, setToDate] = useState<DateTime>()
   const [localData, setLocalData] = useState<Contract[]>(props.data)
 
   useEffect(() => {
@@ -110,6 +117,16 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
         props.onRowClick(rowData)
       }
     },
+    onFilterChange: (
+      changedCol: string,
+      filters: any[],
+      type: FilterType | 'chip' | 'reset'
+    ): void => {
+      if (type === 'reset') {
+        setFromDate(undefined)
+        setToDate(undefined)
+      }
+    },
   }
 
   const columns = [
@@ -117,7 +134,7 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'id',
       label: 'Contract ID',
       options: {
-        filter: true,
+        filter: false,
         sort: true,
       },
     },
@@ -125,11 +142,16 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'state',
       label: 'Status',
       options: {
-        filter: false,
+        filter: true,
         sort: true,
+        filterType: 'checkbox' as FilterType,
+        filterOptions: {
+          renderValue: (value: string): string =>
+            ContractState[parseInt(value)],
+        },
         // eslint-disable-next-line react/display-name
-        customBodyRenderLite: (dataIndex: number): ReactElement => (
-          <span>{ContractState[localData[dataIndex].state]}</span>
+        customBodyRender: (value: ContractState): ReactElement => (
+          <span>{ContractState[value]}</span>
         ),
       },
     },
@@ -137,8 +159,9 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'counterPartyName',
       label: 'Counter Party',
       options: {
-        filter: false,
+        filter: true,
         sort: true,
+        filterType: 'checkbox' as FilterType,
       },
     },
     {
@@ -166,7 +189,7 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       label: 'Remote Collateral',
       options: {
         sort: true,
-        filter: true,
+        filter: false,
         // eslint-disable-next-line react/display-name
         customBodyRenderLite: (dataIndex: number): ReactElement => {
           const contract = localData[dataIndex]
@@ -185,7 +208,8 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'maturityTime',
       label: 'Maturity Time',
       options: {
-        filter: false,
+        filter: true,
+        filterType: 'custom' as FilterType,
         sort: true,
         // eslint-disable-next-line react/display-name
         customBodyRenderLite: (dataIndex: number): ReactElement => (
@@ -195,18 +219,60 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
             ).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}
           </span>
         ),
+        filterOptions: {
+          fullWidth: true,
+          names: [],
+          logic: (dateString: string): boolean => {
+            const date = parseInt(dateString)
+            let filter = false
+            if (fromDate && toDate) {
+              filter = fromDate.toMillis() > date || toDate.toMillis() < date
+            } else if (fromDate) {
+              filter = fromDate.toMillis() > date
+            } else if (toDate) {
+              filter = toDate.toMillis() < date
+            }
+            return filter
+          },
+          // eslint-disable-next-line react/display-name
+          display: (): ReactElement => (
+            <FormControl>
+              <FormLabel>Maturity Date</FormLabel>
+              <FormGroup row>
+                <DateTimePicker
+                  label="From"
+                  value={fromDate || null}
+                  onChange={(date: MaterialUiPickersDate): void => {
+                    setFromDate(date as DateTime)
+                  }}
+                  style={{ width: '45%', marginRight: '5%' }}
+                />
+                <DateTimePicker
+                  label="To"
+                  value={toDate || null}
+                  onChange={(date: MaterialUiPickersDate): void => {
+                    setToDate(date as DateTime)
+                  }}
+                  style={{ width: '45%', marginRight: '5%' }}
+                />
+              </FormGroup>
+            </FormControl>
+          ),
+        },
       },
     },
   ]
 
   return (
     <MuiThemeProvider theme={theme}>
-      <MUIDataTable
-        title={props.title}
-        data={localData}
-        columns={columns}
-        options={options}
-      />
+      <MuiPickersUtilsProvider utils={LuxonUtils}>
+        <MUIDataTable
+          title={props.title}
+          data={localData}
+          columns={columns}
+          options={options}
+        />
+      </MuiPickersUtilsProvider>
     </MuiThemeProvider>
   )
 }
