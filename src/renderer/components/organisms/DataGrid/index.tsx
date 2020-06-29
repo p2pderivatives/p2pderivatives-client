@@ -1,14 +1,19 @@
-import React, { useState, FC, ReactElement, useEffect } from 'react'
+import LuxonUtils from '@date-io/luxon'
+import { FormControl, FormGroup, FormLabel } from '@material-ui/core'
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles'
+import { DateTimePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
+import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date'
+import { DateTime } from 'luxon'
 import MUIDataTable, {
+  FilterType,
   MUIDataTableProps,
   Responsive,
   SelectableRows,
 } from 'mui-datatables'
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import numbro from 'numbro'
+import React, { FC, ReactElement, useEffect, useState } from 'react'
 import { Contract } from '../../../../common/models/dlc/Contract'
 import { ContractState } from '../../../../common/models/dlc/ContractState'
-import { DateTime } from 'luxon'
-import numbro from 'numbro'
 
 export type DataGridProps = Omit<
   MUIDataTableProps,
@@ -81,6 +86,14 @@ const theme = createMuiTheme({
         justifyContent: 'flex-end',
       },
     },
+    MuiChip: {
+      deleteIcon: {
+        color: '#3A4473',
+        '&:hover': {
+          color: '#4A5B83',
+        },
+      },
+    },
   },
 })
 
@@ -95,6 +108,8 @@ function toCollateralString(collateral: number, addOwn?: boolean): string {
 }
 
 const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
+  const [fromDate, setFromDate] = useState<DateTime>()
+  const [toDate, setToDate] = useState<DateTime>()
   const [localData, setLocalData] = useState<Contract[]>(props.data)
 
   useEffect(() => {
@@ -110,14 +125,27 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
         props.onRowClick(rowData)
       }
     },
+    onFilterChange: (
+      changedCol: string,
+      filters: unknown[],
+      type: FilterType | 'chip' | 'reset'
+    ): void => {
+      if (type === 'reset') {
+        setFromDate(undefined)
+        setToDate(undefined)
+      }
+    },
   }
+
+  const stateToString = (value: string): string =>
+    ContractState[parseInt(value)]
 
   const columns = [
     {
       name: 'id',
       label: 'Contract ID',
       options: {
-        filter: true,
+        filter: false,
         sort: true,
       },
     },
@@ -125,11 +153,17 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'state',
       label: 'Status',
       options: {
-        filter: false,
+        filter: true,
         sort: true,
-        // eslint-disable-next-line react/display-name
-        customBodyRenderLite: (dataIndex: number): ReactElement => (
-          <span>{ContractState[localData[dataIndex].state]}</span>
+        filterType: 'checkbox' as FilterType,
+        filterOptions: {
+          renderValue: stateToString,
+        },
+        customFilterListOptions: {
+          render: stateToString,
+        },
+        customBodyRender: (value: ContractState): ReactElement => (
+          <span>{ContractState[value]}</span>
         ),
       },
     },
@@ -137,8 +171,9 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'counterPartyName',
       label: 'Counter Party',
       options: {
-        filter: false,
+        filter: true,
         sort: true,
+        filterType: 'checkbox' as FilterType,
       },
     },
     {
@@ -147,7 +182,6 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       options: {
         filter: false,
         sort: true,
-        // eslint-disable-next-line react/display-name
         customBodyRenderLite: (dataIndex: number): ReactElement => {
           const contract = localData[dataIndex]
           return (
@@ -166,8 +200,7 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       label: 'Remote Collateral',
       options: {
         sort: true,
-        filter: true,
-        // eslint-disable-next-line react/display-name
+        filter: false,
         customBodyRenderLite: (dataIndex: number): ReactElement => {
           const contract = localData[dataIndex]
           return (
@@ -185,9 +218,9 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       name: 'maturityTime',
       label: 'Maturity Time',
       options: {
-        filter: false,
+        filter: true,
+        filterType: 'custom' as FilterType,
         sort: true,
-        // eslint-disable-next-line react/display-name
         customBodyRenderLite: (dataIndex: number): ReactElement => (
           <span>
             {DateTime.fromMillis(
@@ -195,18 +228,59 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
             ).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}
           </span>
         ),
+        filterOptions: {
+          fullWidth: true,
+          names: [],
+          logic: (dateString: string): boolean => {
+            const date = parseInt(dateString)
+            let filter = false
+            if (fromDate && toDate) {
+              filter = fromDate.toMillis() > date || toDate.toMillis() < date
+            } else if (fromDate) {
+              filter = fromDate.toMillis() > date
+            } else if (toDate) {
+              filter = toDate.toMillis() < date
+            }
+            return filter
+          },
+          display: (): ReactElement => (
+            <FormControl>
+              <FormLabel>Maturity Date</FormLabel>
+              <FormGroup row>
+                <DateTimePicker
+                  label="From"
+                  value={fromDate || null}
+                  onChange={(date: MaterialUiPickersDate): void => {
+                    setFromDate(date as DateTime)
+                  }}
+                  style={{ width: '45%', marginRight: '5%' }}
+                />
+                <DateTimePicker
+                  label="To"
+                  value={toDate || null}
+                  onChange={(date: MaterialUiPickersDate): void => {
+                    setToDate(date as DateTime)
+                  }}
+                  style={{ width: '45%', marginRight: '5%' }}
+                />
+              </FormGroup>
+            </FormControl>
+          ),
+        },
       },
     },
   ]
 
   return (
     <MuiThemeProvider theme={theme}>
-      <MUIDataTable
-        title={props.title}
-        data={localData}
-        columns={columns}
-        options={options}
-      />
+      <MuiPickersUtilsProvider utils={LuxonUtils}>
+        <MUIDataTable
+          title={props.title}
+          data={localData}
+          columns={columns}
+          options={options}
+        />
+      </MuiPickersUtilsProvider>
     </MuiThemeProvider>
   )
 }
