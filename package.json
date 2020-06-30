@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "main": "build/browser/electron.js",
+  "author": "CryptoGarage Inc",
   "homepage": "./",
   "files": [
     "gen-grpc"
@@ -10,8 +11,18 @@
   "build": {
     "extends": null,
     "appId": "jp.co.cryptogarage.p2pd.client",
+    "productName": "P2PD client",
+    "copyright": "Copyright © 2020 ${author}",
     "files": [
-      "build/**/*"
+      "build/**/*",
+      "node_modules/**/*",
+      "public/icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "settings.production.yml",
+        "to": "settings.default.yml"
+      }
     ]
   },
   "scripts": {
@@ -30,7 +41,9 @@
     "integration:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports jest --config jest.config.integration.js --reporters=default --reporters=jest-junit --ci --runInBand",
     "eject": "react-scripts eject",
     "electron-dev": "concurrently \"cross-env BROWSER=none PORT=9000 npm start\" \"wait-on http://localhost:9000 && npm run build:browser && electron .\"",
-    "dist": "npm run build && electron-builder",
+    "build-native-cfd": "npm rebuild cfd-js cfd-dlc-js",
+    "build-native-cfd:electron": "npm run build-native-cfd -- --runtime=electron --target=7.0.0",
+    "dist": "npm run build && electron-builder --publish never",
     "lint": "eslint src test --ext .ts,.tsx ",
     "lint:ci": "eslint --format junit --output-file ./reports/linter/eslint.xml src test --ext .ts,.tsx ",
     "mocha": "electron-mocha ./test/*.ts",
@@ -60,10 +73,11 @@
     "@material-ui/pickers": "^3.2.10",
     "axios": "^0.19.2",
     "bitcoin-core": "github:wleev/bitcoin-core#test-version",
+    "cfd-dlc-js": "github:cryptogarageinc/cfd-dlc-js#v0.0.4",
+    "cfd-js": "github:cryptogarageinc/cfd-js#v0.1.9",
     "connected-react-router": "^6.6.1",
     "date-fns": "^2.9.0",
     "electron-better-ipc": "^0.7.0",
-    "electron-is-dev": "^1.1.0",
     "electron-log": "^3.0.9",
     "encoding-down": "^6.3.0",
     "grpc": "^1.24.2",
@@ -122,7 +136,6 @@
     "electron": "^7.0.0",
     "electron-builder": "^21.2.0",
     "electron-mocha": "^8.1.2",
-    "electron-rebuild": "^1.8.8",
     "eslint-config-prettier": "^6.7.0",
     "eslint-config-react": "^1.1.7",
     "eslint-plugin-prettier": "^3.1.1",

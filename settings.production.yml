@@ -1,0 +1,5 @@
+grpc:
+  host: '3.115.1.105:444'
+  secure: false
+oracle:
+  baseURL: 'http://3.115.1.105:443'
