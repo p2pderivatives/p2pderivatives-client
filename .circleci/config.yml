@@ -1,14 +1,48 @@
 version: 2.1
+executors:
+  client-runner:
+    docker:
+      - image: cryptogarageinc/p2pderivatives-client-ci
+  client-browsers-runner:
+    docker:
+      - image: cryptogarageinc/p2pderivatives-client-ci:latest-browser
+  macos-packager:
+    macos:
+      xcode: 11.3.0
+    environment:
+      BUILD_ARG: -m
+      PKG_SUFFIX: dmg
+  win-packager:
+    docker:
+      - image: electronuserland/builder:wine
+    environment:
+      BUILD_ARG: -w
+      PKG_SUFFIX: exe
+  linux-packager:
+    docker:
+      - image: electronuserland/builder
+    environment:
+      BUILD_ARG: -l snap
+      PKG_SUFFIX: snap
+
+tag_only: &tag_only
+  filters:
+    tags:
+      only: /.*/
+    branches:
+      ignore: /.*/
+
 workflows:
   lint-build-test:
     jobs:
-      - dependencies
+      - dependencies:
+          name: dependencies-cache
       - lint:
           requires:
-            - dependencies
+            - dependencies-cache
       - build:
           requires:
-            - dependencies
+            - dependencies-cache
       - jest-tests:
           requires:
             - build
@@ -20,11 +54,48 @@ workflows:
           requires:
             - jest-tests
             - mocha-tests
+  tagged:
+    jobs:
+      - dependencies:
+          name: dependencies-no-cache
+          with-cache: false
+          run-preci: false
+          <<: *tag_only
+      - packaging:
+          name: macos-packaging
+          runner:
+            name: macos-packager
+          <<: *tag_only
+          requires:
+            - dependencies-no-cache
+      - packaging:
+          name: windows-packaging
+          runner:
+            name: win-packager
+          build-cfd-electron-args: --platform=win32
+          <<: *tag_only
+          requires:
+            - dependencies-no-cache
+      - packaging:
+          name: linux-packaging
+          runner:
+            name: linux-packager
+          <<: *tag_only
+          requires:
+            - dependencies-no-cache
 
 jobs:
   dependencies:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    parameters:
+      run-preci:
+        description: 'Should run the preci hook ? (link global packages)'
+        type: boolean
+        default: true
+      with-cache:
+        description: 'Should cache the dependencies ?'
+        type: boolean
+        default: true
+    executor: client-runner
     steps:
       - checkout
       - run:
@@ -33,29 +104,39 @@ jobs:
             git submodule update --init --recursive
             git ls-tree HEAD p2pderivatives-proto | awk '{ print $3 }' > p2pd-proto-hash.txt
 
-      - restore_cache:
-          keys:
-            ## add vX-debug suffix when debugging cache
-            - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v2
+      - when:
+          condition: << parameters.with-cache >>
+          steps:
+            - restore_cache:
+                keys:
+                  ## add vX-debug suffix when debugging cache
+                  - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v5
       - run:
           name: Install nodes modules
           command: |
             if [ -d "node_modules" ]; then
               export HAS_NPM_CACHE="true"
             fi
-            npm run-script preci && (cd gen-grpc && npm run-script preci)
+            if << parameters.run-preci >>;then
+              npm run-script preci && (cd gen-grpc && npm run-script preci)
+            fi
             if [ -z "$HAS_NPM_CACHE" ]; then
               npm ci
             fi
-      - save_cache:
-          key: npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v2
-          paths:
-            - node_modules
-            - gen-grpc/node_modules
-
-      - restore_cache:
-          keys:
-            - gen-grpc-deps-{{checksum "p2pd-proto-hash.txt"}}-v2
+      - when:
+          condition: << parameters.with-cache >>
+          steps:
+            - save_cache:
+                key: npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v5
+                paths:
+                  - node_modules
+                  - gen-grpc/node_modules
+      - when:
+          condition: << parameters.with-cache >>
+          steps:
+            - restore_cache:
+                keys:
+                  - gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v5
       - run:
           name: Generate gen grpc
           command: |
@@ -65,10 +146,13 @@ jobs:
             if [ -z "$HAS_GEN_GRPC_CACHE" ]; then
               cd gen-grpc && npm run-script gen
             fi
-      - save_cache:
-          key: gen-grpc-deps-{{checksum "p2pd-proto-hash.txt"}}-v2
-          paths:
-            - gen-grpc
+      - when:
+          condition: << parameters.with-cache >>
+          steps:
+            - save_cache:
+                key: gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v5
+                paths:
+                  - gen-grpc
 
       - persist_to_workspace:
           root: .
@@ -76,8 +160,7 @@ jobs:
             - .
 
   lint:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    executor: client-runner
     steps:
       - attach_workspace:
           at: .
@@ -88,8 +171,7 @@ jobs:
           path: ./reports/linter
 
   build:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    executor: client-runner
     steps:
       - attach_workspace:
           at: .
@@ -98,8 +180,7 @@ jobs:
           command: CI=false npm run build # ci to false avoid linter warnings as errors
 
   jest-tests:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci
+    executor: client-runner
     steps:
       - attach_workspace:
           at: .
@@ -115,8 +196,7 @@ jobs:
           path: ./reports/jest
 
   mocha-tests:
-    docker:
-      - image: cryptogarageinc/p2pderivatives-client-ci:latest-browser
+    executor: client-browsers-runner
     steps:
       - attach_workspace:
           at: .
@@ -130,6 +210,7 @@ jobs:
           path: ./reports/mocha
       - store_artifacts:
           path: ./reports/mocha
+
   integration-tests:
     docker:
       - image: cimg/base:stable
@@ -194,3 +275,26 @@ jobs:
           when: always
       - store_test_results:
           path: ./reports
+
+  packaging:
+    parameters:
+      runner:
+        type: executor
+      build-cfd-electron-args:
+        description: 'arguments run by rebuilding cfd librairies'
+        type: string
+        default: ''
+    executor: << parameters.runner >>
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Rebuild electron Cfd librairies
+          command: npm run build-native-cfd:electron << parameters.build-cfd-electron-args >>
+      - run:
+          name: Packaging
+          command: |
+            npm run dist -- ${BUILD_ARG}
+            mkdir pkg && cp dist/*.${PKG_SUFFIX}* pkg
+      - store_artifacts:
+          path: ./pkg

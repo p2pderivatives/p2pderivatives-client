@@ -4,7 +4,8 @@
   "description": "Generated typed javascript grpc files",
   "files": [
     "*.d.ts",
-    "*.js"
+    "*.js",
+    "*.proto"
   ],
   "scripts": {
     "preci": "npm link grpc-tools grpc_tools_node_protoc_ts",

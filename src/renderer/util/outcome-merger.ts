@@ -51,7 +51,7 @@ const rangeOutcomeToOutcome: (rangeOutcome: RangeOutcome) => Outcome = (
   rangeOutcome: RangeOutcome
 ) => {
   const fixingPrice =
-    rangeOutcome.range.end == rangeOutcome.range.start
+    rangeOutcome.range.end === rangeOutcome.range.start
       ? rangeOutcome.range.start.toString()
       : `${rangeOutcome.range.start}-${rangeOutcome.range.end}`
   return {

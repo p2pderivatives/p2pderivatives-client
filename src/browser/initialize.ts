@@ -1,9 +1,9 @@
-import electron from 'electron'
+import { app } from 'electron'
 import encoding from 'encoding-down'
 import { promises as fs } from 'fs'
 import leveldown from 'leveldown'
 import levelup, { LevelUp } from 'levelup'
-import * as path from 'path'
+import path from 'path'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
 import { GrpcConfig } from './api/grpc/GrpcConfig'
@@ -19,7 +19,7 @@ import { UserEvents } from './ipc/UserEvents'
 let db: LevelUp | null = null
 
 async function initializeDB(userName: string): Promise<void> {
-  const userPath = electron.app.getPath('userData')
+  const userPath = app.getPath('userData')
   const userDbPath = path.join(userPath, userName)
 
   try {
@@ -79,7 +79,15 @@ async function logoutCallback(): Promise<void> {
 }
 
 export function initialize(): void {
-  const appConfig = new AppConfig('./settings.default.yaml')
+  let resourcesPath: string
+  if (!app.isPackaged) {
+    resourcesPath = app.getAppPath()
+  } else {
+    resourcesPath = path.join(app.getAppPath(), '..')
+  }
+  const configPath = path.join(resourcesPath, 'settings.default.yml')
+  const appConfig = new AppConfig(configPath)
+
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
   const client = new GrpcClient(grpcConfig, auth)
