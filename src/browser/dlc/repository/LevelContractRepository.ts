@@ -93,8 +93,17 @@ export class LevelContractRepository implements ContractRepository {
     }
   }
 
+  private isHex(value: string): boolean {
+    const regexp = /^([0-9a-fA-F]{2})+$/
+    return value.length > 0 && regexp.test(value)
+  }
+
   private getKey(contractId: string): string {
-    return getKeyPrefix(KeyPrefix.CONTRACT) + contractId
+    const key = getKeyPrefix(KeyPrefix.CONTRACT) + contractId
+    if (!this.isHex(key)) {
+      throw new Error('Received invalid key')
+    }
+    return key
   }
 
   private isMatch(
