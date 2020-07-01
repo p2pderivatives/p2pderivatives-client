@@ -5,5 +5,4 @@ import { StatelessContract } from './StatelessContract'
 export interface UnilateralClosedByOtherContract
   extends StatelessContract<MaturedContract> {
   readonly state: ContractState.UnilateralClosedByOther
-  readonly finalCetTxId: string
 }

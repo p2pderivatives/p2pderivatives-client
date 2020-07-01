@@ -6,7 +6,7 @@ import {
   RejectMessage,
 } from '../src/browser/dlc/models/messages'
 
-function sleep(ms: number) {
+function sleep(ms: number): Promise<unknown> {
   return new Promise(resolve => {
     setTimeout(resolve, ms)
   })
