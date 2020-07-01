@@ -6,6 +6,6 @@ export interface UnilateralClosedContract
   extends StatelessContract<MaturedContract> {
   readonly state: ContractState.UnilateralClosed
   readonly finalCetTxId: string
-  readonly closingTxHex: string
-  readonly closingTxId: string
+  readonly closingTxHex?: string
+  readonly closingTxId?: string
 }

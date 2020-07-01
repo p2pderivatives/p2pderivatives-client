@@ -12,4 +12,5 @@ export enum ContractState {
   MutualCloseProposed,
   MutualClosed,
   Refunded,
+  Failed,
 }
