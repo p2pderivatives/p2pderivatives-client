@@ -1,0 +1,27 @@
+version: '3.4'
+services:
+  ### BITCOIND
+  bitcoind:
+    volumes:
+      - bitcoind-config:/config
+
+  dev:
+    image: cryptogarageinc/p2pderivatives-client-ci
+    user: root
+    working_dir: /home/circleci/project
+    environment:
+      BITCOIND_HOST: bitcoind
+      BITCOIND_PORT: 18443
+    volumes:
+      - reports:/home/circleci/project/reports
+      - dev:/home/circleci/project
+
+volumes:
+  bitcoind-config:
+    external: true
+
+  # DEV
+  reports:
+    external: true
+  dev:
+    external: true

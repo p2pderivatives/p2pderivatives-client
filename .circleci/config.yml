@@ -52,8 +52,11 @@ workflows:
       - integration-tests:
           context: github-packages-docker-credentials
           requires:
-            - jest-tests
-            - mocha-tests
+            - build
+      - integration-tests-separate:
+          requires:
+            - build
+
   tagged:
     jobs:
       - dependencies:
@@ -212,8 +215,7 @@ jobs:
           path: ./reports/mocha
 
   integration-tests:
-    docker:
-      - image: cimg/base:stable
+    executor: client-runner
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
@@ -271,7 +273,39 @@ jobs:
           name: Recover tests results
           command: |
             docker cp  helper:/reports/. ./reports
-            docker rm helper --force --volumes
+          when: always
+      - store_test_results:
+          path: ./reports
+
+  integration-tests-separate:
+    executor: client-runner
+    parallelism: 4
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: .
+      - run:
+          name: Configure and start services
+          command: |
+            docker create \
+              -v bitcoind-config:/bitcoind-config \
+              -v reports:/reports \
+              -v dev:/dev \
+              --name helper alpine /bin/true
+            docker cp ./services/bitcoind/config/. helper:/bitcoind-config
+            docker cp ./. helper:/dev
+      - run:
+          name: Run Integration tests separate
+          command: |
+            for i in {1..21}; do echo "$i"; done > tests.txt
+            TESTNAME=$(circleci tests split tests.txt)
+            split="${TESTNAME//[$'\t\r\n']/ }"
+            npm run integration-separate:ci -- $split
+      - run:
+          name: Recover tests results
+          command: |
+            docker cp  helper:/reports/. ./reports
           when: always
       - store_test_results:
           path: ./reports
