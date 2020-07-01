@@ -54,6 +54,11 @@ workflows:
           requires:
             - jest-tests
             - mocha-tests
+      - integration-tests-run-separate:
+          context: github-packages-docker-credentials
+          requires:
+            - jest-tests
+            - mocha-tests
   tagged:
     jobs:
       - dependencies:
@@ -275,6 +280,24 @@ jobs:
           when: always
       - store_test_results:
           path: ./reports
+
+  integration-tests-run-separate:
+    executor: client-runner
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run Integration tests
+          command: |
+            ./integration-test/run-separate/run-ci.sh
+      # - run:
+      #     name: Recover tests results
+      #     command: |
+      #       docker cp  helper:/reports/. ./reports
+      #       docker rm helper --force --volumes
+      #     when: always
+      # - store_test_results:
+      #     path: ./reports
 
   packaging:
     parameters:

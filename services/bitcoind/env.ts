@@ -18,6 +18,19 @@ export const TEST_VECTORS: {
     id: string
     amount: number
   }
-} = yaml.safeLoad(
-  fs.readFileSync(path.resolve(__dirname, './vectors/vector.yml'), 'utf8')
-)
+} = load()
+
+function load() {
+  try {
+    return yaml.safeLoad(
+      fs.readFileSync(path.resolve(__dirname, './vectors/vector.yml'), 'utf8')
+    )
+  } catch {
+    return {
+      testTx: {
+        id: '',
+        amount: 0,
+      },
+    }
+  }
+}
