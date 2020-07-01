@@ -5,21 +5,18 @@ import { SignMessage, DlcMessageType } from '../messages'
 
 export interface SignedContract extends StatelessContract<AcceptedContract> {
   readonly state: ContractState.Signed
-  readonly fundTxSignatures: string[]
-  readonly localUtxoPublicKeys: string[]
+  readonly fundTxSignatures: ReadonlyArray<string>
+  readonly localUtxoPublicKeys: ReadonlyArray<string>
   readonly refundLocalSignature: string
-  readonly localCetSignatures: string[]
+  readonly localCetSignatures: ReadonlyArray<string>
 }
 
-export function toSignMessage(
-  contract: SignedContract,
-  cetSignatures: string[]
-): SignMessage {
+export function toSignMessage(contract: SignedContract): SignMessage {
   return {
     messageType: DlcMessageType.Sign,
     contractId: contract.id,
     fundTxSignatures: contract.fundTxSignatures,
-    cetSignatures,
+    cetSignatures: contract.localCetSignatures,
     refundSignature: contract.refundLocalSignature,
     utxoPublicKeys: contract.localUtxoPublicKeys,
   }
