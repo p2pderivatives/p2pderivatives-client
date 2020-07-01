@@ -2,6 +2,7 @@
 import { AcceptedContract } from './AcceptedContract'
 import { BroadcastContract } from './BroadcastContract'
 import { ConfirmedContract } from './ConfirmedContract'
+import { FailedContract } from './FailedContract'
 import { InitialContract } from './InitialContract'
 import { MaturedContract } from './MaturedContract'
 import { MutualClosedContract } from './MutualClosedContract'
@@ -13,34 +14,32 @@ import { SignedContract } from './SignedContract'
 import { UnilateralClosedByOtherContract } from './UnilateralClosedByOtherContract'
 import { UnilateralClosedContract } from './UnilateralClosedContract'
 
-export type { AcceptedContract } from './AcceptedContract'
 export { toAcceptMessage } from './AcceptedContract'
+export type { AcceptedContract } from './AcceptedContract'
 export type { BroadcastContract } from './BroadcastContract'
 export type { ConfirmedContract } from './ConfirmedContract'
-export type { InitialContract } from './InitialContract'
+export type { FailedContract } from './FailedContract'
 export { fromOfferMessage } from './InitialContract'
+export type { InitialContract } from './InitialContract'
 export type { MaturedContract } from './MaturedContract'
 export type { MutualClosedContract } from './MutualClosedContract'
-export type {
-  MutualCloseProposedContract,
-} from './MutualCloseProposedContract'
-export {
-  toMutualClosingMessage,
-} from './MutualCloseProposedContract'
-export type { OfferedContract} from './OfferedContract'
+export { toMutualClosingMessage } from './MutualCloseProposedContract'
+export type { MutualCloseProposedContract } from './MutualCloseProposedContract'
 export { toOfferMessage } from './OfferedContract'
+export type { OfferedContract } from './OfferedContract'
+export type { PrivateParams } from './PrivateParams'
 export type { RefundedContract } from './RefundedContract'
 export type { RejectedContract } from './RejectedContract'
-export type { SignedContract } from './SignedContract'
 export { toSignMessage } from './SignedContract'
+export type { SignedContract } from './SignedContract'
 export type { UnilateralClosedByOtherContract } from './UnilateralClosedByOtherContract'
 export type { UnilateralClosedContract } from './UnilateralClosedContract'
-export type { PrivateParams } from './PrivateParams'
 
 export type AnyContract =
   | AcceptedContract
   | BroadcastContract
   | ConfirmedContract
+  | FailedContract
   | InitialContract
   | MaturedContract
   | MutualCloseProposedContract

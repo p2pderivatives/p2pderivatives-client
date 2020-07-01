@@ -8,7 +8,7 @@ import { StatelessContract } from './StatelessContract'
 export interface OfferedContract extends StatelessContract<InitialContract> {
   readonly state: ContractState.Offered
   readonly localPartyInputs: PartyInputs
-  readonly privateParams: PrivateParams
+  readonly privateParams?: PrivateParams
 }
 
 export function toOfferMessage(contract: OfferedContract): OfferMessage {
