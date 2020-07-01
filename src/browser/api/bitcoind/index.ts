@@ -5,14 +5,20 @@ import Client, {
   UnspentTxInfo,
 } from 'bitcoin-core'
 
-import { BitcoinDConfig } from '../../../common/models/ipc/BitcoinDConfig'
+import {
+  BitcoinDConfig,
+  BitcoinNetwork,
+} from '../../../common/models/ipc/BitcoinDConfig'
+import * as Utils from '../../dlc/utils/CfdUtils'
+import { Utxo } from '../../dlc/models/Utxo'
+import { btcToSats, satsToBtc } from '../../../common/utils/conversion'
 
 export default class BitcoinDClient {
   private rpcUser = ''
   private rpcPassword = ''
   private host = ''
-  private port = 8332
-  private network: 'mainnet' | 'regtest' | 'testnet' = 'regtest'
+  private port = 833
+  private network: BitcoinNetwork = 'regtest'
   private wallet = ''
   private walletPassphrase = ''
 
@@ -66,27 +72,18 @@ export default class BitcoinDClient {
     this.client = new Client(clientConfig)
     if (this.wallet) {
       const wallets = await this.client.listWallets()
-      if (!(this.wallet in wallets)) {
-        try {
-          await this.client.loadWallet(this.wallet)
-        } catch (e) {
-          if (e.code === -18) {
-            throw e
-          }
-        }
+      if (!wallets.includes(this.wallet)) {
+        await this.client.loadWallet(this.wallet)
       }
     }
     if (options.walletPassphrase) {
-      await this.client.walletPassphrase(this.walletPassphrase, 60)
+      await this.client.walletPassphrase(this.walletPassphrase, 10)
     }
     await this.client.getNetworkInfo()
   }
 
-  public async sendRawTransaction(
-    hexString: string,
-    allowHighFees = false
-  ): Promise<void> {
-    return await this.getClient().sendRawTransaction(hexString, allowHighFees)
+  public async sendRawTransaction(hexString: string): Promise<void> {
+    return await this.getClient().sendRawTransaction(hexString)
   }
 
   public async getTransaction(
@@ -119,18 +116,112 @@ export default class BitcoinDClient {
     )
   }
 
-  public async getNewAddress(label = ''): Promise<string> {
-    return await this.getClient().getNewAddress(label)
+  public async getNewAddress(
+    label = '',
+    addressType = 'bech32'
+  ): Promise<string> {
+    return await this.getClient().getNewAddress(label, addressType)
   }
 
   public async getBalance(
     minConfirmations = 0,
     includeWatchOnly = false
   ): Promise<number> {
-    return await this.getClient().getBalance(
+    const balanceBtc = await this.getClient().getBalance(
       '*',
       minConfirmations,
       includeWatchOnly
     )
+
+    const balanceSats = btcToSats(balanceBtc)
+
+    return balanceSats
+  }
+
+  public async createWallet(name: string, passphrase: string): Promise<void> {
+    await this.getClient().createWallet(name, false, false, passphrase)
+  }
+
+  public async getNewPrivateKey(): Promise<string> {
+    if (this.walletPassphrase)
+      await this.getClient().walletPassphrase(this.walletPassphrase, 10)
+    const address = await this.getClient().getNewAddress()
+    return this.dumpPrivHex(address)
+  }
+
+  public async dumpPrivHex(address: string): Promise<string> {
+    const wif = await this.getClient().dumpPrivKey(address)
+    return Utils.getPrivkeyFromWif(wif)
+  }
+
+  public async getUtxosForAmount(
+    amount: number,
+    feeRate?: number,
+    lockUtxos = true
+  ): Promise<Utxo[]> {
+    let success = true
+    let utxoSet: Utxo[] = []
+    do {
+      const unspent = await this.getClient().listUnspent(
+        1,
+        undefined,
+        undefined,
+        false
+      )
+      const spendable = unspent.filter(x => x.spendable)
+      const utxosIn: Utxo[] = spendable.map(utxo => {
+        return {
+          txid: utxo.txid,
+          vout: utxo.vout,
+          amount: btcToSats(utxo.amount),
+          address: utxo.address,
+        }
+      })
+
+      utxoSet = Utils.selectUtxosForAmount(amount, utxosIn, feeRate)
+
+      // TODO(tibo): locking utxos using the bitcoind wallet is not ideal:
+      // 1. Information lost on wallet restart
+      // 2. Doesn't decrease balance
+      // Ideally should use wallet lock + store information locally.
+      if (lockUtxos) {
+        success = await this.lockUtxos(utxoSet)
+      }
+    } while (success !== true)
+
+    return utxoSet
+  }
+
+  public async lockUtxos(utxos: Utxo[], unlock = false): Promise<boolean> {
+    return this.getClient().lockUnspent(
+      unlock,
+      utxos.map(x => {
+        return {
+          txid: x.txid,
+          vout: x.vout,
+        }
+      })
+    )
+  }
+
+  public async generateBlocksToWallet(nbBlocks: number): Promise<void> {
+    const address = await this.getClient().getNewAddress()
+    await this.getClient().generateToAddress(nbBlocks, address)
+  }
+
+  public async sendToAddress(address: string, amount: number): Promise<void> {
+    await this.getClient().sendToAddress(address, satsToBtc(amount))
+  }
+
+  public getNetwork(): BitcoinNetwork {
+    return this.network
+  }
+
+  public async importAddress(address: string): Promise<void> {
+    await this.getClient().importAddress(address, '', false)
+  }
+
+  public async importPublicKey(pubKey: string): Promise<void> {
+    await this.getClient().importPubKey(pubKey, '', false)
   }
 }
