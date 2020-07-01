@@ -1,5 +1,5 @@
 {
-  "extends": [ 
+  "extends": [
     "react-app",
     "eslint:recommended",
     "plugin:react/recommended",
@@ -13,6 +13,9 @@
     "jasmine": true,
     "jest": true,
     "mocha": true
+  },
+  "globals": {
+    "BigInt": true
   },
   "rules": {
     "prettier/prettier": ["error"],
