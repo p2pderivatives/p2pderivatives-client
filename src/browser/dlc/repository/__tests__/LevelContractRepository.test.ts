@@ -134,7 +134,7 @@ test('Test create contract already inserted returns already exists error', async
 test('Test has contract with unknown contract returns false', async () => {
   // Arrange
   const contractRepo = InitializeDataBase()
-  const unknownContractId = 'abc'
+  const unknownContractId = '0203'
 
   // Act
   const hasContract = await contractRepo.hasContract(unknownContractId)
@@ -146,7 +146,7 @@ test('Test has contract with unknown contract returns false', async () => {
 
 test('Test get unknown contract returns error', async () => {
   // Arrange
-  const unknownContractId = 'abc'
+  const unknownContractId = '0203'
 
   // Act
   const result = await contractRepo.getContract(unknownContractId)
@@ -279,4 +279,12 @@ test('Get contracts with state returns all contract in state', async () => {
   } else {
     fail()
   }
+})
+
+test('Create contract with invalid id throws', async () => {
+  const contract = {
+    ...generateContract(1, 'test'),
+    id: '1',
+  }
+  expect(contractRepo.createContract(contract)).rejects.toThrow(Error)
 })
