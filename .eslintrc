@@ -14,6 +14,9 @@
     "jest": true,
     "mocha": true
   },
+  "globals": {
+    "BigInt": true
+  },
   "rules": {
     "prettier/prettier": ["error"],
     "react/display-name": ["off"],

@@ -720,6 +720,14 @@ declare module 'bitcoin-core' {
       replacable: boolean
     ): Promise<string>
 
+    createWallet(
+      name: string,
+      disablePrivateKeys?: boolean,
+      blank?: boolean,
+      passphrase?: string,
+      avoidReuse?: boolean
+    )
+
     /**
      * @deprecated
      */
@@ -873,7 +881,7 @@ declare module 'bitcoin-core' {
 
     getNetworkInfo(): Promise<NetworkInfo>
 
-    getNewAddress(account?: string): Promise<string>
+    getNewAddress(account?: string, addressType?: string): Promise<string>
 
     getPeerInfo(): Promise<PeerInfo[]>
 
@@ -1158,7 +1166,7 @@ declare module 'bitcoin-core' {
 
     verifyTxOutProof(proof: string): Promise<string[]>
 
-    walletLock(passphrase: string, timeout: number): Promise<void>
+    walletLock(): Promise<void>
 
     walletPassphrase(passphrase: string, timeout: number): Promise<void>
 
