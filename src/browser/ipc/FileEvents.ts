@@ -1,5 +1,5 @@
 import { ipcMain as ipc } from 'electron-better-ipc'
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 import OutcomeCall from '../../common/models/ipc/OutcomeCall'
 import OutcomeAnswer from '../../common/models/ipc/OutcomeAnswer'
 import { PARSE_OUTCOME } from '../../common/constants/IPC'

@@ -12,7 +12,7 @@ import {
 } from '../../common/constants/IPC'
 import { UserAnswer } from '../../common/models/ipc/UserAnswerProps'
 import { IPCError } from '../../common/models/ipc/IPCError'
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 import { GrpcError } from '../api/grpc/GrpcError'
 
 export class AuthenticationEvents implements IPCEvents {
