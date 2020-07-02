@@ -1,12 +1,9 @@
-import React, { FC, useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { push } from 'connected-react-router'
-
 import { makeStyles, Typography } from '@material-ui/core'
-
 import Backdrop from '@material-ui/core/Backdrop'
 import CircularProgress from '@material-ui/core/CircularProgress'
-
+import { push } from 'connected-react-router'
+import React, { FC, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import WalletSettings from '../Settings/WalletSettings'
 
 const useStyles = makeStyles(theme => ({
@@ -14,8 +11,10 @@ const useStyles = makeStyles(theme => ({
     zIndex: theme.zIndex.appBar + 1,
   },
   container: {
+    height: '100%',
+    width: '100%',
+    background: '#303855',
     padding: '2rem',
-    backgroundColor: '#303855',
     color: 'white',
   },
 }))
@@ -35,7 +34,13 @@ const InitialWalletSettings: FC = () => {
   }
 
   return (
-    <div style={{ position: 'absolute', height: '100%', width: '100%' }}>
+    <div
+      style={{
+        position: 'absolute',
+        height: '100%',
+        width: '100%',
+      }}
+    >
       <Backdrop className={classes.backdrop} open={isLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>

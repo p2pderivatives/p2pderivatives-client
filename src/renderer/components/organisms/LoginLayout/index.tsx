@@ -1,9 +1,7 @@
-import React, { FC } from 'react'
-
 import { makeStyles } from '@material-ui/core'
-
-import p2plogo from '../../../assets/p2p-logo.png'
+import React, { FC } from 'react'
 import graph from '../../../assets/logo-rb.png'
+import p2plogo from '../../../assets/p2p-logo.png'
 
 type LayoutProps = {
   children?: React.ReactNode
@@ -38,7 +36,7 @@ const useStyles = makeStyles({
   },
 })
 
-const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
+const LoginLayout: FC<LayoutProps> = (props: LayoutProps) => {
   const classes = useStyles()
   return (
     <div className={classes.rootContainer}>
@@ -55,4 +53,4 @@ const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
   )
 }
 
-export default MainLayout
+export default LoginLayout

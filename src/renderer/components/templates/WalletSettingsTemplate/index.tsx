@@ -1,5 +1,4 @@
 import React, { FC } from 'react'
-
 import WalletSettingsForm, {
   WalletSettingsFormProps,
 } from '../../organisms/WalletSettingsForm'
@@ -10,12 +9,10 @@ const WalletSettingsTemplate: FC<WalletSettingsTemplateProps> = (
   props: WalletSettingsTemplateProps
 ) => {
   return (
-    <div>
-      <WalletSettingsForm
-        config={props.config}
-        checkSettings={props.checkSettings}
-      />
-    </div>
+    <WalletSettingsForm
+      config={props.config}
+      checkSettings={props.checkSettings}
+    />
   )
 }
 
