@@ -44,7 +44,7 @@ const NewContractPage: FC = () => {
     dispatch(goBack())
   }
 
-  const getOracleInfo = async () => {
+  const getOracleInfo = async (): Promise<void> => {
     const info = await OracleIPC.getOracleConfig('btcusd')
     setOracleInfo(info)
   }

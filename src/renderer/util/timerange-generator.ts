@@ -1,14 +1,6 @@
 import { OracleAssetConfiguration } from '../../common/oracle/oracle'
 import { DateTime, ToRelativeUnit, DurationObject, Duration } from 'luxon'
 
-export interface DateSelection {
-  year?: number
-  month?: number
-  day?: number
-  hour?: number
-  minute?: number
-}
-
 export interface DateRanges {
   years: number[]
   months: number[]
@@ -17,10 +9,10 @@ export interface DateRanges {
   minutes: number[]
 }
 
-const getFirstValidDate = (
+export function getFirstValidDate(
   info: OracleAssetConfiguration,
   desiredDate: DateTime
-): DateTime => {
+): DateTime {
   let frequency = info.frequency.years
   let freqUnit: ToRelativeUnit = 'years'
 
@@ -74,15 +66,17 @@ const getFrequencyDiff = (
 
 const getYears = (
   start: DateTime,
+  current: DateTime,
   info: OracleAssetConfiguration
 ): number[] => {
   const startYear = start.year
-  const endYear = info.startDate.plus(info.range).year
+  const endYear = current.plus(info.range).year
   return generateArray(startYear, endYear, info.frequency.years)
 }
 
 const getMonths = (
   start: DateTime,
+  current: DateTime,
   info: OracleAssetConfiguration,
   year: number
 ): number[] => {
@@ -95,27 +89,28 @@ const getMonths = (
       })
 
       const addMonths = getFrequencyDiff(
-        info.startDate,
+        start,
         futureDate,
         info.frequency.months,
         'months'
       )
-      startMonth = info.startDate.plus(addMonths).month
+      startMonth = start.plus(addMonths).month
     } else {
       startMonth = 1
     }
   }
   let endMonth = 12
 
-  const rangeEnd = info.startDate.plus(info.range)
+  const rangeEnd = current.plus(info.range)
   if (rangeEnd.year === year) {
-    endMonth = info.startDate.plus(info.range).month
+    endMonth = current.plus(info.range).month
   }
   return generateArray(startMonth, endMonth, info.frequency.months)
 }
 
 const getDays = (
   start: DateTime,
+  current: DateTime,
   info: OracleAssetConfiguration,
   year: number,
   month: number
@@ -129,19 +124,19 @@ const getDays = (
         day: 1,
       })
       const addDays = getFrequencyDiff(
-        info.startDate,
+        start,
         futureDate,
         info.frequency.days,
         'days'
       )
-      startDay = info.startDate.plus(addDays).day
+      startDay = start.plus(addDays).day
     } else {
       startDay = 1
     }
   }
   let endDay = DateTime.fromObject({ year: year, month: month }).daysInMonth
 
-  const rangeEnd = info.startDate.plus(info.range)
+  const rangeEnd = current.plus(info.range)
   if (rangeEnd.year === year && rangeEnd.month === month) {
     endDay = rangeEnd.day
   }
@@ -150,6 +145,7 @@ const getDays = (
 
 const getHours = (
   start: DateTime,
+  current: DateTime,
   info: OracleAssetConfiguration,
   year: number,
   month: number,
@@ -165,18 +161,18 @@ const getHours = (
         hour: 0,
       })
       const addHours = getFrequencyDiff(
-        info.startDate,
+        start,
         futureDate,
         info.frequency.hours,
         'hours'
       )
-      startHour = info.startDate.plus(addHours).hour
+      startHour = start.plus(addHours).hour
     } else {
       startHour = 0
     }
   }
   let endHour = 23
-  const rangeEnd = info.startDate.plus(info.range)
+  const rangeEnd = current.plus(info.range)
   if (
     rangeEnd.year === year &&
     rangeEnd.month === month &&
@@ -190,6 +186,7 @@ const getHours = (
 
 const getMinutes = (
   start: DateTime,
+  current: DateTime,
   info: OracleAssetConfiguration,
   year: number,
   month: number,
@@ -212,18 +209,18 @@ const getMinutes = (
         minute: 0,
       })
       const addMinutes = getFrequencyDiff(
-        info.startDate,
+        start,
         futureDate,
         info.frequency.minutes,
         'minutes'
       )
-      startMinute = info.startDate.plus(addMinutes).minute
+      startMinute = start.plus(addMinutes).minute
     } else {
       startMinute = 0
     }
   }
   let endMinute = 59
-  const rangeEnd = info.startDate.plus(info.range)
+  const rangeEnd = current.plus(info.range)
   if (
     rangeEnd.year === year &&
     rangeEnd.month === month &&
@@ -238,45 +235,52 @@ const getMinutes = (
 
 export const generateRange = (
   info: OracleAssetConfiguration,
-  selection: DateSelection,
-  minimumDate?: DateTime
+  selection: DateTime,
+  minimumDate: DateTime
 ): DateRanges => {
-  let localStart = info.startDate
-  if (minimumDate) {
-    if (minimumDate.toMillis() - localStart.toMillis() > 0) {
-      localStart = getFirstValidDate(info, minimumDate)
-    }
+  if (info.startDate > minimumDate) {
+    minimumDate = info.startDate
   }
-  const currentYear = selection.year || localStart.year
-  const currentMonth = selection.month || localStart.month
-  const currentDay = selection.day || localStart.day
-  const currentHour = selection.hour || localStart.hour
+  const firstValid = getFirstValidDate(info, minimumDate)
+  selection = DateTime.max(firstValid, selection)
+  const currentYear = selection.year
+  const currentMonth = selection.month
+  const currentDay = selection.day
+  const currentHour = selection.hour
 
   let intervalSet = info.frequency.years > 0
-  const years = getYears(localStart, info)
+  const years = getYears(firstValid, minimumDate, info)
 
-  let months: number[] = [localStart.month]
+  let months: number[] = [firstValid.month]
   if (!intervalSet) {
-    months = getMonths(localStart, info, currentYear)
+    months = getMonths(firstValid, minimumDate, info, currentYear)
     intervalSet = info.frequency.months > 0
   }
 
-  let days: number[] = [localStart.day]
+  let days: number[] = [firstValid.day]
   if (!intervalSet) {
-    days = getDays(localStart, info, currentYear, currentMonth)
+    days = getDays(firstValid, minimumDate, info, currentYear, currentMonth)
     intervalSet = info.frequency.days > 0
   }
 
-  let hours: number[] = [localStart.hour]
+  let hours: number[] = [firstValid.hour]
   if (!intervalSet) {
-    hours = getHours(localStart, info, currentYear, currentMonth, currentDay)
+    hours = getHours(
+      firstValid,
+      minimumDate,
+      info,
+      currentYear,
+      currentMonth,
+      currentDay
+    )
     intervalSet = info.frequency.hours > 0
   }
 
-  let minutes: number[] = [localStart.minute]
+  let minutes: number[] = [firstValid.minute]
   if (!intervalSet) {
     minutes = getMinutes(
-      localStart,
+      firstValid,
+      minimumDate,
       info,
       currentYear,
       currentMonth,

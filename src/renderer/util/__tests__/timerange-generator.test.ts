@@ -16,7 +16,7 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ weeks: 1 }),
     }
 
-    const ranges = generateRange(info, {})
+    const ranges = generateRange(info, info.startDate, info.startDate)
     expect(ranges.years).toStrictEqual([2020])
     expect(ranges.months).toStrictEqual([6])
     expect(ranges.days).toStrictEqual([10, 11, 12, 13, 14, 15, 16, 17])
@@ -49,7 +49,17 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ weeks: 1 }),
     }
 
-    const ranges = generateRange(info, { year: 2020, month: 6, day: 17 })
+    const ranges = generateRange(
+      info,
+      DateTime.fromObject({
+        year: 2020,
+        month: 6,
+        day: 17,
+        hour: 0,
+        minute: 0,
+      }),
+      info.startDate
+    )
     expect(ranges.years).toStrictEqual([2020])
     expect(ranges.months).toStrictEqual([6])
     expect(ranges.days).toStrictEqual([10, 11, 12, 13, 14, 15, 16, 17])
@@ -85,13 +95,17 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ hours: 2 }),
     }
 
-    const ranges = generateRange(info, {
-      year: 2020,
-      month: 6,
-      day: 10,
-      hour: 13,
-      minute: 47,
-    })
+    const ranges = generateRange(
+      info,
+      DateTime.fromObject({
+        year: 2020,
+        month: 6,
+        day: 10,
+        hour: 13,
+        minute: 47,
+      }),
+      info.startDate
+    )
     expect(ranges.years).toStrictEqual([2020])
     expect(ranges.months).toStrictEqual([6])
     expect(ranges.days).toStrictEqual([10])
@@ -112,13 +126,17 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ hours: 2 }),
     }
 
-    const ranges = generateRange(info, {
-      year: 2020,
-      month: 6,
-      day: 10,
-      hour: 15,
-      minute: 47,
-    })
+    const ranges = generateRange(
+      info,
+      DateTime.fromObject({
+        year: 2020,
+        month: 6,
+        day: 10,
+        hour: 15,
+        minute: 47,
+      }),
+      info.startDate
+    )
     expect(ranges.years).toStrictEqual([2020])
     expect(ranges.months).toStrictEqual([6])
     expect(ranges.days).toStrictEqual([10])
@@ -139,7 +157,7 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ years: 2 }),
     }
 
-    const ranges = generateRange(info, {})
+    const ranges = generateRange(info, info.startDate, info.startDate)
     expect(ranges.years).toStrictEqual([2020, 2021, 2022])
     expect(ranges.months).toStrictEqual([6, 8, 10, 12])
     expect(ranges.days).toStrictEqual([10])
@@ -160,7 +178,17 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ years: 2 }),
     }
 
-    const ranges = generateRange(info, { year: 2022 })
+    const ranges = generateRange(
+      info,
+      DateTime.fromObject({
+        year: 2022,
+        month: 1,
+        day: 1,
+        hour: 0,
+        minute: 0,
+      }),
+      info.startDate
+    )
     expect(ranges.years).toStrictEqual([2020, 2021, 2022])
     expect(ranges.months).toStrictEqual([2, 4, 6])
     expect(ranges.days).toStrictEqual([10])
@@ -181,7 +209,17 @@ describe('timerange generator tests', () => {
       range: Duration.fromObject({ weeks: 1 }),
     }
 
-    const ranges = generateRange(info, { year: 2020, month: 6, day: 11 })
+    const ranges = generateRange(
+      info,
+      DateTime.fromObject({
+        year: 2020,
+        month: 6,
+        day: 11,
+        hour: 0,
+        minute: 0,
+      }),
+      info.startDate
+    )
     expect(ranges.years).toStrictEqual([2020])
     expect(ranges.months).toStrictEqual([6])
     expect(ranges.days).toStrictEqual([10, 11, 12, 13, 14, 15, 16, 17])
@@ -217,8 +255,8 @@ describe('timerange generator tests', () => {
 
     const minDate = DateTime.fromObject({ year: 2021, month: 8 })
 
-    const ranges = generateRange(info, {}, minDate)
-    expect(ranges.years).toStrictEqual([2021, 2022])
+    const ranges = generateRange(info, info.startDate, minDate)
+    expect(ranges.years).toStrictEqual([2021, 2022, 2023])
     expect(ranges.months).toStrictEqual([8, 10, 12])
     expect(ranges.days).toStrictEqual([10])
     expect(ranges.hours).toStrictEqual([13])
@@ -246,11 +284,82 @@ describe('timerange generator tests', () => {
       minute: 30,
     })
 
-    const ranges = generateRange(info, {}, minDate)
-    expect(ranges.years).toStrictEqual([2021, 2022])
+    const ranges = generateRange(info, info.startDate, minDate)
+    expect(ranges.years).toStrictEqual([2021, 2022, 2023])
     expect(ranges.months).toStrictEqual([8, 9, 10, 11, 12])
     expect(ranges.days).toStrictEqual([25, 26, 27, 28, 29, 30, 31])
     expect(ranges.hours).toStrictEqual([20, 21, 22, 23])
     expect(ranges.minutes).toStrictEqual([30, 35, 40, 45, 50, 55])
+  })
+
+  it('should generate correctly for range P6M and freq T3D when using optional minimum date and selection date', () => {
+    const info: OracleAssetConfiguration = {
+      startDate: DateTime.fromObject({
+        year: 2020,
+        month: 6,
+        day: 10,
+        hour: 13,
+        minute: 5,
+      }),
+      frequency: Duration.fromObject({ days: 3 }),
+      range: Duration.fromObject({ months: 6 }),
+    }
+
+    const minDate = DateTime.fromObject({
+      year: 2021,
+      month: 8,
+      day: 25,
+      hour: 20,
+      minute: 30,
+    })
+
+    const selectionDate = DateTime.fromObject({
+      year: 2022,
+      month: 2,
+    })
+
+    const ranges = generateRange(info, selectionDate, minDate)
+    expect(ranges.years).toStrictEqual([2021, 2022])
+    expect(ranges.months).toStrictEqual([1, 2])
+    expect(ranges.days).toStrictEqual([3, 6, 9, 12, 15, 18, 21, 24])
+    expect(ranges.hours).toStrictEqual([13])
+    expect(ranges.minutes).toStrictEqual([5])
+  })
+
+  it('should generate correctly for range P6M and freq T1M when using optional minimum date and selection date', () => {
+    const info: OracleAssetConfiguration = {
+      startDate: DateTime.fromObject({
+        year: 2020,
+        month: 6,
+        day: 10,
+        hour: 13,
+        minute: 5,
+      }),
+      frequency: Duration.fromObject({ month: 1 }),
+      range: Duration.fromObject({ months: 6 }),
+    }
+
+    const minDate = DateTime.fromObject({
+      year: 2021,
+      month: 8,
+      day: 25,
+      hour: 20,
+      minute: 30,
+    })
+
+    const selectionDate = DateTime.fromObject({
+      year: 2021,
+      month: 5,
+      day: 11,
+      hour: 12,
+      minute: 10,
+    })
+
+    const ranges = generateRange(info, selectionDate, minDate)
+    expect(ranges.years).toStrictEqual([2021, 2022])
+    expect(ranges.months).toStrictEqual([9, 10, 11, 12])
+    expect(ranges.days).toStrictEqual([10])
+    expect(ranges.hours).toStrictEqual([13])
+    expect(ranges.minutes).toStrictEqual([5])
   })
 })
