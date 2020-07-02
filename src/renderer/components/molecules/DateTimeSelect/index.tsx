@@ -1,13 +1,17 @@
 import React, { FC, useState, useEffect, ReactElement } from 'react'
 import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
 import { FormControl, InputLabel, Select, makeStyles } from '@material-ui/core'
-import { generateRange, DateSelection } from '../../../util/timerange-generator'
+import {
+  generateRange,
+  getFirstValidDate,
+} from '../../../util/timerange-generator'
 import { DateTime } from 'luxon'
 
 type DateTimeSelectProps = {
   oracleInfo: OracleAssetConfiguration
   onChange: (value: DateTime) => void
   date?: DateTime
+  minimumDate: DateTime
 }
 
 const useStyles = makeStyles(theme => ({
@@ -15,25 +19,39 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(1),
     minWidth: 80,
   },
-  selectEmpty: {
-    marginTop: theme.spacing(2),
+  select: {
+    '& .Mui-disabled': {
+      color: theme.palette.text.secondary,
+    },
   },
 }))
 
 const DateTimeSelect: FC<DateTimeSelectProps> = (
   props: DateTimeSelectProps
 ) => {
+  let initialDate: DateTime
+  const minimumValidDate = getFirstValidDate(
+    props.oracleInfo,
+    props.minimumDate
+  )
+
+  if (props.date) {
+    initialDate = DateTime.max(props.date, minimumValidDate)
+  } else {
+    initialDate = minimumValidDate
+  }
+
   const classes = useStyles()
   const [yearOptions, setYearOptions] = useState<number[]>([])
-  const [year, setYear] = useState(props.oracleInfo.startDate.year)
+  const [year, setYear] = useState(initialDate.year)
   const [monthOptions, setMonthOptions] = useState<number[]>([])
-  const [month, setMonth] = useState(props.oracleInfo.startDate.month)
+  const [month, setMonth] = useState(initialDate.month)
   const [dayOptions, setDayOptions] = useState<number[]>([])
-  const [day, setDay] = useState(props.oracleInfo.startDate.day)
+  const [day, setDay] = useState(initialDate.day)
   const [hourOptions, setHourOptions] = useState<number[]>([])
-  const [hour, setHour] = useState(props.oracleInfo.startDate.hour)
+  const [hour, setHour] = useState(initialDate.hour)
   const [minuteOptions, setMinuteOptions] = useState<number[]>([])
-  const [minute, setMinute] = useState(props.oracleInfo.startDate.minute)
+  const [minute, setMinute] = useState(initialDate.minute)
 
   const handleChange = (
     setter: React.Dispatch<React.SetStateAction<number>>,
@@ -49,13 +67,15 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
     options: number[]
   ): ReactElement => (
     <FormControl className={classes.formControl}>
-      <InputLabel>{label}</InputLabel>
+      <InputLabel shrink={value !== null}>{label}</InputLabel>
       <Select
+        className={classes.select}
         native
+        disabled={options.length < 2}
         value={value}
-        onChange={(event): void =>
+        onChange={(event): void => {
           handleChange(setter, event.target.value as string)
-        }
+        }}
       >
         {options.map(o => (
           <option value={o} key={o}>
@@ -66,6 +86,26 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
     </FormControl>
   )
 
+  const setInitial = (): void => {
+    let initialDate: DateTime
+    const minimumValidDate = getFirstValidDate(
+      props.oracleInfo,
+      props.minimumDate
+    )
+
+    if (props.date) {
+      initialDate = DateTime.max(props.date, minimumValidDate)
+    } else {
+      initialDate = minimumValidDate
+    }
+
+    setYear(initialDate.year)
+    setMonth(initialDate.month)
+    setDay(initialDate.day)
+    setHour(initialDate.hour)
+    setMinute(initialDate.minute)
+  }
+
   const handleDateChange = (): void => {
     const newDate = DateTime.fromObject({
       year: year,
@@ -73,19 +113,26 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
       day: day,
       hour: hour,
       minute: minute,
+      zone: 'utc',
     })
-    props.onChange(newDate)
+    if (!props.date || !newDate.equals(props.date)) {
+      props.onChange(newDate)
+    }
   }
 
   const refreshOptions = (): void => {
-    const dateSelection: DateSelection = {
+    const dateSelection = DateTime.fromObject({
       year: year,
       month: month,
       day: day,
       hour: hour,
       minute: minute,
-    }
-    const range = generateRange(props.oracleInfo, dateSelection)
+    })
+    const range = generateRange(
+      props.oracleInfo,
+      dateSelection,
+      props.minimumDate
+    )
     setYearOptions(range.years)
     setMonthOptions(range.months)
     setDayOptions(range.days)
@@ -94,20 +141,11 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
   }
 
   useEffect(() => {
+    setInitial()
     refreshOptions()
     handleDateChange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.oracleInfo, year, month, day, hour, minute])
-
-  useEffect(() => {
-    if (props.date) {
-      setYear(props.date.year)
-      setMonth(props.date.month)
-      setDay(props.date.day)
-      setHour(props.date.hour)
-      setMinute(props.date.minute)
-    }
-  }, [])
+  }, [props.oracleInfo, props.minimumDate, year, month, day, hour, minute])
 
   return (
     <div>

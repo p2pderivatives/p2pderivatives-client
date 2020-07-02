@@ -7,13 +7,11 @@ import {
   Box,
   Grid,
   IconButton,
-  MenuItem,
   FormControl,
   FormLabel,
 } from '@material-ui/core'
 import Contacts from '@material-ui/icons/Contacts'
 
-import Select from '../../atoms/Select'
 import Tabs, { TabItem } from '../../molecules/Tabs'
 import MainLayout from '../../organisms/MainLayout'
 import TextInput from '../../atoms/TextInput'
@@ -83,11 +81,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     isBitcoin: true,
   })
 
-  const oracleDates = [
-    DateTime.utc().plus({ days: 1 }),
-    DateTime.utc().plus({ days: 2 }),
-    DateTime.utc().plus({ days: 3 }),
-  ]
+  const [oracleInfo, setOracleInfo] = useState(props.oracleInfo)
+
+  useEffect(() => {
+    setOracleInfo(props.oracleInfo)
+  }, [props.oracleInfo])
 
   const handleMaturityChange = (date: DateTime): void => {
     setMaturityDate(date)
@@ -194,11 +192,12 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               </FormControl>
               <FormControl>
                 <FormLabel color="secondary">Maturity date</FormLabel>
-                {props.oracleInfo && (
+                {oracleInfo && (
                   <DateTimeSelect
                     date={maturityDate}
-                    oracleInfo={props.oracleInfo}
+                    oracleInfo={oracleInfo}
                     onChange={handleMaturityChange}
+                    minimumDate={DateTime.utc().plus({ minutes: 1 })}
                   />
                 )}
               </FormControl>
