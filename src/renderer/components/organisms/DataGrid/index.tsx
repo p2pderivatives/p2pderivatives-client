@@ -86,6 +86,14 @@ const theme = createMuiTheme({
         justifyContent: 'flex-end',
       },
     },
+    MuiChip: {
+      deleteIcon: {
+        color: '#3A4473',
+        '&:hover': {
+          color: '#4A5B83',
+        },
+      },
+    },
   },
 })
 
@@ -119,6 +127,7 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
     },
     onFilterChange: (
       changedCol: string,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       filters: any[],
       type: FilterType | 'chip' | 'reset'
     ): void => {
@@ -128,6 +137,9 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
       }
     },
   }
+
+  const stateToString = (value: string): string =>
+    ContractState[parseInt(value)]
 
   const columns = [
     {
@@ -146,8 +158,10 @@ const DataGrid: FC<DataGridProps> = (props: DataGridProps) => {
         sort: true,
         filterType: 'checkbox' as FilterType,
         filterOptions: {
-          renderValue: (value: string): string =>
-            ContractState[parseInt(value)],
+          renderValue: stateToString,
+        },
+        customFilterListOptions: {
+          render: stateToString,
         },
         // eslint-disable-next-line react/display-name
         customBodyRender: (value: ContractState): ReactElement => (
