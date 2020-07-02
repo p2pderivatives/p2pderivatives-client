@@ -2,11 +2,11 @@ import { OracleAssetConfiguration } from '../../common/oracle/oracle'
 import { DateTime, ToRelativeUnit, DurationObject, Duration } from 'luxon'
 
 export interface DateSelection {
-  year?: number
-  month?: number
-  day?: number
-  hour?: number
-  minute?: number
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
 }
 
 export interface DateRanges {
@@ -17,10 +17,26 @@ export interface DateRanges {
   minutes: number[]
 }
 
-const getFirstValidDate = (
+function maxDateSelectionAndDateTime(
+  dateTime: DateTime,
+  dateSelection: DateSelection
+): DateTime | DateSelection {
+  if (
+    dateTime.year >= dateSelection.year &&
+    dateTime.month >= dateSelection.month &&
+    dateTime.day >= dateSelection.day &&
+    dateTime.minute >= dateSelection.minute
+  ) {
+    return dateTime
+  }
+
+  return dateSelection
+}
+
+export function getFirstValidDate(
   info: OracleAssetConfiguration,
   desiredDate: DateTime
-): DateTime => {
+): DateTime {
   let frequency = info.frequency.years
   let freqUnit: ToRelativeUnit = 'years'
 
@@ -243,9 +259,10 @@ export const generateRange = (
 ): DateRanges => {
   let localStart = info.startDate
   if (minimumDate) {
-    if (minimumDate.toMillis() - localStart.toMillis() > 0) {
+    if (minimumDate > localStart) {
       localStart = getFirstValidDate(info, minimumDate)
     }
+    selection = maxDateSelectionAndDateTime(localStart, selection)
   }
   const currentYear = selection.year || localStart.year
   const currentMonth = selection.month || localStart.month
