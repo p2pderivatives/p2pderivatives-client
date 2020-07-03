@@ -110,7 +110,7 @@ jobs:
             - restore_cache:
                 keys:
                   ## add vX-debug suffix when debugging cache
-                  - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v5
+                  - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v7
       - run:
           name: Install nodes modules
           command: |
@@ -127,16 +127,15 @@ jobs:
           condition: << parameters.with-cache >>
           steps:
             - save_cache:
-                key: npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v5
+                key: npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v7
                 paths:
                   - node_modules
-                  - gen-grpc/node_modules
       - when:
           condition: << parameters.with-cache >>
           steps:
             - restore_cache:
                 keys:
-                  - gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v5
+                  - gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v7
       - run:
           name: Generate gen grpc
           command: |
@@ -144,15 +143,16 @@ jobs:
               export HAS_GEN_GRPC_CACHE="true"
             fi
             if [ -z "$HAS_GEN_GRPC_CACHE" ]; then
-              cd gen-grpc && npm run-script gen
+              cd gen-grpc && npm ci && npm run-script gen
             fi
       - when:
           condition: << parameters.with-cache >>
           steps:
             - save_cache:
-                key: gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v5
+                key: gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v7
                 paths:
                   - gen-grpc
+                  - gen-grpc/node_modules
 
       - persist_to_workspace:
           root: .
