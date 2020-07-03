@@ -11,7 +11,7 @@ function createWindow(): void {
     height: 768,
     webPreferences: { nodeIntegration: true },
   })
-  initialize()
+  initialize(mainWindow)
   let reactUrl = url.format({
     pathname: path.join(__dirname, '../index.html'),
     protocol: 'file:',

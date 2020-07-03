@@ -12,6 +12,7 @@ import { User } from '../../../../common/models/user/User'
 export type UserSelectionDialogProps = {
   open?: boolean
   onClose: () => void
+  onSelect: (username: string) => void
   users: User[]
 }
 
@@ -92,14 +93,9 @@ const columns = [
   },
 ]
 
-const options = {
-  print: false,
-  download: false,
-  elevation: 0,
-  rowsPerPage: 5,
-  selectableRows: 'single' as SelectableRows,
-  // eslint-disable-next-line react/display-name
-  customToolbarSelect: (): ReactElement => <div />,
+interface RowObj {
+  index: number
+  dataIndex: number
 }
 
 const UserSelectionDialog: FC<UserSelectionDialogProps> = (
@@ -107,6 +103,7 @@ const UserSelectionDialog: FC<UserSelectionDialogProps> = (
 ) => {
   const classes = useStyles()
   const [open, setOpen] = useState(props.open ? props.open : false)
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
     if (props.open) {
@@ -115,6 +112,26 @@ const UserSelectionDialog: FC<UserSelectionDialogProps> = (
       setOpen(false)
     }
   }, [props.open])
+
+  const options = {
+    print: false,
+    download: false,
+    elevation: 0,
+    rowsPerPage: 5,
+    selectableRows: 'single' as SelectableRows,
+    onRowsSelect: (
+      currentRowsSelected: RowObj[],
+      allRowsSelected: RowObj[]
+    ): void => {
+      if (currentRowsSelected.length > 0) {
+        setUsername(props.users[currentRowsSelected[0].dataIndex]._name)
+      } else {
+        setUsername('')
+      }
+    },
+    // eslint-disable-next-line react/display-name
+    customToolbarSelect: (): ReactElement => <div />,
+  }
 
   return (
     <Dialog
@@ -132,7 +149,12 @@ const UserSelectionDialog: FC<UserSelectionDialogProps> = (
           />
         </MuiThemeProvider>
         <div className={classes.buttons}>
-          <Button variant="outlined" color="primary">
+          <Button
+            variant="outlined"
+            color="primary"
+            disabled={username === ''}
+            onClick={(): void => props.onSelect(username)}
+          >
             {'Select'}
           </Button>
           <Button variant="outlined" color="secondary" onClick={props.onClose}>

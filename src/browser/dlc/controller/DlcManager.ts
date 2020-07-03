@@ -39,7 +39,7 @@ import {
 export class DlcManager {
   private readonly timeoutHandle: NodeJS.Timeout
   private readonly mutex: Mutex
-  private dlcMessageStream: DlcMessageStream
+  private dlcMessageStream: DlcMessageStream | undefined
   private isFinalized = false
 
   constructor(
@@ -52,24 +52,28 @@ export class DlcManager {
     private readonly logger: Logger,
     timeOutSeconds: number
   ) {
-    this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
     this.timeoutHandle = setInterval(
       () => this.periodicChecks(),
       timeOutSeconds * 1000
     )
-
-    this.handleStream()
 
     this.mutex = new Mutex()
   }
 
   finalize(): void {
     this.timeoutHandle.unref()
-    this.dlcMessageStream.cancel()
+    if (this.dlcMessageStream) {
+      this.dlcMessageStream.cancel()
+      this.dlcMessageStream = undefined
+    }
     this.isFinalized = true
   }
 
-  async handleStream(): Promise<void> {
+  private async initialize(): Promise<void> {
+    if (this.dlcMessageStream) {
+      this.dlcMessageStream.cancel()
+    }
+    this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
     while (!this.isFinalized) {
       try {
         for await (const message of this.dlcMessageStream.listen()) {
@@ -99,7 +103,7 @@ export class DlcManager {
         }
         const values = result.value
         const oracleInfo: OracleInfo = {
-          name: 'super oracle',
+          name: 'unused for now',
           publicKey: values.oraclePublicKey,
           rValue: values.rvalue,
           assetId: values.assetID,

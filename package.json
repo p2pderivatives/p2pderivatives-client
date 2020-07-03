@@ -104,7 +104,8 @@
     "typesafe-actions": "^5.1.0",
     "typescript": "^3.8.3",
     "uuid": "^8.2.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.0"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^5.3.10",

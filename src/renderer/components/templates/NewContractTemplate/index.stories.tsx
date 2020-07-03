@@ -42,6 +42,7 @@ export const newContract = (): ReactElement => (
         onTabChange={action('onTabChange')}
         onCancel={action('onCancel')}
         oracleInfo={oracleInfo}
+        onPublish={action('onPublish')}
       />
     </div>
   </MuiThemeProvider>
