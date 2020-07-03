@@ -29,7 +29,7 @@ import { DlcEvents } from './ipc/DlcEvents'
 
 let db: LevelUp | null = null
 let dlcManager: DlcManager | null = null
-let logger = createLogger({
+const logger = createLogger({
   level: 'info',
   format: format.json(),
   defaultMeta: { service: 'user-service' },
@@ -53,7 +53,7 @@ async function initializeDB(userName: string): Promise<void> {
     valueEncoding: 'json',
   }
 
-  var rotateFileTransport = new transports.DailyRotateFile({
+  const rotateFileTransport = new transports.DailyRotateFile({
     filename: 'p2pd-%DATE%.log',
     datePattern: 'YYYY-MM-DD-HH',
     maxFiles: '7d',
@@ -101,7 +101,7 @@ function bitcoindConfigCallback(
   appConfig: AppConfig,
   dlcIPCBrowser: DlcIPCBrowser,
   grpcClient: GrpcClient
-) {
+): void {
   const contractRepository = new LevelContractRepository(db as LevelUp)
   const dlcService = new DlcService(contractRepository)
   const contractUpdater = new ContractUpdater(
@@ -132,6 +132,9 @@ function bitcoindConfigCallback(
     5
   )
 
+  dlcManager.initialize()
+
+  console.log('REGISTERED REPLIES')
   const dlcEvents = new DlcEvents(dlcManager, dlcService)
   dlcEvents.registerReplies()
 }

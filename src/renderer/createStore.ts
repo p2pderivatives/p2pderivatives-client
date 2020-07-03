@@ -13,6 +13,7 @@ import { BitcoinIPC } from './ipc/BitcoinIPC'
 import { UserIPC } from './ipc/UserIPC'
 // Import the state interface and our combined reducers/sagas.
 import { ApplicationState, createRootReducer, rootSaga } from './store'
+import { DlcIPCRenderer } from './ipc/DlcIPCRenderer'
 
 export const history = createHashHistory()
 
@@ -27,6 +28,7 @@ export default function configureStore(
       authAPI: new AuthenticationIPC(),
       userAPI: new UserIPC(),
       bitcoinAPI: new BitcoinIPC(),
+      dlcAPI: new DlcIPCRenderer(),
     },
   })
 

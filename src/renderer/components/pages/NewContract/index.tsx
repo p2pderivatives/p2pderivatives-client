@@ -32,6 +32,8 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
   const [oracleInfo, setOracleInfo] = useState<OracleAssetConfiguration>()
   const userList = useSelector(state => state.user.userList)
   const contractId = props.match ? props.match.params.id : ''
+  console.log(contractId)
+  console.log('SJAOISDJAOSIJD')
   const contracts = useSelector(state => state.dlc.contracts)
   const selectedContract = contracts.find(c => c.id === contractId)
   const [actualOutcomes, setActualOutcomes] = useState<Outcome[]>(
@@ -67,7 +69,7 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
     dispatch(push('/main'))
   }
 
-  const getOracleInfo = async () => {
+  const getOracleInfo = async (): Promise<void> => {
     const info = await OracleIPC.getOracleConfig('btcusd')
     setOracleInfo(info)
   }
@@ -75,7 +77,6 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
   useEffect(() => {
     dispatch(userListRequest())
     getOracleInfo()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

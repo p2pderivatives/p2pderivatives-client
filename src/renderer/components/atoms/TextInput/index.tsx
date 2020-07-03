@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
       borderBottomColor: theme.palette.common.white,
     },
-    '& .MuiFormHelperText-root': {
+    '& .MuiFormHelperText-root:not(.Mui-error)': {
       color: theme.palette.text.secondary,
     },
     '& .Mui-disabled': {

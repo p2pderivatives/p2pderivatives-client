@@ -48,11 +48,11 @@ const reducer: Reducer<DlcState> = (state: DlcState = initialState, action) => {
     case DlcActionTypes.DLC_ACTION_ERROR: {
       const payload = action.payload as { error: string; contract?: Contract }
       let newContracts = state.contracts
-      let updatedContract = payload.contract
+      const updatedContract = payload.contract
       if (updatedContract) {
         newContracts = Object.assign([], state.contracts) as Contract[]
         const contractIndex = state.contracts.findIndex(
-          c => c.id === updatedContract!.id
+          c => c.id === updatedContract.id
         )
         if (contractIndex >= 0) newContracts[contractIndex] = updatedContract
         else newContracts.push(updatedContract)

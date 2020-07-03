@@ -35,7 +35,7 @@ type NewContractTemplateProps = {
   onCancel: () => void
   onPublish: (contract: Contract) => void
   users: User[]
-  oracleInfo: OracleAssetConfiguration | undefined
+  oracleInfo?: OracleAssetConfiguration
   contract?: Contract
 }
 
@@ -113,7 +113,9 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     isBitcoin: true,
   })
   const [feeRate, setFeeRate] = useState(contract.feeRate)
-  const [maturityDate, setMaturityDate] = useState(contract.maturityTime)
+  const [maturityDate, setMaturityDate] = useState(
+    DateTime.fromMillis(contract.maturityTime)
+  )
 
   const [feeRateError, setFeeRateError] = useState(false)
   const [feeRateMessage, setFeeRateMessage] = useState('')
@@ -130,8 +132,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
   const [outcomesError, setOutcomesError] = useState(false)
   const [outcomesMessage, setOutcomesMessage] = useState('')
 
-  const [maturityError, setMaturityError] = useState(false)
-  const [maturityMessage, setMaturityMessage] = useState('')
+  const [oracleInfo, setOracleInfo] = useState(props.oracleInfo)
+
+  useEffect(() => {
+    setOracleInfo(props.oracleInfo)
+  }, [props.oracleInfo])
 
   const validateFeeRate: (feeRateVal?: number) => boolean = (
     feeRateVal: number = feeRate
@@ -206,26 +211,26 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     outcomes: Outcome[] = props.data,
     localCollateralVal: number = localCollateral.value,
     remoteCollateralVal: number = remoteCollateral.value,
-    validateLength: boolean = true
+    validateLength = true
   ) => {
     const firstPayout =
       outcomes.length > 0 ? outcomes[0].local + outcomes[0].remote : 0
     const validations: (() => boolean)[] = [
-      () =>
+      (): boolean =>
         validationBase(
           validateLength ? outcomes.length > 0 : true,
           setOutcomesError,
           setOutcomesMessage,
           'Needs at least one outcome'
         ),
-      () =>
+      (): boolean =>
         validationBase(
           outcomes.every(x => x.local + x.remote === firstPayout),
           setOutcomesError,
           setOutcomesMessage,
           'The sum of all outcomes payout need to be the same'
         ),
-      () =>
+      (): boolean =>
         validationBase(
           outcomes.length > 0
             ? localCollateralVal + remoteCollateralVal === firstPayout
@@ -245,22 +250,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     return true
   }
 
-  const validateMaturity: (maturity?: number) => boolean = (
-    maturity: number = maturityDate
-  ) => {
-    return validationBase(
-      maturity > 0,
-      setMaturityError,
-      setMaturityMessage,
-      'Please select a maturity date'
-    )
-  }
-
   useEffect(() => {
     if (outcomesError && props.data.length > 0) {
       validateOutcomes()
     }
-  }, [outcomesError, validateOutcomes])
+  }, [outcomesError, props.data.length, validateOutcomes])
 
   const validate: () => boolean = () => {
     const validations: (() => boolean)[] = [
@@ -268,13 +262,12 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       validateRemoteParty,
       validateCollaterals,
       validateOutcomes,
-      validateMaturity,
     ]
     return validations.map(x => x()).reduce((acc, cur) => acc && cur)
   }
 
   const handleMaturityChange = (date: DateTime): void => {
-    setMaturityDate(date.toMillis())
+    setMaturityDate(date)
   }
 
   const handleTabChange = (index: number): void => {
@@ -300,7 +293,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       remoteCollateral: remoteCollateral.value,
       outcomes: props.data,
       state: ContractState.Initial,
-      maturityTime: maturityDate,
+      maturityTime: maturityDate.toMillis(),
     }
     props.onPublish(publishContract)
   }
@@ -417,16 +410,13 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               </FormControl>
               <FormControl>
                 <FormLabel color="secondary">Maturity date</FormLabel>
-                {props.oracleInfo && (
+                {oracleInfo && (
                   <DateTimeSelect
-                    date={DateTime.fromMillis(maturityDate, { zone: 'utc' })}
-                    oracleInfo={props.oracleInfo}
+                    date={maturityDate}
+                    oracleInfo={oracleInfo}
                     onChange={handleMaturityChange}
                     minimumDate={DateTime.utc().plus({ minutes: 1 })}
                   />
-                )}
-                {maturityError && (
-                  <FormHelperText error>{maturityMessage}</FormHelperText>
                 )}
               </FormControl>
               <div style={{ marginBottom: '1rem' }}>

@@ -45,12 +45,14 @@ export class DlcEvents implements IPCEvents {
     ipc.answerRenderer(OFFER_CONTRACT, async data => {
       const contract = data as Contract
       try {
+        console.log('RECEIVED CALL')
         const returnContract = await this._dlcManager.sendContractOffer(
           contract
         )
         const answer = new DlcAnswer(true, returnContract)
         return answer
       } catch (error) {
+        console.log(error)
         if (error instanceof DlcError) {
           return new DlcAnswer(
             false,

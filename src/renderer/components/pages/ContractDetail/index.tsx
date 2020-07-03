@@ -31,12 +31,12 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
   }, [contract])
 
   const handleAccept = (): void => {
-    if (contract) dispatch(acceptRequest(contract.id!))
+    if (contract && contract.id) dispatch(acceptRequest(contract.id))
     dispatch(push('/main'))
   }
 
   const handleReject = (): void => {
-    if (contract) dispatch(rejectRequest(contract.id!))
+    if (contract && contract.id) dispatch(rejectRequest(contract.id))
     dispatch(push('/main'))
   }
 

@@ -69,14 +69,17 @@ export class DlcManager {
     this.isFinalized = true
   }
 
-  private async initialize(): Promise<void> {
+  async initialize(): Promise<void> {
     if (this.dlcMessageStream) {
       this.dlcMessageStream.cancel()
     }
     this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
+    console.log('Got stream')
     while (!this.isFinalized) {
       try {
+        console.log('wait for stream')
         for await (const message of this.dlcMessageStream.listen()) {
+          console.log('received from stream')
           this.onDlcMessage(message)
         }
       } catch (error) {

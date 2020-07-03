@@ -13,20 +13,16 @@ export class DlcIPCBrowser implements DlcBrowserAPI {
 
   async dlcUpdate(contract: Contract): Promise<void> {
     const call = { contract: contract }
-    try {
-      const answerProps = (await ipc.callRenderer(
-        this.window,
-        DLC_UPDATE,
-        call
-      )) as GeneralAnswerProps
-      const answer = GeneralAnswer.parse(answerProps)
+    const answerProps = (await ipc.callRenderer(
+      this.window,
+      DLC_UPDATE,
+      call
+    )) as GeneralAnswerProps
+    const answer = GeneralAnswer.parse(answerProps)
 
-      if (!answer.isSuccess()) {
-        const error = answer.getError()
-        throw error
-      }
-    } catch (e) {
-      throw e
+    if (!answer.isSuccess()) {
+      const error = answer.getError()
+      throw error
     }
   }
 }

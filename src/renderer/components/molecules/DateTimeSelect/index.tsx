@@ -35,6 +35,7 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
     props.oracleInfo,
     props.minimumDate
   )
+
   if (props.date) {
     initialDate = DateTime.max(props.date, minimumValidDate)
   } else {
@@ -73,9 +74,9 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
         native
         disabled={options.length < 2}
         value={value}
-        onChange={(event): void =>
+        onChange={(event): void => {
           handleChange(setter, event.target.value as string)
-        }
+        }}
       >
         {options.map(o => (
           <option value={o} key={o}>
@@ -93,8 +94,11 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
       day: day,
       hour: hour,
       minute: minute,
+      zone: 'utc',
     })
-    props.onChange(newDate)
+    if (!props.date || !newDate.equals(props.date)) {
+      props.onChange(newDate)
+    }
   }
 
   const refreshOptions = (): void => {
@@ -120,18 +124,7 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
   useEffect(() => {
     refreshOptions()
     handleDateChange()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.oracleInfo, year, month, day, hour, minute, props.minimumDate])
-
-  useEffect(() => {
-    if (props.date) {
-      setYear(props.date.year)
-      setMonth(props.date.month)
-      setDay(props.date.day)
-      setHour(props.date.hour)
-      setMinute(props.date.minute)
-    }
-  }, [props.date])
+  }, [props.oracleInfo, props.minimumDate, year, month, day, hour, minute])
 
   return (
     <div>

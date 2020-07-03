@@ -4,9 +4,11 @@ import { makeStyles } from '@material-ui/core'
 import Paper from '@material-ui/core/Paper'
 import MuiTabs from '@material-ui/core/Tabs'
 import MuiTab from '@material-ui/core/Tab'
+import Badge from '@material-ui/core/Badge'
 
 export type TabItem = {
   label: string
+  new?: number
 }
 
 export type TabsProps = {
@@ -45,7 +47,20 @@ const Tabs: FC<TabsProps> = (props: TabsProps) => {
         classes={{ root: classes.root, indicator: classes.indicator }}
       >
         {props.items.map((tab, i) => {
-          return <MuiTab key={tab.label} label={tab.label}></MuiTab>
+          return (
+            <MuiTab
+              key={tab.label}
+              label={
+                <Badge
+                  badgeContent={tab.new}
+                  color="primary"
+                  invisible={!tab.new}
+                >
+                  {tab.label}
+                </Badge>
+              }
+            ></MuiTab>
+          )
         })}
       </MuiTabs>
     </Paper>

@@ -5,7 +5,6 @@ import {
   makeStyles,
   createMuiTheme,
   MuiThemeProvider,
-  Typography,
   IconButton,
 } from '@material-ui/core'
 import AppBar from '@material-ui/core/AppBar'
@@ -122,7 +121,7 @@ const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
               <IconButton color="secondary" onClick={props.refresh}>
                 <Refresh />
               </IconButton>
-              <BtcDisplay satValue={props.balance * 100000000} currency="BTC" />
+              <BtcDisplay satValue={props.balance} currency="BTC" />
             </div>
             <Button
               className={classes.loginButton}
