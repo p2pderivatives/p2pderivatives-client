@@ -328,7 +328,7 @@ jobs:
       - run:
           name: Packaging
           command: |
-            npm run dist -- ${BUILD_ARG}
+            CI=false npm run dist -- ${BUILD_ARG}
             mkdir pkg && cp dist/*.${PKG_SUFFIX}* pkg
       - store_artifacts:
           path: ./pkg
