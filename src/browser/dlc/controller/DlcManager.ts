@@ -39,7 +39,7 @@ import {
 export class DlcManager {
   private readonly timeoutHandle: NodeJS.Timeout
   private readonly mutex: Mutex
-  private dlcMessageStream: DlcMessageStream | undefined
+  private dlcMessageStream: DlcMessageStream
   private isFinalized = false
 
   constructor(
@@ -58,28 +58,20 @@ export class DlcManager {
     )
 
     this.mutex = new Mutex()
+    this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
+    this.listenToStream()
   }
 
   finalize(): void {
     this.timeoutHandle.unref()
-    if (this.dlcMessageStream) {
-      this.dlcMessageStream.cancel()
-      this.dlcMessageStream = undefined
-    }
+    this.dlcMessageStream.cancel()
     this.isFinalized = true
   }
 
-  async initialize(): Promise<void> {
-    if (this.dlcMessageStream) {
-      this.dlcMessageStream.cancel()
-    }
-    this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
-    console.log('Got stream')
+  private async listenToStream(): Promise<void> {
     while (!this.isFinalized) {
       try {
-        console.log('wait for stream')
         for await (const message of this.dlcMessageStream.listen()) {
-          console.log('received from stream')
           this.onDlcMessage(message)
         }
       } catch (error) {

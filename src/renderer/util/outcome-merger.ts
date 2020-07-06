@@ -11,7 +11,7 @@ interface RangeOutcome {
 
 export const merge = (outcomes: Outcome[]): Outcome[] => {
   const stringOutcomes: Outcome[] = []
-  const numericalOutcomes: Outcome[] = []
+  let numericalOutcomes: Outcome[] = []
   outcomes.forEach(o => {
     if (isNaN(parseInt(o.message))) {
       stringOutcomes.push(o)
@@ -23,7 +23,9 @@ export const merge = (outcomes: Outcome[]): Outcome[] => {
 
   let resultOutcomes: Outcome[] = []
 
-  numericalOutcomes.sort(o => parseInt(o.message))
+  numericalOutcomes = numericalOutcomes.sort(
+    (a, b) => parseInt(a.message) - parseInt(b.message)
+  )
   let tempOutcome = outcomeToRangeOutcome(numericalOutcomes[0])
 
   for (let i = 1; i < numericalOutcomes.length; i++) {

@@ -13,24 +13,21 @@ import { isSuccessful } from '../../common/utils/failable'
 import BitcoinDClient from '../api/bitcoind'
 import { IPCError } from '../../common/models/ipc/IPCError'
 import ConfigRepository from '../config/ConfigRepository'
-
-export type BitcoinDConfigCallback = (
-  config: BitcoinDConfig,
-  client: BitcoinDClient
-) => void
+import { TaggedCallback, registerTaggedCallbacks } from './Utils'
 
 export class BitcoinDEvents implements IPCEvents {
   private _client = new BitcoinDClient()
   private _storage: ConfigRepository
   private _config: BitcoinDConfig | null = null
-  private _configCallback: BitcoinDConfigCallback
+  private _unregisterers: (() => void)[]
 
-  constructor(
-    storage: ConfigRepository,
-    configCallback: BitcoinDConfigCallback
-  ) {
+  constructor(storage: ConfigRepository) {
     this._storage = storage
-    this._configCallback = configCallback
+    this._unregisterers = []
+  }
+
+  public getClient(): BitcoinDClient {
+    return this._client
   }
 
   public async initialize(): Promise<void> {
@@ -40,44 +37,63 @@ export class BitcoinDEvents implements IPCEvents {
       return
     }
 
-    this._config = result.value
-    await this._client.configure(this._config)
-    this._configCallback(this._config, this._client)
+    try {
+      this._config = result.value
+      await this._client.configure(this._config)
+    } catch (e) {
+      // Ignore errors here.
+    }
+  }
+
+  public unregisterReplies(): void {
+    for (const unregisterer of this._unregisterers) {
+      unregisterer()
+    }
   }
 
   public registerReplies(): void {
-    ipc.answerRenderer(CHECK_BITCOIND, async data => {
+    const taggedCallbacks: TaggedCallback[] = [
+      {
+        tag: CHECK_BITCOIND,
+        callback: data => this.bitcoinDCheckCallback(data),
+      },
+      { tag: GET_BALANCE, callback: () => this.getBalanceCallback() },
+      { tag: GET_CONFIG, callback: () => this.getConfigCallback() },
+    ]
+
+    this._unregisterers = registerTaggedCallbacks(taggedCallbacks)
+  }
+
+  async bitcoinDCheckCallback(data: unknown) {
+    try {
       const config = data as BitcoinDConfig
-      try {
-        await this._client.configure(config)
-        await this._storage.WriteBitcoinDConfig(config)
-        this._config = config
-        this._configCallback(config, this._client)
-        return new GeneralAnswer(true)
-      } catch (e) {
-        return new GeneralAnswer(false, e)
-      }
-    })
+      await this._client.configure(config)
+      await this._storage.WriteBitcoinDConfig(config)
+      this._config = config
+      return new GeneralAnswer(true)
+    } catch (e) {
+      return new GeneralAnswer(false, e)
+    }
+  }
 
-    ipc.answerRenderer(GET_BALANCE, async () => {
-      try {
-        const balance = await this._client.getBalance()
-        return new BalanceAnswer(true, balance)
-      } catch (e) {
-        return new BalanceAnswer(false, 0, e)
-      }
-    })
+  async getBalanceCallback() {
+    try {
+      const balance = await this._client.getBalance()
+      return new BalanceAnswer(true, balance)
+    } catch (e) {
+      return new BalanceAnswer(false, 0, e)
+    }
+  }
 
-    ipc.answerRenderer(GET_CONFIG, () => {
-      if (this._config) {
-        return new ConfigAnswer(true, this._config)
-      } else {
-        return new ConfigAnswer(
-          false,
-          null,
-          new IPCError('general', -1, 'No valid config found', 'NoValidConfig')
-        )
-      }
-    })
+  async getConfigCallback() {
+    if (this._config) {
+      return new ConfigAnswer(true, this._config)
+    } else {
+      return new ConfigAnswer(
+        false,
+        null,
+        new IPCError('general', -1, 'No valid config found', 'NoValidConfig')
+      )
+    }
   }
 }

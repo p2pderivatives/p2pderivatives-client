@@ -12,10 +12,10 @@ const userMockServer = getUserMockServer()
 const auth = new GrpcAuth()
 
 const client = new GrpcClient({ host: '127.0.0.1:50055', secure: false }, auth)
-const voidCallback = (): Promise<void> => {
-  return Promise.resolve()
+const voidCallback = (userName: string): Promise<() => Promise<void>> => {
+  return Promise.resolve(() => Promise.resolve())
 }
-const authEvents = new AuthenticationEvents(client, voidCallback, voidCallback)
+const authEvents = new AuthenticationEvents(client, voidCallback)
 const fileEvents = new FileEvents()
 mockServer.listen('0.0.0.0:50055')
 authEvents.registerReplies()

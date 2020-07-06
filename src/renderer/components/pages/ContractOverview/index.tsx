@@ -48,7 +48,6 @@ const ContractOverviewPage: FC = () => {
     dispatch(dlcSelectContract(contract))
 
     if (contract.state === ContractState.Failed) {
-      console.log('Redirecting to: /new-contract/' + id)
       dispatch(push('/new-contract/' + id))
     } else {
       dispatch(push('/contract/' + id))

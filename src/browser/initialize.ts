@@ -4,31 +4,27 @@ import { promises as fs } from 'fs'
 import leveldown from 'leveldown'
 import levelup, { LevelUp } from 'levelup'
 import path from 'path'
+import { createLogger, format, transports } from 'winston'
+import 'winston-daily-rotate-file'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
 import { GrpcConfig } from './api/grpc/GrpcConfig'
 import { OracleClient, OracleConfig } from './api/oracle'
 import { AppConfig } from './config/config'
 import { LevelConfigRepository } from './config/LevelConfigRepository'
-import { AuthenticationEvents } from './ipc/AuthenticationEvents'
-import { BitcoinDEvents, BitcoinDConfigCallback } from './ipc/BitcoinDEvents'
-import { FileEvents } from './ipc/FileEvents'
-import { OracleEvents } from './ipc/OracleEvents'
-import { UserEvents } from './ipc/UserEvents'
 import { DlcManager } from './dlc/controller/DlcManager'
-import { createLogger, format, transports } from 'winston'
-import 'winston-daily-rotate-file'
-import { DlcEventHandler } from './dlc/utils/DlcEventHandler'
-import { BitcoinDConfig } from '../common/models/ipc/BitcoinDConfig'
-import BitcoinDClient from './api/bitcoind'
 import { LevelContractRepository } from './dlc/repository/LevelContractRepository'
 import { DlcService } from './dlc/service/DlcService'
 import { ContractUpdater } from './dlc/utils/ContractUpdater'
-import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
+import { DlcEventHandler } from './dlc/utils/DlcEventHandler'
+import { AuthenticationEvents } from './ipc/AuthenticationEvents'
+import { BitcoinDEvents } from './ipc/BitcoinDEvents'
 import { DlcEvents } from './ipc/DlcEvents'
+import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
+import { FileEvents } from './ipc/FileEvents'
+import { OracleEvents } from './ipc/OracleEvents'
+import { UserEvents } from './ipc/UserEvents'
 
-let db: LevelUp | null = null
-let dlcManager: DlcManager | null = null
 const logger = createLogger({
   level: 'info',
   format: format.json(),
@@ -36,9 +32,7 @@ const logger = createLogger({
   transports: [new transports.Console()],
 })
 
-async function initializeDB(userName: string): Promise<void> {
-  await finalizeDB()
-
+async function initializeDB(userName: string): Promise<LevelUp> {
   const userPath = app.getPath('userData')
   const userDataPath = path.join(userPath, userName)
 
@@ -78,8 +72,7 @@ async function initializeDB(userName: string): Promise<void> {
         )
       })
 
-    const tmpDb = await levelupAsync()
-    db = db !== null ? db : tmpDb
+    return await levelupAsync()
   } catch (error) {
     throw new Error(
       'An instance of the application with this username is already running'
@@ -87,44 +80,37 @@ async function initializeDB(userName: string): Promise<void> {
   }
 }
 
-async function finalizeDB(): Promise<void> {
-  if (db !== null) {
-    const tmpDb = db
-    db = null
-    await tmpDb.close()
-  }
+async function finalizeDB(db: LevelUp): Promise<void> {
+  await db.close()
 }
 
-function bitcoindConfigCallback(
-  config: BitcoinDConfig,
-  bitcoinDClient: BitcoinDClient,
+async function loginCallBack(
+  userName: string,
   appConfig: AppConfig,
   dlcIPCBrowser: DlcIPCBrowser,
   grpcClient: GrpcClient
-): void {
+): Promise<() => Promise<void>> {
+  const db = await initializeDB(userName)
+  const bitcoinEvents = new BitcoinDEvents(
+    new LevelConfigRepository(db as LevelUp)
+  )
+  bitcoinEvents.registerReplies()
+  await bitcoinEvents.initialize()
   const contractRepository = new LevelContractRepository(db as LevelUp)
   const dlcService = new DlcService(contractRepository)
-  const contractUpdater = new ContractUpdater(
-    bitcoinDClient,
-    config.walletPassphrase ? config.walletPassphrase : ''
-  )
+  const contractUpdater = new ContractUpdater(bitcoinEvents.getClient())
 
   const oracleConfig = appConfig.parse<OracleConfig>('oracle')
   const oracleClient = new OracleClient(oracleConfig)
   const oracleEvents = new OracleEvents(oracleClient)
   oracleEvents.registerReplies()
 
-  if (dlcManager !== null) {
-    dlcManager.finalize()
-    dlcManager = null
-  }
-
   const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
 
-  dlcManager = new DlcManager(
+  const dlcManager = new DlcManager(
     eventHandler,
     dlcService,
-    bitcoinDClient,
+    bitcoinEvents.getClient(),
     dlcIPCBrowser,
     oracleClient,
     grpcClient.getDlcService(),
@@ -132,34 +118,27 @@ function bitcoindConfigCallback(
     5
   )
 
-  dlcManager.initialize()
-
-  console.log('REGISTERED REPLIES')
   const dlcEvents = new DlcEvents(dlcManager, dlcService)
   dlcEvents.registerReplies()
+  return () =>
+    logoutCallback(db, dlcManager, dlcEvents, bitcoinEvents, oracleEvents)
 }
 
-async function loginCallBack(
-  userName: string,
-  configCallback: BitcoinDConfigCallback
+async function logoutCallback(
+  db: LevelUp,
+  dlcManager: DlcManager,
+  dlcEvents: DlcEvents,
+  bitcoinEvents: BitcoinDEvents,
+  oracleEvents: OracleEvents
 ): Promise<void> {
-  await initializeDB(userName)
-  const bitcoinEvents = new BitcoinDEvents(
-    new LevelConfigRepository(db as LevelUp),
-    configCallback
-  )
-  bitcoinEvents.registerReplies()
-  await bitcoinEvents.initialize()
+  dlcManager.finalize()
+  dlcEvents.unregisterReplies()
+  bitcoinEvents.unregisterReplies()
+  oracleEvents.unregisterReplies()
+  await finalizeDB(db)
 }
 
-async function logoutCallback(): Promise<void> {
-  if (dlcManager) {
-    dlcManager.finalize()
-  }
-  await finalizeDB()
-}
-
-export function initialize(browserWindow: BrowserWindow): void {
+export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
   let resourcesPath: string
   if (!app.isPackaged) {
     resourcesPath = app.getAppPath()
@@ -173,28 +152,14 @@ export function initialize(browserWindow: BrowserWindow): void {
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
   const grpcClient = new GrpcClient(grpcConfig, auth)
   const dlcIPCBrowser = new DlcIPCBrowser(browserWindow)
-  const configCallback: BitcoinDConfigCallback = (
-    config: BitcoinDConfig,
-    client: BitcoinDClient
-  ) => {
-    return bitcoindConfigCallback(
-      config,
-      client,
-      appConfig,
-      dlcIPCBrowser,
-      grpcClient
-    )
+
+  const authLoginCallback = (
+    userName: string
+  ): Promise<() => Promise<void>> => {
+    return loginCallBack(userName, appConfig, dlcIPCBrowser, grpcClient)
   }
 
-  const authLoginCallback = (userName: string): Promise<void> => {
-    return loginCallBack(userName, configCallback)
-  }
-
-  const authEvents = new AuthenticationEvents(
-    grpcClient,
-    authLoginCallback,
-    logoutCallback
-  )
+  const authEvents = new AuthenticationEvents(grpcClient, authLoginCallback)
   authEvents.registerReplies()
 
   const userEvents = new UserEvents(grpcClient)
@@ -202,8 +167,8 @@ export function initialize(browserWindow: BrowserWindow): void {
 
   const fileEvents = new FileEvents()
   fileEvents.registerReplies()
-}
 
-export function finalize(): Promise<void> {
-  return finalizeDB()
+  return async () => {
+    await authEvents.logout()
+  }
 }

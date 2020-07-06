@@ -14,7 +14,7 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 import LoginTemplate from '../../templates/LoginTemplate'
 import { ApplicationState } from '../../../store'
 import { loginRequest } from '../../../store/login/actions'
-import { configRequest } from '../../../store/bitcoin/actions'
+import { configRequest, checkRequest } from '../../../store/bitcoin/actions'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
@@ -27,7 +27,9 @@ const LoginPage: FC = () => {
   const isLoggedIn = useSelector(state => state.login.loggedIn)
   const loginError = useSelector(state => state.login.error)
   const bitcoinConfig = useSelector(state => state.bitcoin.config)
-  const configProcessing = useSelector(state => state.bitcoin.processing)
+  const bitcoinProcessing = useSelector(state => state.bitcoin.processing)
+  const [checkRequested, setCheckRequested] = useState(false)
+  const checkSuccess = useSelector(state => state.bitcoin.checkSuccessful)
 
   const dispatch = useDispatch()
 
@@ -39,15 +41,31 @@ const LoginPage: FC = () => {
   }
 
   useEffect(() => {
-    if (isLoggedIn && configRequested && !configProcessing) {
-      if (!(bitcoinConfig === undefined || bitcoinConfig === {})) {
-        dispatch(push('/main'))
+    if (isLoggedIn && configRequested && !bitcoinProcessing) {
+      if (bitcoinConfig !== undefined && bitcoinConfig !== {}) {
+        dispatch(checkRequest(bitcoinConfig))
+        setCheckRequested(true)
+        setConfigRequested(false)
       } else {
         dispatch(push('/initial-settings'))
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bitcoinConfig, isLoggedIn, configProcessing, configRequested])
+  }, [bitcoinConfig, isLoggedIn, bitcoinProcessing, configRequested])
+
+  useEffect(() => {
+    if (isLoggedIn && checkRequested && !bitcoinProcessing) {
+      if (checkSuccess) {
+        dispatch(push('/main'))
+      } else {
+        snackbar.createSnack(
+          'Error: could not connect to the bitcoind wallet',
+          'error'
+        )
+        dispatch(push('/initial-settings'))
+      }
+    }
+  })
 
   useEffect(() => {
     if (submitted && !isLoggingIn) {

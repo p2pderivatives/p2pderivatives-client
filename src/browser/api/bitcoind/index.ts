@@ -70,13 +70,11 @@ export default class BitcoinDClient {
     this.client = new Client(clientConfig)
     if (this.wallet) {
       const wallets = await this.client.listWallets()
-      if (!(this.wallet in wallets)) {
+      if (!wallets.includes(this.wallet)) {
         try {
           await this.client.loadWallet(this.wallet)
-        } catch (e) {
-          if (e.code === -18) {
-            throw e
-          }
+        } catch (error) {
+          throw error
         }
       }
     }
@@ -166,8 +164,14 @@ export default class BitcoinDClient {
     let success = true
     let utxoSet: Utxo[] = []
     do {
-      const unspent = await this.getClient().listUnspent(1)
-      const utxosIn: Utxo[] = unspent.map(utxo => {
+      const unspent = await this.getClient().listUnspent(
+        1,
+        undefined,
+        undefined,
+        false
+      )
+      const spendable = unspent.filter(x => x.spendable)
+      const utxosIn: Utxo[] = spendable.map(utxo => {
         return {
           txid: utxo.txid,
           vout: utxo.vout,

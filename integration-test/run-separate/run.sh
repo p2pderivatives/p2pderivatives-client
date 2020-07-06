@@ -2,7 +2,7 @@
 
 set -e
 
-for i in {1..15}
+for i in {1..16}
 do
   docker-compose up -d bitcoind
   jest --config jest.config.integration-separate.js --reporters=default --runInBand ./integration-test/run-separate/dlcEventHandler.integration.test.ts -t=" $i-"

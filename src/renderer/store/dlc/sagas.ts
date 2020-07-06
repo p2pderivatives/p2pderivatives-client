@@ -32,7 +32,6 @@ export function* handleContracts(): SagaIterator {
 export function* handleOffer(
   action: ReturnType<typeof offerRequest>
 ): SagaIterator {
-  console.log('HANDLING OFFER')
   try {
     const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
     const answer = (yield call(

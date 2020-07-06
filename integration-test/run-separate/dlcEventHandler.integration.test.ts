@@ -434,6 +434,38 @@ describe('dlc-event-handler', () => {
     await acceptOffer(offerMessage2, noBtcPartyContext)
   })
 
+  test('16-local-mutual-closes-remote-can-see-transaction', async () => {
+    const offerMessage = await sendOffer()
+    await acceptOffer(offerMessage)
+    const mutualClosedOfferContract = await remotePartyContext.eventHandler.onSendMutualCloseOffer(
+      offerMessage.contractId,
+      baseOutcomes[0]
+    )
+    const mutualClosingMessage = toMutualClosingMessage(
+      mutualClosedOfferContract
+    )
+
+    assertContractState(
+      remotePartyContext.dlcService,
+      mutualClosingMessage.contractId,
+      ContractState.MutualCloseProposed
+    )
+
+    await localPartyContext.eventHandler.onMutualCloseOffer(
+      remoteParty,
+      mutualClosingMessage,
+      () => {
+        throw Error()
+      }
+    )
+
+    expect(
+      remotePartyContext.client.getTransaction(
+        mutualClosedOfferContract.mutualCloseTxId
+      )
+    ).resolves
+  })
+
   async function sendOffer(
     localContext = localPartyContext,
     remoteContext = remotePartyContext,

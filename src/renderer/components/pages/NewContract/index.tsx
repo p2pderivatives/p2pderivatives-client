@@ -32,8 +32,6 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
   const [oracleInfo, setOracleInfo] = useState<OracleAssetConfiguration>()
   const userList = useSelector(state => state.user.userList)
   const contractId = props.match ? props.match.params.id : ''
-  console.log(contractId)
-  console.log('SJAOISDJAOSIJD')
   const contracts = useSelector(state => state.dlc.contracts)
   const selectedContract = contracts.find(c => c.id === contractId)
   const [actualOutcomes, setActualOutcomes] = useState<Outcome[]>(

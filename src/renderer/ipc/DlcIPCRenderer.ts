@@ -23,7 +23,6 @@ export class DlcIPCRenderer implements DlcRendererAPI {
   }
 
   async offerContract(contract: Contract): Promise<DlcAnswer> {
-    console.log('OFFERING CONTRACT')
     const answerProps = (await ipc.callMain(
       OFFER_CONTRACT,
       contract

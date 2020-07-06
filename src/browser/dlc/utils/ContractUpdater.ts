@@ -37,11 +37,9 @@ enum DustDiscardedParty {
 
 export class ContractUpdater {
   readonly walletClient: BitcoinDClient
-  readonly passphrase: string
 
-  constructor(walletClient: BitcoinDClient, passphrase: string) {
+  constructor(walletClient: BitcoinDClient) {
     this.walletClient = walletClient
-    this.passphrase = passphrase
   }
 
   private getTotalInputAmount(partyInputs: PartyInputs): number {
@@ -196,7 +194,7 @@ export class ContractUpdater {
           remotePartyInputs
         )
 
-    const acceptedContract: AcceptedContract = {
+    return {
       ...contract,
       state: ContractState.Accepted,
       privateParams,
@@ -210,14 +208,6 @@ export class ContractUpdater {
       remoteCetsHex,
       remoteCetSignatures: remoteCetSignatures,
     }
-
-    await this.importCetsIfRequired(
-      localCetsHex,
-      remoteCetsHex,
-      acceptedContract
-    )
-
-    return acceptedContract
   }
 
   private getCetSignatures(
@@ -442,6 +432,8 @@ export class ContractUpdater {
     const mutualClosingTxHex = cfddlcjs.CreateMutualClosingTransaction(
       mutualClosingRequest
     ).hex
+
+    this.importTxIfRequired(mutualClosingTxHex, contract)
 
     const mutualClosingTx = Utils.decodeRawTransaction(
       mutualClosingTxHex,
@@ -700,16 +692,26 @@ export class ContractUpdater {
     outcomeValue: string,
     oracleSignature: string
   ): MaturedContract {
-    const finalOutcome = contract.outcomes.find(x => x.message === outcomeValue)
-    if (!finalOutcome) {
+    const finalOutcomeIndex = contract.outcomes.findIndex(
+      x => x.message === outcomeValue
+    )
+    if (finalOutcomeIndex < 0) {
       throw new Error(
         "Could not find final outcome in the list of contract's outcomes."
       )
     }
+
+    // Import other party CET if necessary to be able to watch it through the
+    // bitcoind wallet
+    const otherPartyCets = contract.isLocalParty
+      ? contract.remoteCetsHex
+      : contract.localCetsHex
+    const finalCet = otherPartyCets[finalOutcomeIndex]
+    this.importTxIfRequired(finalCet, contract)
     return {
       ...contract,
       state: ContractState.Mature,
-      finalOutcome,
+      finalOutcome: contract.outcomes[finalOutcomeIndex],
       oracleSignature,
     }
   }
@@ -776,7 +778,7 @@ export class ContractUpdater {
 
   private getDustDiscardedParty(
     tx: DecodeRawTransactionResponse,
-    contract: AcceptedContract | MaturedContract,
+    contract: AcceptedContract | ConfirmedContract | MaturedContract,
     ownTransaction = true
   ): DustDiscardedParty {
     if (tx.vout && tx.vout.length === 1) {
@@ -844,26 +846,9 @@ export class ContractUpdater {
     return contract.finalOutcome
   }
 
-  private async importCetsIfRequired(
-    localCets: string[],
-    remoteCets: string[],
-    contract: AcceptedContract
-  ): Promise<void> {
-    let cets = []
-    if (contract.isLocalParty) {
-      cets = remoteCets
-    } else {
-      cets = localCets
-    }
-
-    for (const cet of cets) {
-      await this.importTxIfRequired(cet, contract)
-    }
-  }
-
   private async importTxIfRequired(
     txHex: string,
-    contract: AcceptedContract | MaturedContract,
+    contract: AcceptedContract | MaturedContract | ConfirmedContract,
     pubkey?: string
   ): Promise<void> {
     const tx = Utils.decodeRawTransaction(txHex, this.walletClient.getNetwork())
