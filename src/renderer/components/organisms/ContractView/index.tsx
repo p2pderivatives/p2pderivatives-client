@@ -134,7 +134,7 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
     props.cancel()
   }
 
-  const content: ContentType[] = [
+  let content: ContentType[] = [
     { title: 'State', value: ContractState[contract.state] },
     {
       title: 'Maturity Date',
@@ -163,7 +163,7 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
       ? contract.finalOutcome.local - contract.localCollateral
       : contract.finalOutcome.remote - contract.remoteCollateral
 
-    content.concat([
+    content = content.concat([
       { title: 'Outcome Value', value: contract.finalOutcome.message },
       {
         title: 'Local Payout',
