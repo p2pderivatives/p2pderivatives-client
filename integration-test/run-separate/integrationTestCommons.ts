@@ -30,6 +30,7 @@ export interface OracleContext {
   readonly oraclePrivateKey: string
   readonly oracleKValue: string
   readonly oracleRValue: string
+  readonly signature: string
 }
 
 export async function createWallets(): Promise<void> {
@@ -44,7 +45,7 @@ export async function createWallets(): Promise<void> {
   await client.createWallet(oneBtcParty, oneBtcParty)
 }
 
-export function getNewMockedOracleContext(): OracleContext {
+export function getNewMockedOracleContext(message: string): OracleContext {
   const oracleKeyPair = Utils.createKeyPair()
   const oraclePrivateKey = oracleKeyPair.privkey
   const oraclePublicKey = oracleKeyPair.pubkey
@@ -52,11 +53,17 @@ export function getNewMockedOracleContext(): OracleContext {
   const oracleKValue = kRPair.privkey
   const oracleRValue = cfddlcjs.GetSchnorrPublicNonce({ kValue: oracleKValue })
     .hex
+  const signature = cfddlcjs.SchnorrSign({
+    privkey: oraclePrivateKey,
+    kValue: oracleKValue,
+    message,
+  }).hex
   return {
     oraclePublicKey,
     oraclePrivateKey,
     oracleKValue,
     oracleRValue,
+    signature,
   }
 }
 
