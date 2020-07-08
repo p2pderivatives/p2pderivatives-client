@@ -2,9 +2,9 @@
 
 set -e
 
-for i in {1..16}
+for i in {1..21}
 do
   docker-compose up -d bitcoind
-  jest --config jest.config.integration-separate.js --reporters=default --runInBand ./integration-test/run-separate/dlcEventHandler.test.ts -t=" $i-"
+  jest --config jest.config.integration-separate.js --reporters=default --runInBand -t=" $i-"
   docker-compose down --volumes
 done

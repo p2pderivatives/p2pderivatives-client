@@ -74,7 +74,7 @@ describe('dlc-event-handler', () => {
       localPartyContext = await getNewPartyContext(localParty)
       remotePartyContext = await getNewPartyContext(remoteParty)
       noBtcPartyContext = await getNewPartyContext(noBtcParty, false)
-      oracleContext = getNewMockedOracleContext()
+      oracleContext = getNewMockedOracleContext(baseOutcomes[0].message)
     } catch (error) {
       fail(error)
     }
@@ -489,12 +489,6 @@ describe('dlc-event-handler', () => {
 
     const finalOutcome = baseOutcomes[0]
 
-    const oracleSignature = cfddlcjs.SchnorrSign({
-      privkey: oracleContext.oraclePrivateKey,
-      kValue: oracleContext.oracleKValue,
-      message: finalOutcome.message,
-    }).hex
-
     await testOnContractConfirmed(localContext, offeredContract.id)
     await testOnContractConfirmed(remotePartyContext, offeredContract.id)
 
@@ -502,14 +496,14 @@ describe('dlc-event-handler', () => {
       localContext,
       offeredContract.id,
       finalOutcome.message,
-      oracleSignature
+      oracleContext.signature
     )
 
     await testOnContractMature(
       remotePartyContext,
       offeredContract.id,
       finalOutcome.message,
-      oracleSignature
+      oracleContext.signature
     )
   }
 
