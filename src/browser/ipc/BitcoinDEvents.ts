@@ -24,15 +24,23 @@ export class BitcoinDEvents extends IPCEventsBase {
     this._storage = storage
   }
 
-  public async Initialize(): Promise<void> {
+  public getClient(): BitcoinDClient {
+    return this._client
+  }
+
+  public async initialize(): Promise<void> {
     const result = await this._storage.ReadBitcoinDConfig()
     if (!isSuccessful(result)) {
       // No config
       return
     }
 
-    this._config = result.value
-    await this._client.configure(this._config)
+    try {
+      this._config = result.value
+      await this._client.configure(this._config)
+    } catch (e) {
+      // Ignore errors here.
+    }
   }
 
   protected taggedCallbacks(): TaggedCallback[] {

@@ -17,18 +17,22 @@ import { TaggedCallback } from './TaggedCallback'
 
 export class AuthenticationEvents extends IPCEventsBase {
   private _client: GrpcClient
-  private _loginCallback: (userName: string) => Promise<void>
-  private _logoutCallback: () => Promise<void>
+  private _loginCallback: (userName: string) => Promise<() => Promise<void>>
+  private _logoutCallback: () => Promise<void> = (): Promise<void> =>
+    Promise.resolve()
 
   public constructor(
     client: GrpcClient,
-    loginCallback: (userName: string) => Promise<void>,
-    logoutCallback: () => Promise<void>
+    loginCallback: (userName: string) => Promise<() => Promise<void>>
   ) {
     super()
     this._client = client
     this._loginCallback = loginCallback
-    this._logoutCallback = logoutCallback
+  }
+
+  public async logout(): Promise<void> {
+    await this._client.getAuthenticationService().logout()
+    await this._logoutCallback()
   }
 
   protected taggedCallbacks(): TaggedCallback[] {
@@ -39,7 +43,7 @@ export class AuthenticationEvents extends IPCEventsBase {
       },
       {
         tag: LOGOUT,
-        callback: (): Promise<GeneralAnswer> => this.logoutCallback(),
+        callback: (): Promise<GeneralAnswer> => this.logoutIPCCallback(),
       },
       {
         tag: REFRESH,
@@ -63,7 +67,7 @@ export class AuthenticationEvents extends IPCEventsBase {
       await this._client
         .getAuthenticationService()
         .login(request.username, request.password)
-      await this._loginCallback(request.username)
+      this._logoutCallback = await this._loginCallback(request.username)
       return new GeneralAnswer(true)
     } catch (e) {
       const ipcError =
@@ -74,10 +78,9 @@ export class AuthenticationEvents extends IPCEventsBase {
     }
   }
 
-  private async logoutCallback(): Promise<GeneralAnswer> {
+  private async logoutIPCCallback(): Promise<GeneralAnswer> {
     try {
-      await this._client.getAuthenticationService().logout()
-      await this._logoutCallback()
+      await this.logout()
       return new GeneralAnswer(true)
     } catch (e) {
       return new GeneralAnswer(false, e)
