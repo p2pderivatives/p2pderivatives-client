@@ -5,7 +5,6 @@ import {
   makeStyles,
   createMuiTheme,
   MuiThemeProvider,
-  Typography,
   IconButton,
 } from '@material-ui/core'
 import AppBar from '@material-ui/core/AppBar'
@@ -18,6 +17,9 @@ import Refresh from '@material-ui/icons/Refresh'
 
 import p2plogo from '../../../assets/p2p-logo.png'
 import BtcDisplay from '../../atoms/BtcDisplay'
+import { logoutRequest } from '../../../store/login/actions'
+import { useDispatch } from 'react-redux'
+import { push } from 'connected-react-router'
 
 type StatusBarProps = {
   username: string
@@ -66,6 +68,8 @@ const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const isMenuOpen = Boolean(anchorEl)
 
+  const dispatch = useDispatch()
+
   const handleProfileMenuOpen = (
     event: React.MouseEvent<HTMLElement>
   ): void => {
@@ -74,6 +78,12 @@ const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
 
   const handleMenuClose = (): void => {
     setAnchorEl(null)
+  }
+
+  const handleLogout = (): void => {
+    handleMenuClose()
+    dispatch(logoutRequest())
+    dispatch(push('/'))
   }
 
   const menuId = 'primary-search-account-menu'
@@ -102,7 +112,7 @@ const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
       >
         Change Password
       </MenuItem>
-      <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+      <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
   )
 
@@ -122,7 +132,7 @@ const StatusBar: FC<StatusBarProps> = (props: StatusBarProps) => {
               <IconButton color="secondary" onClick={props.refresh}>
                 <Refresh />
               </IconButton>
-              <BtcDisplay satValue={props.balance * 100000000} currency="BTC" />
+              <BtcDisplay satValue={props.balance} currency="BTC" />
             </div>
             <Button
               className={classes.loginButton}
