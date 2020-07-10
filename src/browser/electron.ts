@@ -1,9 +1,10 @@
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
 import url from 'url'
-import { finalize, initialize } from './initialize'
+import { initialize } from './initialize'
 
 let mainWindow: BrowserWindow | null = null
+let finalize: () => Promise<void> = (): Promise<void> => Promise.resolve()
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -11,7 +12,7 @@ function createWindow(): void {
     height: 768,
     webPreferences: { nodeIntegration: true },
   })
-  initialize()
+  finalize = initialize(mainWindow)
   let reactUrl = url.format({
     pathname: path.join(__dirname, '../index.html'),
     protocol: 'file:',

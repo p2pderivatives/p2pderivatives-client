@@ -1,31 +1,46 @@
-import { app } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import encoding from 'encoding-down'
 import { promises as fs } from 'fs'
 import leveldown from 'leveldown'
 import levelup, { LevelUp } from 'levelup'
 import path from 'path'
+import { createLogger, format, transports } from 'winston'
+import 'winston-daily-rotate-file'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
 import { GrpcConfig } from './api/grpc/GrpcConfig'
 import { OracleClient, OracleConfig } from './api/oracle'
 import { AppConfig } from './config/config'
 import { LevelConfigRepository } from './config/LevelConfigRepository'
+import { DlcManager } from './dlc/controller/DlcManager'
+import { LevelContractRepository } from './dlc/repository/LevelContractRepository'
+import { DlcService } from './dlc/service/DlcService'
+import { ContractUpdater } from './dlc/utils/ContractUpdater'
+import { DlcEventHandler } from './dlc/utils/DlcEventHandler'
 import { AuthenticationEvents } from './ipc/AuthenticationEvents'
 import { BitcoinDEvents } from './ipc/BitcoinDEvents'
+import { DlcEvents } from './ipc/DlcEvents'
+import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
 import { FileEvents } from './ipc/FileEvents'
+import { IPCEvents } from './ipc/IPCEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
 
-let db: LevelUp | null = null
+const logger = createLogger({
+  level: 'info',
+  format: format.json(),
+  defaultMeta: { service: 'user-service' },
+  transports: [new transports.Console()],
+})
 
-async function initializeDB(userName: string): Promise<void> {
+async function initializeDB(userName: string): Promise<LevelUp> {
   const userPath = app.getPath('userData')
-  const userDbPath = path.join(userPath, userName)
+  const userDataPath = path.join(userPath, userName)
 
   try {
-    await fs.access(userDbPath)
+    await fs.access(userDataPath)
   } catch {
-    await fs.mkdir(userDbPath)
+    await fs.mkdir(userDataPath)
   }
 
   const options = {
@@ -33,11 +48,21 @@ async function initializeDB(userName: string): Promise<void> {
     valueEncoding: 'json',
   }
 
+  const rotateFileTransport = new transports.DailyRotateFile({
+    filename: 'p2pd-%DATE%.log',
+    datePattern: 'YYYY-MM-DD-HH',
+    maxFiles: '7d',
+    level: 'info',
+    dirname: path.join(userDataPath, 'log'),
+  })
+
+  logger.transports.push(rotateFileTransport)
+
   try {
     const levelupAsync: () => Promise<LevelUp> = () =>
       new Promise<LevelUp>((accept, reject) => {
         levelup(
-          encoding(leveldown(path.join(userDbPath, 'leveldb')), options),
+          encoding(leveldown(path.join(userDataPath, 'leveldb')), options),
           function(error: Error, db: LevelUp) {
             if (error) {
               reject(error)
@@ -48,8 +73,7 @@ async function initializeDB(userName: string): Promise<void> {
         )
       })
 
-    const tmpDb = await levelupAsync()
-    db = db !== null ? db : tmpDb
+    return await levelupAsync()
   } catch (error) {
     throw new Error(
       'An instance of the application with this username is already running'
@@ -57,28 +81,61 @@ async function initializeDB(userName: string): Promise<void> {
   }
 }
 
-async function finalizeDB(): Promise<void> {
-  if (db !== null) {
-    const tmpDb = db
-    db = null
-    await tmpDb.close()
-  }
+async function finalizeDB(db: LevelUp): Promise<void> {
+  await db.close()
 }
 
-async function loginCallBack(userName: string): Promise<void> {
-  await initializeDB(userName)
+async function loginCallBack(
+  userName: string,
+  oracleClient: OracleClient,
+  dlcIPCBrowser: DlcIPCBrowser,
+  grpcClient: GrpcClient
+): Promise<() => Promise<void>> {
+  const db = await initializeDB(userName)
   const bitcoinEvents = new BitcoinDEvents(
     new LevelConfigRepository(db as LevelUp)
   )
   bitcoinEvents.registerReplies()
-  await bitcoinEvents.Initialize()
+  await bitcoinEvents.initialize()
+  const contractRepository = new LevelContractRepository(db as LevelUp)
+  const dlcService = new DlcService(contractRepository)
+  const contractUpdater = new ContractUpdater(bitcoinEvents.getClient())
+
+  const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
+
+  const dlcManager = new DlcManager(
+    eventHandler,
+    dlcService,
+    bitcoinEvents.getClient(),
+    dlcIPCBrowser,
+    oracleClient,
+    grpcClient.getDlcService(),
+    logger,
+    5
+  )
+
+  const oracleEvents = new OracleEvents(oracleClient)
+  oracleEvents.registerReplies()
+
+  const dlcEvents = new DlcEvents(dlcManager, dlcService)
+  dlcEvents.registerReplies()
+  return (): Promise<void> =>
+    logoutCallback(db, dlcManager, [dlcEvents, bitcoinEvents, oracleEvents])
 }
 
-async function logoutCallback(): Promise<void> {
-  await finalizeDB()
+async function logoutCallback(
+  db: LevelUp,
+  dlcManager: DlcManager,
+  ipcEvents: IPCEvents[]
+): Promise<void> {
+  dlcManager.finalize()
+  for (const ipcEvent of ipcEvents) {
+    ipcEvent.unregisterReplies()
+  }
+  await finalizeDB(db)
 }
 
-export function initialize(): void {
+export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
   let resourcesPath: string
   if (!app.isPackaged) {
     resourcesPath = app.getAppPath()
@@ -90,27 +147,28 @@ export function initialize(): void {
 
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
-  const client = new GrpcClient(grpcConfig, auth)
+  const grpcClient = new GrpcClient(grpcConfig, auth)
+  const dlcIPCBrowser = new DlcIPCBrowser(browserWindow)
 
-  const authEvents = new AuthenticationEvents(
-    client,
-    loginCallBack,
-    logoutCallback
-  )
+  const oracleConfig = appConfig.parse<OracleConfig>('oracle')
+  const oracleClient = new OracleClient(oracleConfig)
+
+  const authLoginCallback = (
+    userName: string
+  ): Promise<() => Promise<void>> => {
+    return loginCallBack(userName, oracleClient, dlcIPCBrowser, grpcClient)
+  }
+
+  const authEvents = new AuthenticationEvents(grpcClient, authLoginCallback)
   authEvents.registerReplies()
 
-  const userEvents = new UserEvents(client)
+  const userEvents = new UserEvents(grpcClient)
   userEvents.registerReplies()
 
   const fileEvents = new FileEvents()
   fileEvents.registerReplies()
 
-  const oracleConfig = appConfig.parse<OracleConfig>('oracle')
-  const oracleClient = new OracleClient(oracleConfig)
-  const oracleEvents = new OracleEvents(oracleClient)
-  oracleEvents.registerReplies()
-}
-
-export function finalize(): Promise<void> {
-  return finalizeDB()
+  return async (): Promise<void> => {
+    await authEvents.logout()
+  }
 }
