@@ -11,8 +11,11 @@ import { SnackbarProvider } from './providers/Snackbar'
 import { StatusBarProvider } from './providers/StatusBar'
 import { AuthenticationIPC } from './ipc/AuthenticationIPC'
 import { BitcoinIPC } from './ipc/BitcoinIPC'
+import { DlcEvents } from './ipc/DlcEvents'
 
 const store = createStore()
+const dlcEvents = new DlcEvents(store)
+dlcEvents.registerReplies()
 
 ReactDOM.render(
   <Provider store={store}>
