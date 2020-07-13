@@ -1,6 +1,6 @@
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { TaggedCallback } from './TaggedCallback'
-import { IPCEvents } from './IPCEvents'
+import { IPCEvents } from '../../common/models/ipc/IPCEvents'
 
 export abstract class IPCEventsBase implements IPCEvents {
   private _unregisterers: (() => void)[] = []

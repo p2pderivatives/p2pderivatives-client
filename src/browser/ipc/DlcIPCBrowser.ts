@@ -12,11 +12,10 @@ export class DlcIPCBrowser implements DlcBrowserAPI {
   constructor(private readonly window: electron.BrowserWindow) {}
 
   async dlcUpdate(contract: Contract): Promise<void> {
-    const call = { contract: contract }
     const answerProps = (await ipc.callRenderer(
       this.window,
       DLC_UPDATE,
-      call
+      contract
     )) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(answerProps)
 
