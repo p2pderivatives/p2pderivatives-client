@@ -60,6 +60,13 @@ const ContractListTemplate: FC<ContractListTemplateProps> = (
 
   useEffect(() => {
     setContractData(props.data)
+    const newOffered = props.data.filter(
+      c => c.state === ContractState.Offered && !c.isLocalParty
+    ).length
+    const offeredIndex = tabStatuses.findIndex(arr =>
+      arr.some(c => c === ContractState.Offered)
+    )
+    tabItems[offeredIndex].new = newOffered
   }, [props.data, setContractData])
 
   const handleTabChange = (tabIdx: number): void => {
