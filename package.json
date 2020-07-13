@@ -44,6 +44,7 @@
     "integration-separate:ci:test": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/separate BITCOIND_HOST=$BITCOIND_HOST jest --config jest.config.integration-separate.js --reporters=default --reporters=jest-junit --ci --runInBand",
     "eject": "react-scripts eject",
     "electron-dev": "concurrently \"cross-env BROWSER=none PORT=9000 npm start\" \"wait-on http://localhost:9000 && npm run build:browser && electron .\"",
+    "electron-dev-simple": "npm run build:browser && electron .",
     "build-native-cfd": "npm rebuild cfd-js cfd-dlc-js",
     "build-native-cfd:electron": "npm run build-native-cfd -- --runtime=electron --target=7.0.0",
     "dist": "npm run build && electron-builder --publish never",
