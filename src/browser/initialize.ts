@@ -22,7 +22,7 @@ import { BitcoinDEvents } from './ipc/BitcoinDEvents'
 import { DlcEvents } from './ipc/DlcEvents'
 import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
 import { FileEvents } from './ipc/FileEvents'
-import { IPCEvents } from './ipc/IPCEvents'
+import { IPCEvents } from '../common/models/ipc/IPCEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
 
