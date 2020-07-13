@@ -34,7 +34,7 @@ export default class OracleConfigAnswer extends GeneralAnswer {
       json._success,
       json._error ? IPCError.parse(json._error) : null,
       {
-        startDate: DateTime.fromISO(json.startDate),
+        startDate: DateTime.fromISO(json.startDate, { setZone: true }),
         frequency: Duration.fromISO(json.frequency),
         range: Duration.fromISO(json.range),
       }
