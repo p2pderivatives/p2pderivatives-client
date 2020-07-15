@@ -1,6 +1,6 @@
 import level from 'level-test'
 import { DateTime } from 'luxon'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../../common/models/dlc/Contract'
 import { isSuccessful } from '../../../../common/utils/failable'
 import { ErrorCode } from '../../../storage/ErrorCode'
 import { RepositoryError } from '../../../storage/RepositoryError'

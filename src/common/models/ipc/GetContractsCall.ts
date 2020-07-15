@@ -1,4 +1,4 @@
-import { ContractState } from '../dlc/ContractState'
+import { ContractState } from '../dlc/Contract'
 
 export interface GetContractsCall {
   id?: string

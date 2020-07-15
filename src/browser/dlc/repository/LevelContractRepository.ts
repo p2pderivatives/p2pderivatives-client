@@ -1,5 +1,6 @@
 import { LevelUp } from 'levelup'
 import { DateTime } from 'luxon'
+import { ContractState } from '../../../common/models/dlc/Contract'
 import { Failable } from '../../../common/utils/failable'
 import { ErrorCode } from '../../storage/ErrorCode'
 import { getKeyPrefix, KeyPrefix } from '../../storage/KeyPrefix'
@@ -8,7 +9,6 @@ import { RepositoryError } from '../../storage/RepositoryError'
 import { AnyContract } from '../models/contract'
 import { ContractQuery, ExtendedContractQuery } from '../service/ContractQuery'
 import { ContractRepository } from '../service/DlcService'
-import { ContractState } from '../../../common/models/dlc/ContractState'
 
 export class LevelContractRepository implements ContractRepository {
   private readonly _db: LevelUp

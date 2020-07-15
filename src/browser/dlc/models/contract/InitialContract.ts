@@ -1,5 +1,4 @@
-import { Contract } from '../../../../common/models/dlc/Contract'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { Contract, ContractState } from '../../../../common/models/dlc/Contract'
 import { OracleInfo } from '../../../../common/models/dlc/OracleInfo'
 import { OfferMessage } from '../messages'
 
