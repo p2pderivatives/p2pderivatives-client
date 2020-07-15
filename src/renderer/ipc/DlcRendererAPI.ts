@@ -1,6 +1,5 @@
-import { ContractState } from '../../common/models/dlc/ContractState'
 import { DlcEventType } from '../../common/constants/DlcEventType'
-import { Contract } from '../../common/models/dlc/Contract'
+import { Contract, ContractState } from '../../common/models/dlc/Contract'
 import { DlcAnswer } from '../../common/models/ipc/DlcAnswer'
 import { GetContractsCall } from '../../common/models/ipc/GetContractsCall'
 

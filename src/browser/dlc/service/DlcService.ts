@@ -1,13 +1,13 @@
 import { DateTime, Duration } from 'luxon'
-import { ContractState } from '../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../common/models/dlc/Contract'
 import { Failable } from '../../../common/utils/failable'
 import { RepositoryError } from '../../storage/RepositoryError'
 import {
   AnyContract,
-  SignedContract,
   BroadcastContract,
-  MutualCloseProposedContract,
   ConfirmedContract,
+  MutualCloseProposedContract,
+  SignedContract,
 } from '../models/contract'
 import { ExtendedContractQuery } from './ContractQuery'
 

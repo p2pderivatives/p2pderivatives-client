@@ -1,4 +1,4 @@
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../../common/models/dlc/Contract'
 import { DlcMessageType, OfferMessage } from '../messages'
 import { PartyInputs } from '../PartyInputs'
 import { InitialContract } from './InitialContract'

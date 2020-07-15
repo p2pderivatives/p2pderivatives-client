@@ -1,6 +1,6 @@
-import { Contract } from './common/models/dlc/Contract'
-import { ContractState } from '../src/common/models/dlc/ContractState'
 import { DateTime } from 'luxon'
+import { ContractState } from '../src/common/models/dlc/Contract'
+import { Contract } from './common/models/dlc/Contract'
 
 export const ContractTest: Contract = {
   state: ContractState.Initial,

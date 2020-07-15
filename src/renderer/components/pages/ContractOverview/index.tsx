@@ -1,20 +1,19 @@
+import { push } from 'connected-react-router'
 import React, { FC, useEffect, useState } from 'react'
 import {
-  useSelector as useReduxSelector,
   TypedUseSelectorHook,
   useDispatch,
+  useSelector as useReduxSelector,
 } from 'react-redux'
+import { ContractState } from '../../../../common/models/dlc/Contract'
+import { useSnackbar } from '../../../providers/Snackbar'
 import { ApplicationState } from '../../../store'
-
-import ContractListTemplate from '../../templates/ContractListTemplate'
 import {
   contractRequest,
-  dlcSelectContract,
   dlcActionError,
+  dlcSelectContract,
 } from '../../../store/dlc/actions'
-import { push } from 'connected-react-router'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
-import { useSnackbar } from '../../../providers/Snackbar'
+import ContractListTemplate from '../../templates/ContractListTemplate'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 

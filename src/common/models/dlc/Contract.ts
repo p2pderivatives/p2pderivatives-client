@@ -1,7 +1,23 @@
 import { Outcome } from './Outcome'
 import { PremiumInfo } from './PremiumInfo'
-import { ContractState } from './ContractState'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
+
+export enum ContractState {
+  Initial = 1,
+  Offered,
+  Accepted,
+  Rejected,
+  Signed,
+  Broadcast,
+  Confirmed,
+  Mature,
+  UnilateralClosed,
+  UnilateralClosedByOther,
+  MutualCloseProposed,
+  MutualClosed,
+  Refunded,
+  Failed,
+}
 
 export interface Contract {
   readonly state: ContractState

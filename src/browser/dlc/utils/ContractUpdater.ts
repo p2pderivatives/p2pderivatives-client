@@ -1,7 +1,7 @@
 import * as cfddlcjs from 'cfd-dlc-js'
 import { DecodeRawTransactionResponse } from 'cfd-js'
 import { DateTime, Duration } from 'luxon'
-import { ContractState } from '../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
 import BitcoinDClient from '../../api/bitcoind'
 import {

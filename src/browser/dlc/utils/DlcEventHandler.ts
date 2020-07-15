@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
 import { v4 } from 'uuid'
-import { Contract } from '../../../common/models/dlc/Contract'
-import { ContractState } from '../../../common/models/dlc/ContractState'
+import { Contract, ContractState } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
 import { isSuccessful } from '../../../common/utils/failable'
 import { ErrorCode } from '../../storage/ErrorCode'
