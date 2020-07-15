@@ -1,6 +1,5 @@
-import { Contract } from '../../../common/models/dlc/Contract'
-import { ContractState } from '../../../common/models/dlc/ContractState'
 import { DateTime } from 'luxon'
+import { Contract, ContractState } from '../../../common/models/dlc/Contract'
 
 export const contracts: Contract[] = [
   {

@@ -12,8 +12,7 @@ import MUIDataTable, {
 } from 'mui-datatables'
 import numbro from 'numbro'
 import React, { FC, ReactElement, useEffect, useState } from 'react'
-import { Contract } from '../../../../common/models/dlc/Contract'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { Contract, ContractState } from '../../../../common/models/dlc/Contract'
 
 export type DataGridProps = Omit<
   MUIDataTableProps,

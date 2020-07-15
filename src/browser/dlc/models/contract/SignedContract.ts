@@ -1,5 +1,5 @@
 import { AcceptedContract } from './AcceptedContract'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../../common/models/dlc/Contract'
 import { StatelessContract } from './StatelessContract'
 import { SignMessage, DlcMessageType } from '../messages'
 

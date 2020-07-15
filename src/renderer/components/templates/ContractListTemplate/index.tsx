@@ -1,12 +1,9 @@
-import React, { FC, useState, useEffect } from 'react'
-
 import { makeStyles } from '@material-ui/core'
-
+import React, { FC, useEffect, useState } from 'react'
+import { Contract, ContractState } from '../../../../common/models/dlc/Contract'
 import Tabs, { TabItem } from '../../molecules/Tabs'
 import DataGrid from '../../organisms/DataGrid'
 import MainLayout from '../../organisms/MainLayout'
-import { Contract } from '../../../../common/models/dlc/Contract'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
 
 type ContractListTemplateProps = {
   username: string

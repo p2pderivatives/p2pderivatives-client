@@ -11,8 +11,7 @@ import { OracleClientApi } from '../../src/browser/api/oracle/oracleClient'
 import { DlcManager } from '../../src/browser/dlc/controller/DlcManager'
 import { DlcTypedMessage } from '../../src/browser/dlc/models/messages'
 import { DlcBrowserAPI } from '../../src/browser/ipc/DlcBrowserAPI'
-import { Contract } from '../../src/common/models/dlc/Contract'
-import { ContractState } from '../../src/common/models/dlc/ContractState'
+import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
 import {
   assertContractState,
   createWallets,

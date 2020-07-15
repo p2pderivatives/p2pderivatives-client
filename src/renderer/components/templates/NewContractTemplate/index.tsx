@@ -1,31 +1,28 @@
-import React, { FC, useState, useEffect } from 'react'
-
-import { DateTime } from 'luxon'
 import {
-  makeStyles,
-  Typography,
   Box,
+  FormControl,
+  FormHelperText,
+  FormLabel,
   Grid,
   IconButton,
-  FormControl,
-  FormLabel,
-  FormHelperText,
+  makeStyles,
+  Typography,
 } from '@material-ui/core'
 import Contacts from '@material-ui/icons/Contacts'
-
+import { DateTime } from 'luxon'
+import React, { FC, useEffect, useState } from 'react'
+import { Contract, ContractState } from '../../../../common/models/dlc/Contract'
+import { Outcome } from '../../../../common/models/dlc/Outcome'
+import { User } from '../../../../common/models/user/User'
+import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
+import BitcoinInput from '../../atoms/BitcoinInput'
+import Button from '../../atoms/Button'
+import TextInput from '../../atoms/TextInput'
+import DateTimeSelect from '../../molecules/DateTimeSelect'
 import Tabs, { TabItem } from '../../molecules/Tabs'
 import MainLayout from '../../organisms/MainLayout'
-import TextInput from '../../atoms/TextInput'
-import Button from '../../atoms/Button'
-import BitcoinInput from '../../atoms/BitcoinInput'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
-import { User } from '../../../../common/models/user/User'
-import DateTimeSelect from '../../molecules/DateTimeSelect'
-import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
-import { Contract } from '../../../../common/models/dlc/Contract'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
-import { Outcome } from '../../../../common/models/dlc/Outcome'
 
 type NewContractTemplateProps = {
   tab: number

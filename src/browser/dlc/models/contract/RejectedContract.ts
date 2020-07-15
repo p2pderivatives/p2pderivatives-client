@@ -1,4 +1,4 @@
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../../common/models/dlc/Contract'
 import { InitialContract } from './InitialContract'
 import { StatelessContract } from './StatelessContract'
 

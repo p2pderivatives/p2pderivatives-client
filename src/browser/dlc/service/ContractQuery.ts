@@ -1,4 +1,4 @@
-import { ContractState } from '../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../common/models/dlc/Contract'
 import { DateTime } from 'luxon'
 
 export interface ContractQuery {

@@ -1,4 +1,4 @@
-import { ContractState } from '../../../../common/models/dlc/ContractState'
+import { ContractState } from '../../../../common/models/dlc/Contract'
 import { DlcMessageType, MutualClosingMessage } from '../messages'
 import { MaturedContract } from './MaturedContract'
 import { StatelessContract } from './StatelessContract'

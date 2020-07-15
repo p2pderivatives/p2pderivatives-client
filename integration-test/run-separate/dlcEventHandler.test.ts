@@ -1,7 +1,5 @@
-import * as cfddlcjs from 'cfd-dlc-js'
 import { DateTime } from 'luxon'
-import { Contract } from '../../src/common/models/dlc/Contract'
-import { ContractState } from '../../src/common/models/dlc/ContractState'
+import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
 import {
   OfferedContract,
   toAcceptMessage,

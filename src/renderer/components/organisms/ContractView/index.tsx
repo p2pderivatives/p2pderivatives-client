@@ -1,10 +1,9 @@
 import { Grid, makeStyles, Typography } from '@material-ui/core'
-import React, { FC, useState, useEffect, ReactElement } from 'react'
-import { ContractState } from '../../../../common/models/dlc/ContractState'
-import { Contract } from '../../../../common/models/dlc/Contract'
-import Button from '../../atoms/Button'
-import BtcDisplay from '../../atoms/BtcDisplay'
 import { DateTime } from 'luxon'
+import React, { FC, ReactElement, useEffect, useState } from 'react'
+import { Contract, ContractState } from '../../../../common/models/dlc/Contract'
+import BtcDisplay from '../../atoms/BtcDisplay'
+import Button from '../../atoms/Button'
 
 export type ContractViewProps = {
   data: Contract
