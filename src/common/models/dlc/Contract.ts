@@ -1,5 +1,4 @@
 import { Outcome } from './Outcome'
-import { PremiumInfo } from './PremiumInfo'
 import { ContractState } from './ContractState'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
 
@@ -13,7 +12,7 @@ export interface Contract {
   readonly maturityTime: number
   readonly feeRate: number
   readonly oracleInfo?: OracleInfo
-  readonly premiumInfo?: PremiumInfo
+  readonly premiumAmount?: number
   readonly isLocalParty?: boolean
   readonly finalOutcome?: Outcome
 }

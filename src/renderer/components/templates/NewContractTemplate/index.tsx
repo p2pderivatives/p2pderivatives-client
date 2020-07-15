@@ -112,6 +112,10 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     value: contract.remoteCollateral,
     isBitcoin: true,
   })
+  const [optionPremium, setOptionPremium] = useState({
+    value: contract.premiumAmount,
+    isBitcoin: true,
+  })
   const [feeRate, setFeeRate] = useState(contract.feeRate)
   const [maturityDate, setMaturityDate] = useState(
     DateTime.fromMillis(contract.maturityTime)
@@ -294,6 +298,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       outcomes: props.data,
       state: ContractState.Initial,
       maturityTime: maturityDate.toMillis(),
+      premiumAmount: optionPremium.value,
     }
     props.onPublish(publishContract)
   }
@@ -392,6 +397,22 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                   validateOutcomes(undefined, undefined, value, false)
                 }}
                 label={'Remote collateral'}
+              />
+              <BitcoinInput
+                value={optionPremium.value}
+                isBitcoin={optionPremium.isBitcoin}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  const collat = optionPremium
+                  collat.isBitcoin = isBitcoin
+                  setOptionPremium(collat)
+                }}
+                onChange={(value: number): void => {
+                  setOptionPremium({
+                    value,
+                    isBitcoin: optionPremium.isBitcoin,
+                  })
+                }}
+                label={'Option Premium'}
               />
               <FormControl>
                 <FormLabel error={outcomesError} color="secondary">

@@ -141,35 +141,35 @@ describe('dlc-manager', () => {
     }
   })
 
-  test('17-mutual-closing-both-send', async () => {
+  test('18-mutual-closing-both-send', async () => {
     const contractId = await commonTests()
     await bothReceiveMutualClose(contractId)
     localPartyManager.finalize()
     remotePartyManager.finalize()
   })
 
-  test('18-mutual-closing-local-send', async () => {
+  test('19-mutual-closing-local-send', async () => {
     const contractId = await commonTests()
     await onlyLocalSendsMutualClosing(contractId)
     localPartyManager.finalize()
     remotePartyManager.finalize()
   })
 
-  test('19-unilateral-close-by-local', async () => {
+  test('20-unilateral-close-by-local', async () => {
     const contractId = await commonTests()
     await unilateralCloseFromLocal(contractId)
     localPartyManager.finalize()
     remotePartyManager.finalize()
   })
 
-  test('20-unilateral-close-by-remote', async () => {
+  test('21-unilateral-close-by-remote', async () => {
     const contractId = await commonTests()
     await unilateralCloseFromRemote(contractId)
     localPartyManager.finalize()
     remotePartyManager.finalize()
   })
 
-  test('21-unilateral-close-by-local-after-timeout', async () => {
+  test('22-unilateral-close-by-local-after-timeout', async () => {
     const contractId = await commonTests()
     await unilateralCloseFromLocalAfterProposeTimeout(contractId)
     localPartyManager.finalize()

@@ -450,12 +450,52 @@ describe('dlc-event-handler', () => {
     ).resolves.toBeDefined()
   })
 
+  test('17-mutual-closing-with-premium', async () => {
+    const offerMessage = await sendOffer(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      10000
+    )
+    await acceptOffer(offerMessage)
+    const mutualClosedOfferContract = await localPartyContext.eventHandler.onSendMutualCloseOffer(
+      offerMessage.contractId,
+      baseOutcomes[0]
+    )
+    const mutualClosingMessage = toMutualClosingMessage(
+      mutualClosedOfferContract
+    )
+
+    assertContractState(
+      localPartyContext.dlcService,
+      mutualClosingMessage.contractId,
+      ContractState.MutualCloseProposed
+    )
+
+    const mutualClosedContract = await remotePartyContext.eventHandler.onMutualCloseOffer(
+      localParty,
+      mutualClosingMessage,
+      () => {
+        throw Error()
+      }
+    )
+
+    assertContractState(
+      remotePartyContext.dlcService,
+      mutualClosedContract.id,
+      ContractState.MutualClosed
+    )
+  })
+
   async function sendOffer(
     localContext = localPartyContext,
     remoteContext = remotePartyContext,
     localCollateral = 1 * oneBtc,
     remoteCollateral = 1 * oneBtc,
-    outcomes = baseOutcomes
+    outcomes = baseOutcomes,
+    premiumAmount = 0
   ): Promise<OfferMessage> {
     const contract: Contract = {
       state: ContractState.Initial,
@@ -473,6 +513,7 @@ describe('dlc-event-handler', () => {
         .toMillis(),
       outcomes,
       feeRate: 2,
+      premiumAmount,
     }
 
     return await testOnSendOffer(contract, localContext)

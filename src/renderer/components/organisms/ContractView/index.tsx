@@ -158,6 +158,12 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
     },
   ]
 
+  if (contract.premiumAmount) {
+    content = content.concat([
+      { title: 'Option Premium', value: contract.premiumAmount, btc: true },
+    ])
+  }
+
   if (contract.finalOutcome) {
     const pnl = contract.isLocalParty
       ? contract.finalOutcome.local - contract.localCollateral
