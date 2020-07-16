@@ -86,26 +86,6 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
     </FormControl>
   )
 
-  const setInitial = (): void => {
-    let initialDate: DateTime
-    const minimumValidDate = getFirstValidDate(
-      props.oracleInfo,
-      props.minimumDate
-    )
-
-    if (props.date) {
-      initialDate = DateTime.max(props.date, minimumValidDate)
-    } else {
-      initialDate = minimumValidDate
-    }
-
-    setYear(initialDate.year)
-    setMonth(initialDate.month)
-    setDay(initialDate.day)
-    setHour(initialDate.hour)
-    setMinute(initialDate.minute)
-  }
-
   const handleDateChange = (): void => {
     const newDate = DateTime.fromObject({
       year: year,
@@ -141,7 +121,6 @@ const DateTimeSelect: FC<DateTimeSelectProps> = (
   }
 
   useEffect(() => {
-    setInitial()
     refreshOptions()
     handleDateChange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
