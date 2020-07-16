@@ -2,21 +2,22 @@ import { PARSE_OUTCOME } from '../../common/constants/IPC'
 import OutcomeAnswer from '../../common/models/ipc/OutcomeAnswer'
 import OutcomeCall from '../../common/models/ipc/OutcomeCall'
 import IOAPI from '../api/io'
-import { IPCEventsBase } from './IPCEventsBase'
+import { IPCEventsBase, IPCMainBase } from './IPCEventsBase'
 import { TaggedCallback } from './TaggedCallback'
 
-export class FileEvents extends IPCEventsBase {
+export class FileEvents extends IPCMainBase<{}> {
+  protected _provider = {}
   private _client = new IOAPI()
 
-  protected taggedCallbacks(): TaggedCallback[] {
-    return [
+  protected taggedCallbacks: TaggedCallback<'main'>[] =
+   [
       {
         tag: PARSE_OUTCOME,
-        callback: (data): Promise<OutcomeAnswer> =>
+        callback: (data: unknown): Promise<OutcomeAnswer> =>
           this.parseOutcomeCallback(data as OutcomeCall),
       },
     ]
-  }
+
 
   private async parseOutcomeCallback(
     outcomeCall: OutcomeCall
