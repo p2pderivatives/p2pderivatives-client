@@ -100,8 +100,8 @@ const BitcoinInput: FC<BitcoinInputProps> = (props: BitcoinInputProps) => {
     props.isBitcoin === undefined || props.isBitcoin === true ? 0 : 1
   )
   const coinValues = [
-    { label: '₿ (BTC)', short: '₿' },
-    { label: 's (Satoshi)', short: 's' },
+    { label: 'BTC', short: 'BTC' },
+    { label: 'Satoshis', short: 'sats' },
   ]
 
   const isProperInput: (input: string) => boolean = (
