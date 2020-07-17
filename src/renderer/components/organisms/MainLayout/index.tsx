@@ -11,6 +11,8 @@ import Paper from '@material-ui/core/Paper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
 
+import ArrowBackIcon from '@material-ui/icons/ArrowBack'
+
 import { useStatusBarContext } from '../../../providers/StatusBar'
 
 export type LayoutProps = {
@@ -101,7 +103,7 @@ const MainLayout: FC<LayoutProps> = (props: LayoutProps) => {
                       props.onBack !== undefined ? props.onBack() : void 0
                     }
                   >
-                    🠐 Back
+                    <ArrowBackIcon /> Back
                   </MenuItem>
                   <MenuItem component={RouterLink} to="/settings/bitcoind">
                     BitcoinD
