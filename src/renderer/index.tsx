@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
-import { Provider } from 'react-redux'
 import { ConnectedRouter } from 'connected-react-router'
 import routes from './routes'
 import createStore, { history } from './createStore'
@@ -12,13 +11,14 @@ import { StatusBarProvider } from './providers/StatusBar'
 import { AuthenticationIPC } from './ipc/AuthenticationIPC'
 import { BitcoinIPC } from './ipc/BitcoinIPC'
 import { DlcEvents } from './ipc/DlcEvents'
+import ProviderWrapper from './provider'
 
 const store = createStore()
 const dlcEvents = new DlcEvents(store)
 dlcEvents.registerReplies()
 
 ReactDOM.render(
-  <Provider store={store}>
+  <ProviderWrapper store={store}>
     <MuiThemeProvider theme={theme}>
       <SnackbarProvider>
         <StatusBarProvider
@@ -29,6 +29,6 @@ ReactDOM.render(
         </StatusBarProvider>
       </SnackbarProvider>
     </MuiThemeProvider>
-  </Provider>,
+  </ProviderWrapper>,
   document.getElementById('root')
 )

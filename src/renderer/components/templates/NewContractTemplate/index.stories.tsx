@@ -7,11 +7,15 @@ import theme from '../../theme'
 import { User } from '../../../../common/models/user/User'
 import { DateTime, Duration } from 'luxon'
 import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
+import configureStore from '../../stories-data/createStoriesStore'
+import ProviderWrapper from '../../../provider'
 
 export default {
   title: 'Components/Templates/NewContractTemplate',
   decorators: [StoryRouter()],
 }
+
+const store = configureStore()
 
 const testUsers: User[] = [
   new User('Jane Doe'),
@@ -32,18 +36,20 @@ const oracleInfo: OracleAssetConfiguration = {
 }
 
 export const newContract = (): ReactElement => (
-  <MuiThemeProvider theme={theme}>
-    <div style={{ width: 1366, height: 768 }}>
-      <NewContractTemplate
-        onCSVImport={action('onCSVImport')}
-        data={[]}
-        tab={1}
-        users={testUsers}
-        onTabChange={action('onTabChange')}
-        onCancel={action('onCancel')}
-        oracleInfo={oracleInfo}
-        onPublish={action('onPublish')}
-      />
-    </div>
-  </MuiThemeProvider>
+  <ProviderWrapper store={store}>
+    <MuiThemeProvider theme={theme}>
+      <div style={{ width: 1366, height: 768 }}>
+        <NewContractTemplate
+          onCSVImport={action('onCSVImport')}
+          data={[]}
+          tab={1}
+          users={testUsers}
+          onTabChange={action('onTabChange')}
+          onCancel={action('onCancel')}
+          oracleInfo={oracleInfo}
+          onPublish={action('onPublish')}
+        />
+      </div>
+    </MuiThemeProvider>
+  </ProviderWrapper>
 )
