@@ -1,12 +1,7 @@
-import React, { FC, useState } from 'react'
-import { useDispatch } from 'react-redux'
-import { push } from 'connected-react-router'
-
 import { makeStyles, Typography } from '@material-ui/core'
-
-import Backdrop from '@material-ui/core/Backdrop'
-import CircularProgress from '@material-ui/core/CircularProgress'
-
+import { push } from 'connected-react-router'
+import React, { FC } from 'react'
+import { useDispatch } from 'react-redux'
 import WalletSettings from '../Settings/WalletSettings'
 
 const useStyles = makeStyles(theme => ({
@@ -14,9 +9,12 @@ const useStyles = makeStyles(theme => ({
     zIndex: theme.zIndex.appBar + 1,
   },
   container: {
-    padding: '2rem',
-    backgroundColor: '#303855',
     color: 'white',
+    height: 'calc(100vh - 4rem)',
+    width: 'calc(100vw - 4rem)',
+    padding: '2rem',
+    display: 'table',
+    backgroundColor: '#303855',
   },
 }))
 
@@ -24,31 +22,17 @@ const InitialWalletSettings: FC = () => {
   const dispatch = useDispatch()
   const classes = useStyles()
 
-  const [isLoading, setLoading] = useState(false)
-
-  const handleLoading = (loading: boolean): void => {
-    setLoading(loading)
-  }
-
   const handleSettingsSaved = (): void => {
     dispatch(push('/main'))
   }
 
   return (
-    <div style={{ position: 'absolute', height: '100%', width: '100%' }}>
-      <Backdrop className={classes.backdrop} open={isLoading}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-      <div className={classes.container}>
-        <Typography variant="h5">Wallet configuration</Typography>
-        <Typography variant="caption">
-          You need to set up your wallet before using the application.
-        </Typography>
-        <WalletSettings
-          onLoading={handleLoading}
-          onSaved={handleSettingsSaved}
-        />
-      </div>
+    <div className={classes.container}>
+      <Typography variant="h5">Wallet configuration</Typography>
+      <Typography variant="caption">
+        You need to set up your wallet before using the application.
+      </Typography>
+      <WalletSettings onSaved={handleSettingsSaved} />
     </div>
   )
 }

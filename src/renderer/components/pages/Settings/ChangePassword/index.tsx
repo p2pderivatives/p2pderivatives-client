@@ -1,25 +1,18 @@
 import React, { FC, useEffect, useState } from 'react'
 import {
-  useSelector as useReduxSelector,
   TypedUseSelectorHook,
   useDispatch,
+  useSelector as useReduxSelector,
 } from 'react-redux'
-
 import { useSnackbar } from '../../../../providers/Snackbar'
-
-import ChangePasswordTemplate from '../../../templates/ChangePasswordTemplate'
 import { ApplicationState } from '../../../../store'
 import { changePasswordRequest } from '../../../../store/login/actions'
 import { isValidPassword } from '../../../../util/password-validator'
-import { LoadingProps } from '../../../props'
-
-type ChangePasswordProps = LoadingProps
+import ChangePasswordTemplate from '../../../templates/ChangePasswordTemplate'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
-const ChangePassword: FC<ChangePasswordProps> = (
-  props: ChangePasswordProps
-) => {
+const ChangePassword: FC = () => {
   const snackbar = useSnackbar()
   const dispatch = useDispatch()
 
@@ -30,7 +23,6 @@ const ChangePassword: FC<ChangePasswordProps> = (
 
   useEffect(() => {
     if (submitted && !processing) {
-      props.onLoading(false)
       setSubmitted(false)
       if (changePWSuccessful) {
         snackbar.createSnack('Password successfully changed.', 'success')
@@ -52,7 +44,6 @@ const ChangePassword: FC<ChangePasswordProps> = (
     if (validationError) {
       snackbar.createSnack(validationError, 'error')
     } else {
-      props.onLoading(true)
       dispatch(changePasswordRequest(oldPassword, newPassword))
       setSubmitted(true)
     }

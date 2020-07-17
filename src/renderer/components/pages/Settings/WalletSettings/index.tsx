@@ -12,11 +12,10 @@ import { ApplicationState } from '../../../../store'
 import { checkRequest, configRequest } from '../../../../store/bitcoin/actions'
 
 import { BitcoinDConfig } from '../../../../../common/models/ipc/BitcoinDConfig'
-import { LoadingProps } from '../../../props'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
-type WalletSettingsProps = LoadingProps & {
+type WalletSettingsProps = {
   onSaved?: () => void
 }
 
@@ -34,7 +33,6 @@ const WalletSettings: FC<WalletSettingsProps> = (
 
   useEffect(() => {
     if (submitted && !processing) {
-      props.onLoading(false)
       setSubmitted(false)
       if (checkSuccessful) {
         if (props.onSaved) props.onSaved()
@@ -56,7 +54,6 @@ const WalletSettings: FC<WalletSettingsProps> = (
   }, [submitted, processing, checkSuccessful, bitcoinError])
 
   const onSubmit = (config: BitcoinDConfig): void => {
-    props.onLoading(true)
     dispatch(checkRequest(config))
     setSubmitted(true)
   }
