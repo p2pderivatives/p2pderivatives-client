@@ -50,7 +50,7 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
     props.config ? props.config.rpcPassword : ''
   )
   const [network, setNetwork] = useState<BitcoinNetwork>(
-    props.config && props.config.network ? props.config.network : 'mainnet'
+    props.config && props.config.network ? props.config.network : 'testnet'
   )
   const [defaultPort, setDefaultPort] = useState('8332')
 
@@ -68,7 +68,6 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
   }
 
   useEffect(() => {
-    if (network === 'mainnet') setDefaultPort('8332')
     if (network === 'testnet') setDefaultPort('18332')
     if (network === 'regtest') setDefaultPort('18443')
   }, [network])
@@ -87,7 +86,6 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             fullWidth
             onChange={(e): void => setNetwork(e.target.value as BitcoinNetwork)}
           >
-            <MenuItem value={'mainnet'}>mainnet</MenuItem>
             <MenuItem value={'testnet'}>testnet</MenuItem>
             <MenuItem value={'regtest'}>regtest</MenuItem>
           </Select>

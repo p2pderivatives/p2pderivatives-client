@@ -10,12 +10,12 @@ const WalletSettingsTemplate: FC<WalletSettingsTemplateProps> = (
   props: WalletSettingsTemplateProps
 ) => {
   return (
-    <div>
+    <>
       <WalletSettingsForm
         config={props.config}
         checkSettings={props.checkSettings}
       />
-    </div>
+    </>
   )
 }
 
