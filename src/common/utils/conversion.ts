@@ -1,7 +1,9 @@
-const SatoshisInBtc = 100000000
-
 export function btcToSats(amount: number): number {
-  return amount * SatoshisInBtc
+  const btcString = amount.toString()
+  const parts = btcString.split('.')
+  let rightSide = parts.length == 2 ? parts[1] : ''
+  rightSide = rightSide.padEnd(8, '0')
+  return parseInt(parts[0] + rightSide)
 }
 
 export function satsToBtc(amount: number): number {
