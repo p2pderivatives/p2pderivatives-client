@@ -67,10 +67,7 @@ const theme = createMuiTheme({
     MUIDataTable: {
       paper: {
         height: 'inherit',
-      },
-      responsiveScrollMaxHeight: {
-        maxHeight: 'calc(100% - 116px)',
-        height: 'calc(100% - 116px)',
+        overflow: 'auto',
       },
     },
     MUIDataTableSelectCell: {
