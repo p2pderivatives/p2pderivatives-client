@@ -54,7 +54,7 @@ const ContractOverviewPage: FC = () => {
   }
 
   return (
-    <div style={{ position: 'absolute', height: '100%', width: '100%' }}>
+    <div style={{ width: '100vw', height: '100vh' }}>
       <ContractListTemplate
         username={username}
         data={contracts}
