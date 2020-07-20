@@ -1,7 +1,7 @@
 export function btcToSats(amount: number): number {
   const btcString = amount.toString()
   const parts = btcString.split('.')
-  let rightSide = parts.length == 2 ? parts[1] : ''
+  let rightSide = parts.length === 2 ? parts[1] : ''
   rightSide = rightSide.padEnd(8, '0')
   return parseInt(parts[0] + rightSide)
 }

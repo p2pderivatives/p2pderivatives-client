@@ -10,7 +10,7 @@ import OutcomeAnswer, {
 @suite('IPC-Auth')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
-  @test async ipcOutcomeParseShouldSucceed() {
+  @test async ipcOutcomeParseShouldSucceed(): Promise<void> {
     const outcomeCall: OutcomeCall = {
       outcomesPath: './src/browser/api/io/test.csv',
     }

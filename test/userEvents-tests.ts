@@ -25,7 +25,7 @@ import { User } from '../src/common/models/user/User'
 @suite('IPC-User')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
-  @test async ipcCanRegisterUser() {
+  @test async ipcCanRegisterUser(): Promise<void> {
     const registerCall = new RegisterUserCall('test', 'test')
     const result = (await ipc.callMain(
       REGISTER_USER,
@@ -39,7 +39,7 @@ class Main {
   }
 
   // TODO fix test failing, disabled for now
-  @test async ipcCanDeregisterUser() {
+  @test async ipcCanDeregisterUser(): Promise<void> {
     const loginCall = new LoginCall('test', 'test')
     const loginResult = (await ipc.callMain(
       LOGIN,
@@ -54,7 +54,7 @@ class Main {
     expect(answer.isSuccess()).eq(true)
   }
 
-  @test async ipcCanGetUserList() {
+  @test async ipcCanGetUserList(): Promise<void> {
     const loginCall = new LoginCall('test', 'test')
     const loginResult = (await ipc.callMain(
       LOGIN,
