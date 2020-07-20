@@ -23,6 +23,7 @@ import Tabs, { TabItem } from '../../molecules/Tabs'
 import MainLayout from '../../organisms/MainLayout'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import UserSelectionDialog from '../../organisms/UserSelectionDialog'
+import BtcDisplay from '../../atoms/BtcDisplay'
 
 type NewContractTemplateProps = {
   tab: number
@@ -34,6 +35,7 @@ type NewContractTemplateProps = {
   users: User[]
   oracleInfo?: OracleAssetConfiguration
   contract?: Contract
+  utxoAmount: number
 }
 
 const useStyles = makeStyles({
@@ -131,13 +133,17 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
 
   const [oracleInfo, setOracleInfo] = useState(props.oracleInfo)
 
+  const [utxoAmount, setUtxoAmount] = useState(props.utxoAmount)
+
+  useEffect(() => {
+    setUtxoAmount(props.utxoAmount)
+  }, [props.utxoAmount])
+
   useEffect(() => {
     setOracleInfo(props.oracleInfo)
   }, [props.oracleInfo])
 
-  const validateFeeRate: (feeRateVal?: number) => boolean = (
-    feeRateVal: number = feeRate
-  ) => {
+  const validateFeeRate = (feeRateVal: number = feeRate): boolean => {
     const isValid = Number.isInteger(feeRateVal) && feeRateVal > 1
     return validationBase(
       isValid,
@@ -147,9 +153,9 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     )
   }
 
-  const validateRemoteParty: (remotePartyVal?: string) => boolean = (
+  const validateRemoteParty = (
     remotePartyVal: string = remoteParty
-  ) => {
+  ): boolean => {
     return validationBase(
       remotePartyVal !== '',
       setRemotePartyError,
@@ -158,13 +164,10 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     )
   }
 
-  const validateCollaterals: (
-    localCollateralValue?: number,
-    remoteCollateralValue?: number
-  ) => boolean = (
+  const validateCollaterals = (
     localCollateralValue: number = localCollateral.value,
     remoteCollateralValue: number = remoteCollateral.value
-  ) => {
+  ): boolean => {
     let isValid = localCollateralValue > 2000 || remoteCollateralValue > 2000
     const message = 'One collateral needs to be greater than 2000 satoshis'
     validationBase(
@@ -196,20 +199,24 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
         setRemoteCollateralMessage,
         nanMessage
       )
+
+    isValid =
+      isValid &&
+      validationBase(
+        localCollateralValue <= utxoAmount,
+        setLocalCollateralError,
+        setLocalCollateralMessage,
+        'Not enough UTXOs available'
+      )
     return isValid
   }
 
-  const validateOutcomes: (
-    outcomes?: Outcome[],
-    localCollateralVal?: number,
-    remoteCollateralVal?: number,
-    validateLength?: boolean
-  ) => boolean = (
+  const validateOutcomes = (
     outcomes: Outcome[] = props.data,
     localCollateralVal: number = localCollateral.value,
     remoteCollateralVal: number = remoteCollateral.value,
     validateLength = true
-  ) => {
+  ): boolean => {
     const firstPayout =
       outcomes.length > 0 ? outcomes[0].local + outcomes[0].remote : 0
     const validations: (() => boolean)[] = [
@@ -254,7 +261,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outcomesError, props.data.length])
 
-  const validate: () => boolean = () => {
+  const validate = (): boolean => {
     const validations: (() => boolean)[] = [
       validateFeeRate,
       validateRemoteParty,
@@ -351,26 +358,46 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                 }}
                 label={'Fee rate'}
               />
-              <BitcoinInput
-                value={localCollateral.value}
-                error={localCollateralError}
-                helperText={localCollateralMessage}
-                isBitcoin={localCollateral.isBitcoin}
-                onCoinChange={(isBitcoin: boolean): void => {
-                  const collat = localCollateral
-                  collat.isBitcoin = isBitcoin
-                  setLocalCollateral(collat)
-                }}
-                onChange={(value: number): void => {
-                  setLocalCollateral({
-                    value,
-                    isBitcoin: localCollateral.isBitcoin,
-                  })
-                  validateCollaterals(value)
-                  validateOutcomes(undefined, value, undefined, false)
-                }}
-                label={'Local collateral'}
-              />
+              <Grid className={classes.formGrid} container direction="row">
+                <Grid item xs={8}>
+                  <BitcoinInput
+                    style={{ width: '100%' }}
+                    value={localCollateral.value}
+                    error={localCollateralError}
+                    helperText={localCollateralMessage}
+                    isBitcoin={localCollateral.isBitcoin}
+                    onCoinChange={(isBitcoin: boolean): void => {
+                      const collat = localCollateral
+                      collat.isBitcoin = isBitcoin
+                      setLocalCollateral(collat)
+                    }}
+                    onChange={(value: number): void => {
+                      setLocalCollateral({
+                        value,
+                        isBitcoin: localCollateral.isBitcoin,
+                      })
+                      validateCollaterals(value)
+                      validateOutcomes(undefined, value, undefined, false)
+                    }}
+                    label={'Local collateral'}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <Grid
+                    style={{ textAlign: 'center' }}
+                    container
+                    direction={'column'}
+                  >
+                    <Typography color="textPrimary">
+                      Available Amount:
+                    </Typography>
+                    <BtcDisplay
+                      satValue={utxoAmount}
+                      currency={'BTC'}
+                    ></BtcDisplay>
+                  </Grid>
+                </Grid>
+              </Grid>
               <BitcoinInput
                 value={remoteCollateral.value}
                 isBitcoin={remoteCollateral.isBitcoin}

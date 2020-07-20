@@ -123,6 +123,14 @@ export default class BitcoinDClient {
     return await this.getClient().getNewAddress(label, addressType)
   }
 
+  public async getAvailableUtxoAmount(minConfirmations = 0): Promise<number> {
+    const spendable = (await this.getSpendableUtxos()).filter(
+      x => x.confirmations >= minConfirmations
+    )
+
+    return spendable.reduce((sum, cur) => sum + btcToSats(cur.amount), 0)
+  }
+
   public async getBalance(
     minConfirmations = 0,
     includeWatchOnly = false
@@ -133,9 +141,7 @@ export default class BitcoinDClient {
       includeWatchOnly
     )
 
-    const balanceSats = btcToSats(balanceBtc)
-
-    return balanceSats
+    return btcToSats(balanceBtc)
   }
 
   public async createWallet(name: string, passphrase: string): Promise<void> {
@@ -154,6 +160,16 @@ export default class BitcoinDClient {
     return Utils.getPrivkeyFromWif(wif)
   }
 
+  private async getSpendableUtxos(): Promise<UnspentTxInfo[]> {
+    const unspent = await this.getClient().listUnspent(
+      1,
+      undefined,
+      undefined,
+      false
+    )
+    return unspent.filter(x => x.spendable)
+  }
+
   public async getUtxosForAmount(
     amount: number,
     feeRate?: number,
@@ -162,13 +178,7 @@ export default class BitcoinDClient {
     let success = true
     let utxoSet: Utxo[] = []
     do {
-      const unspent = await this.getClient().listUnspent(
-        1,
-        undefined,
-        undefined,
-        false
-      )
-      const spendable = unspent.filter(x => x.spendable)
+      const spendable = await this.getSpendableUtxos()
       const utxosIn: Utxo[] = spendable.map(utxo => {
         return {
           txid: utxo.txid,

@@ -2,6 +2,7 @@ import {
   CHECK_BITCOIND,
   GET_BALANCE,
   GET_CONFIG,
+  GET_UTXO_AMOUNT,
 } from '../../common/constants/IPC'
 import { BalanceAnswer } from '../../common/models/ipc/BalanceAnswer'
 import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
@@ -58,10 +59,16 @@ export class BitcoinDEvents extends IPCEventsBase {
         tag: GET_CONFIG,
         callback: (): Promise<ConfigAnswer> => this.getConfigCallback(),
       },
+      {
+        tag: GET_UTXO_AMOUNT,
+        callback: (): Promise<BalanceAnswer> => this.getUtxoAmount(),
+      },
     ]
   }
 
-  async bitcoinDCheckCallback(config: BitcoinDConfig): Promise<GeneralAnswer> {
+  private async bitcoinDCheckCallback(
+    config: BitcoinDConfig
+  ): Promise<GeneralAnswer> {
     try {
       await this._client.configure(config)
       await this._storage.WriteBitcoinDConfig(config)
@@ -72,7 +79,7 @@ export class BitcoinDEvents extends IPCEventsBase {
     }
   }
 
-  async getBalanceCallback(): Promise<BalanceAnswer> {
+  private async getBalanceCallback(): Promise<BalanceAnswer> {
     try {
       const balance = await this._client.getBalance()
       return new BalanceAnswer(true, balance)
@@ -81,7 +88,7 @@ export class BitcoinDEvents extends IPCEventsBase {
     }
   }
 
-  async getConfigCallback(): Promise<ConfigAnswer> {
+  private async getConfigCallback(): Promise<ConfigAnswer> {
     if (this._config) {
       return new ConfigAnswer(true, this._config)
     } else {
@@ -90,6 +97,15 @@ export class BitcoinDEvents extends IPCEventsBase {
         null,
         new IPCError('general', -1, 'No valid config found', 'NoValidConfig')
       )
+    }
+  }
+
+  private async getUtxoAmount(): Promise<BalanceAnswer> {
+    try {
+      const balance = await this._client.getAvailableUtxoAmount()
+      return new BalanceAnswer(true, balance)
+    } catch (e) {
+      return new BalanceAnswer(false, 0, e)
     }
   }
 }

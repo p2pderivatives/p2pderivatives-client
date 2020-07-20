@@ -11,6 +11,7 @@ export const GET_USERLIST = 'get-userlist'
 export const CHECK_BITCOIND = 'check-bitcoind'
 export const GET_BALANCE = 'get-balance'
 export const GET_CONFIG = 'get-config'
+export const GET_UTXO_AMOUNT = 'get-utxo-amount'
 
 export const PARSE_OUTCOME = 'parse-outcome'
 

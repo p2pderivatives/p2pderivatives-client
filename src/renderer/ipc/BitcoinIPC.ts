@@ -3,6 +3,7 @@ import {
   CHECK_BITCOIND,
   GET_BALANCE,
   GET_CONFIG,
+  GET_UTXO_AMOUNT,
 } from '../../common/constants/IPC'
 import {
   GeneralAnswer,
@@ -35,15 +36,7 @@ export class BitcoinIPC implements BitcoinAPI {
   }
 
   public async getBalance(): Promise<number> {
-    const answerProps = (await ipc.callMain(GET_BALANCE)) as BalanceAnswerProps
-    const answer = BalanceAnswer.parse(answerProps)
-
-    if (answer.isSuccess()) {
-      return answer.getBalance()
-    } else {
-      const error = answer.getError()
-      throw error
-    }
+    return BitcoinIPC.getBalanceCommon(GET_BALANCE)
   }
 
   public async getConfig(): Promise<BitcoinDConfig> {
@@ -53,6 +46,22 @@ export class BitcoinIPC implements BitcoinAPI {
     const config = answer.getConfig()
     if (answer.isSuccess() && config) {
       return config
+    } else {
+      const error = answer.getError()
+      throw error
+    }
+  }
+
+  public static getUtxoAmount(): Promise<number> {
+    return this.getBalanceCommon(GET_UTXO_AMOUNT)
+  }
+
+  private static async getBalanceCommon(tag: string): Promise<number> {
+    const answerProps = (await ipc.callMain(tag)) as BalanceAnswerProps
+    const answer = BalanceAnswer.parse(answerProps)
+
+    if (answer.isSuccess()) {
+      return answer.getBalance()
     } else {
       const error = answer.getError()
       throw error
