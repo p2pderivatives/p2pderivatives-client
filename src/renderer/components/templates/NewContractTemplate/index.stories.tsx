@@ -48,6 +48,7 @@ export const newContract = (): ReactElement => (
           onCancel={action('onCancel')}
           oracleInfo={oracleInfo}
           onPublish={action('onPublish')}
+          utxoAmount={100000000}
         />
       </div>
     </MuiThemeProvider>

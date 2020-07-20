@@ -18,6 +18,7 @@ import { push } from 'connected-react-router'
 import { offerRequest } from '../../../store/dlc/actions'
 import { Contract } from '../../../../common/models/dlc/Contract'
 import { RouteChildrenProps } from 'react-router'
+import { BitcoinIPC } from '../../../ipc/BitcoinIPC'
 
 const { dialog } = window.require('electron').remote
 
@@ -40,6 +41,8 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
   const [outcomesList, setOutcomesList] = useState<Outcome[]>(
     selectedContract ? merge([...selectedContract.outcomes]) : []
   )
+
+  const [utxoAmount, setUtxoAmount] = useState(0)
 
   const handleCSVImport = (): void => {
     dialog.showOpenDialog({ properties: ['openFile'] }).then(async files => {
@@ -67,14 +70,20 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
     dispatch(push('/main'))
   }
 
-  const getOracleInfo = async (): Promise<void> => {
+  const updateOracleInfo = async (): Promise<void> => {
     const info = await OracleIPC.getOracleConfig('btcusd')
     setOracleInfo(info)
   }
 
+  const updateUtxoAmount = async (): Promise<void> => {
+    const utxoAmount = await BitcoinIPC.getUtxoAmount()
+    setUtxoAmount(utxoAmount)
+  }
+
   useEffect(() => {
     dispatch(userListRequest())
-    getOracleInfo()
+    updateOracleInfo()
+    updateUtxoAmount()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -90,6 +99,7 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
         onCancel={handleCancel}
         oracleInfo={oracleInfo}
         contract={selectedContract}
+        utxoAmount={utxoAmount}
       />
     </div>
   )
