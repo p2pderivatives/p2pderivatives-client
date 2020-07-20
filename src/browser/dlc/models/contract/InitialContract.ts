@@ -24,6 +24,6 @@ export function fromOfferMessage(
     feeRate: offerMessage.feeRate,
     oracleInfo: offerMessage.oracleInfo,
     isLocalParty: false,
-    premiumInfo: offerMessage.premiumInfo,
+    premiumAmount: offerMessage.premiumAmount,
   }
 }

@@ -25,6 +25,7 @@ import {
   DlcMessageType,
 } from '../../src/browser/dlc/models/messages'
 import { getCommonFee } from '../../src/browser/dlc/utils/FeeEstimator'
+import { Outcome } from '../../src/common/models/dlc/Outcome'
 
 const localParty = 'alice'
 const remoteParty = 'bob'
@@ -95,13 +96,14 @@ describe('dlc-event-handler', () => {
       ContractState.MutualCloseProposed
     )
 
+    const getOracleInfoMock = jest.fn()
     const mutualClosedContract = await remotePartyContext.eventHandler.onMutualCloseOffer(
       localParty,
       mutualClosingMessage,
-      () => {
-        throw Error()
-      }
+      getOracleInfoMock
     )
+
+    expect(getOracleInfoMock).not.toHaveBeenCalled()
 
     assertContractState(
       remotePartyContext.dlcService,
@@ -147,7 +149,7 @@ describe('dlc-event-handler', () => {
       carolCollateral + estimatedFee
     )
     await localPartyContext.client.generateBlocksToWallet(1)
-    const offerMessage = await sendOffer(noBtcPartyContext)
+    const offerMessage = await sendOffer({ localContext: noBtcPartyContext })
     await acceptOffer(offerMessage, noBtcPartyContext)
   })
 
@@ -156,7 +158,9 @@ describe('dlc-event-handler', () => {
     const carolCollateral = oneBtc
     await localPartyContext.client.sendToAddress(carolAddress, carolCollateral)
     await localPartyContext.client.generateBlocksToWallet(1)
-    expect(sendOffer(noBtcPartyContext)).rejects.toThrow(Error)
+    expect(sendOffer({ localContext: noBtcPartyContext })).rejects.toThrow(
+      Error
+    )
   })
 
   test('6-on-accept-not-enough-with-fee-should-throw', async () => {
@@ -171,13 +175,11 @@ describe('dlc-event-handler', () => {
   })
 
   test('7-with-dust-payout-mutual-closed-dust-is-discarded', async () => {
-    const offerMessage = await sendOffer(
-      localPartyContext,
-      remotePartyContext,
-      0.5 * oneBtc,
-      0.5 * oneBtc,
-      outcomesWithDust
-    )
+    const offerMessage = await sendOffer({
+      localCollateral: 0.5 * oneBtc,
+      remoteCollateral: 0.5 * oneBtc,
+      outcomes: outcomesWithDust,
+    })
     await acceptOffer(offerMessage)
     const mutualClosedOfferContract = await localPartyContext.eventHandler.onSendMutualCloseOffer(
       offerMessage.contractId,
@@ -205,13 +207,11 @@ describe('dlc-event-handler', () => {
   })
 
   test('8-with-dust-payout-unilateral-local-closed-dust-is-discarded', async () => {
-    const offerMessage = await sendOffer(
-      localPartyContext,
-      remotePartyContext,
-      0.5 * oneBtc,
-      0.5 * oneBtc,
-      outcomesWithDust
-    )
+    const offerMessage = await sendOffer({
+      localCollateral: 0.5 * oneBtc,
+      remoteCollateral: 0.5 * oneBtc,
+      outcomes: outcomesWithDust,
+    })
     await acceptOffer(offerMessage)
 
     const localContract = await localPartyContext.eventHandler.onUnilateralClose(
@@ -228,13 +228,11 @@ describe('dlc-event-handler', () => {
   })
 
   test('9-with-dust-payout-unilateral-remote-closed-dust-is-discarded', async () => {
-    const offerMessage = await sendOffer(
-      localPartyContext,
-      remotePartyContext,
-      0.5 * oneBtc,
-      0.5 * oneBtc,
-      outcomesWithDust
-    )
+    const offerMessage = await sendOffer({
+      localCollateral: 0.5 * oneBtc,
+      remoteCollateral: 0.5 * oneBtc,
+      outcomes: outcomesWithDust,
+    })
     await acceptOffer(offerMessage)
 
     const remoteContract = await remotePartyContext.eventHandler.onUnilateralClose(
@@ -409,10 +407,12 @@ describe('dlc-event-handler', () => {
       carolCollateral + estimatedFee
     )
     await localPartyContext.client.generateBlocksToWallet(1)
-    const offerMessage = await sendOffer(noBtcPartyContext)
+    const offerMessage = await sendOffer({
+      localContext: noBtcPartyContext,
+    })
     await rejectOffer(offerMessage, noBtcPartyContext)
 
-    const offerMessage2 = await sendOffer(noBtcPartyContext)
+    const offerMessage2 = await sendOffer({ localContext: noBtcPartyContext })
     await acceptOffer(offerMessage2, noBtcPartyContext)
   })
 
@@ -433,13 +433,14 @@ describe('dlc-event-handler', () => {
       ContractState.MutualCloseProposed
     )
 
+    const getOracleInfoMock = jest.fn()
     await localPartyContext.eventHandler.onMutualCloseOffer(
       remoteParty,
       mutualClosingMessage,
-      () => {
-        throw Error()
-      }
+      getOracleInfoMock
     )
+
+    expect(getOracleInfoMock).not.toHaveBeenCalled()
 
     expect(
       remotePartyContext.client.getTransaction(
@@ -448,13 +449,55 @@ describe('dlc-event-handler', () => {
     ).resolves.toBeDefined()
   })
 
+  test('17-mutual-closing-with-premium', async () => {
+    const offerMessage = await sendOffer({ premiumAmount: 10000 })
+    await acceptOffer(offerMessage)
+    const mutualClosedOfferContract = await localPartyContext.eventHandler.onSendMutualCloseOffer(
+      offerMessage.contractId,
+      baseOutcomes[0]
+    )
+    const mutualClosingMessage = toMutualClosingMessage(
+      mutualClosedOfferContract
+    )
+
+    assertContractState(
+      localPartyContext.dlcService,
+      mutualClosingMessage.contractId,
+      ContractState.MutualCloseProposed
+    )
+
+    const getOracleInfoMock = jest.fn()
+    const mutualClosedContract = await remotePartyContext.eventHandler.onMutualCloseOffer(
+      localParty,
+      mutualClosingMessage,
+      getOracleInfoMock
+    )
+
+    expect(getOracleInfoMock).not.toHaveBeenCalled()
+
+    assertContractState(
+      remotePartyContext.dlcService,
+      mutualClosedContract.id,
+      ContractState.MutualClosed
+    )
+  })
+
   async function sendOffer(
-    localContext = localPartyContext,
-    remoteContext = remotePartyContext,
-    localCollateral = 1 * oneBtc,
-    remoteCollateral = 1 * oneBtc,
-    outcomes = baseOutcomes
+    params: {
+      localContext?: PartyContext
+      remoteContext?: PartyContext
+      localCollateral?: number
+      remoteCollateral?: number
+      outcomes?: Outcome[]
+      premiumAmount?: number
+    } = {}
   ): Promise<OfferMessage> {
+    const localContext = params.localContext || localPartyContext
+    const remoteContext = params.remoteContext || remotePartyContext
+    const localCollateral = params.localCollateral || 1 * oneBtc
+    const remoteCollateral = params.remoteCollateral || 1 * oneBtc
+    const outcomes = params.outcomes || baseOutcomes
+    const premiumAmount = params.premiumAmount || 0
     const contract: Contract = {
       state: ContractState.Initial,
       oracleInfo: {
@@ -471,6 +514,7 @@ describe('dlc-event-handler', () => {
         .toMillis(),
       outcomes,
       feeRate: 2,
+      premiumAmount,
     }
 
     return await testOnSendOffer(contract, localContext)

@@ -43,10 +43,6 @@ function generateContract(
       assetId: 'btcusd',
     },
     isLocalParty: true,
-    premiumInfo: {
-      premiumAmount: 10000,
-      localPays: true,
-    },
   }
 }
 

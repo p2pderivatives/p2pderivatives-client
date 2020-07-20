@@ -111,6 +111,10 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     value: contract.remoteCollateral,
     isBitcoin: true,
   })
+  const [optionPremium, setOptionPremium] = useState({
+    value: contract.premiumAmount || 0,
+    isBitcoin: true,
+  })
   const [feeRate, setFeeRate] = useState(contract.feeRate)
   const [maturityDate, setMaturityDate] = useState(
     DateTime.fromMillis(contract.maturityTime)
@@ -124,6 +128,9 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
 
   const [remoteCollateralError, setRemoteCollateralError] = useState(false)
   const [remoteCollateralMessage, setRemoteCollateralMessage] = useState('')
+
+  const [optionPremiumError, setOptionPremiumError] = useState(false)
+  const [optionPremiumMessage, setOptionPremiumMessage] = useState('')
 
   const [remotePartyError, setRemotePartyError] = useState(false)
   const [remotePartyMessage, setRemotePartyMessage] = useState('')
@@ -166,7 +173,8 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
 
   const validateCollaterals = (
     localCollateralValue: number = localCollateral.value,
-    remoteCollateralValue: number = remoteCollateral.value
+    remoteCollateralValue: number = remoteCollateral.value,
+    optionPremiumValue: number = optionPremium.value
   ): boolean => {
     let isValid = localCollateralValue > 2000 || remoteCollateralValue > 2000
     const message = 'One collateral needs to be greater than 2000 satoshis'
@@ -200,15 +208,26 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
         nanMessage
       )
 
-    isValid =
-      isValid &&
+    const enoughUtxos = localCollateralValue + optionPremiumValue <= utxoAmount
+    const notEnoughUtxoMsg = 'Not enough UTXOs available'
+
+    if (isValid) {
       validationBase(
-        localCollateralValue <= utxoAmount,
+        enoughUtxos,
         setLocalCollateralError,
         setLocalCollateralMessage,
-        'Not enough UTXOs available'
+        notEnoughUtxoMsg
       )
-    return isValid
+    }
+
+    validationBase(
+      enoughUtxos,
+      setOptionPremiumError,
+      setOptionPremiumMessage,
+      notEnoughUtxoMsg
+    )
+
+    return enoughUtxos && isValid
   }
 
   const validateOutcomes = (
@@ -299,6 +318,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       outcomes: props.data,
       state: ContractState.Initial,
       maturityTime: maturityDate.toMillis(),
+      premiumAmount: optionPremium.value,
     }
     props.onPublish(publishContract)
   }
@@ -417,6 +437,25 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                   validateOutcomes(undefined, undefined, value, false)
                 }}
                 label={'Remote collateral'}
+              />
+              <BitcoinInput
+                value={optionPremium.value}
+                isBitcoin={optionPremium.isBitcoin}
+                error={optionPremiumError}
+                helperText={optionPremiumMessage}
+                onCoinChange={(isBitcoin: boolean): void => {
+                  const collat = optionPremium
+                  collat.isBitcoin = isBitcoin
+                  setOptionPremium(collat)
+                }}
+                onChange={(value: number): void => {
+                  setOptionPremium({
+                    value,
+                    isBitcoin: optionPremium.isBitcoin,
+                  })
+                  validateCollaterals(undefined, undefined, value)
+                }}
+                label={'Option Premium'}
               />
               <FormControl>
                 <FormLabel error={outcomesError} color="secondary">
