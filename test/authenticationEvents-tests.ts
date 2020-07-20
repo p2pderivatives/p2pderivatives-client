@@ -12,7 +12,7 @@ import { LOGIN, LOGOUT } from '../src/common/constants/IPC'
 @suite('IPC-Auth')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
-  @test async ipcLoginShouldSucceed() {
+  @test async ipcLoginShouldSucceed(): Promise<void> {
     const loginCall = new LoginCall('test', 'test')
     const result = (await ipc.callMain(LOGIN, loginCall)) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(result)
@@ -21,7 +21,7 @@ class Main {
     expect(answer.getError()).eq(null)
   }
 
-  @test async ipcLoginFailsWithWrongPassword() {
+  @test async ipcLoginFailsWithWrongPassword(): Promise<void> {
     const loginCall = new LoginCall('error', 'test')
     const result = (await ipc.callMain(LOGIN, loginCall)) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(result)
@@ -34,7 +34,7 @@ class Main {
     }
   }
 
-  @test async ipcLogoutShouldSucceed() {
+  @test async ipcLogoutShouldSucceed(): Promise<void> {
     const result = (await ipc.callMain(LOGOUT)) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(result)
 

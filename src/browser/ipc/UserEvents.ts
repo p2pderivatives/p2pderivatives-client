@@ -1,5 +1,4 @@
 import { UserInfo } from '@internal/gen-grpc/user_pb'
-import { ClientReadableStream } from 'grpc'
 import {
   GET_USERLIST,
   REGISTER_USER,
@@ -16,7 +15,6 @@ import { TaggedCallback } from './TaggedCallback'
 
 export class UserEvents extends IPCEventsBase {
   private _client: GrpcClient
-  private _listStream: ClientReadableStream<UserInfo> | null = null
 
   public constructor(client: GrpcClient) {
     super()
@@ -75,18 +73,15 @@ export class UserEvents extends IPCEventsBase {
 
     return new Promise<UserListAnswer>((resolve, reject) => {
       try {
-        this._listStream = this._client.getUserService().getConnectedUsers()
-        this._listStream.on('data', (data: UserInfo) => {
+        const listStream = this._client.getUserService().getConnectedUsers()
+        listStream.on('data', (data: UserInfo) => {
           userList.push(new User(data.getName()))
         })
-        this._listStream.on('error', error => {
+        listStream.on('error', error => {
           reject(error.message)
         })
-        this._listStream.on('end', () => {
-          if (this._listStream) {
-            this._listStream.removeAllListeners()
-            this._listStream = null
-          }
+        listStream.on('end', () => {
+          listStream.removeAllListeners()
           return resolve(new UserListAnswer(true, userList))
         })
       } catch (e) {

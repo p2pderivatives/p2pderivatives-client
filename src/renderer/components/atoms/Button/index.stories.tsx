@@ -16,7 +16,7 @@ export default {
 type buttonColorType = 'primary' | 'secondary' | 'inherit' | 'default'
 const buttonColorValues: buttonColorType[] = ['primary', 'secondary']
 
-export const button = () => (
+export const button = (): JSX.Element => (
   <MuiThemeProvider theme={theme}>
     <Button
       variant="contained"
@@ -28,7 +28,7 @@ export const button = () => (
   </MuiThemeProvider>
 )
 
-export const outlinedButton = () => (
+export const outlinedButton = (): JSX.Element => (
   <MuiThemeProvider theme={theme}>
     <Button
       variant="outlined"
