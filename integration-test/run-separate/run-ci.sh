@@ -3,7 +3,7 @@
 set -e
 
 tests=("$@")
-tests=${tests:-$(seq 1 1 21)}
+tests=${tests:-$(seq 1 1 22)}
 
 dcci='docker-compose -f docker-compose.yml -f docker-compose.ci-separate.yml'
 

@@ -68,7 +68,8 @@ export class ContractUpdater {
 
   private async getPartyInputs(
     privateParams: PrivateParams,
-    utxos: Utxo[]
+    utxos: Utxo[],
+    premiumDestAddress = false
   ): Promise<PartyInputs> {
     const fundPublicKey = Utils.getPubkeyFromPrivkey(
       privateParams.fundPrivateKey
@@ -78,6 +79,9 @@ export class ContractUpdater {
     )
     const changeAddress = await this.walletClient.getNewAddress()
     const finalAddress = await this.walletClient.getNewAddress()
+    const premiumDest = premiumDestAddress
+      ? await this.walletClient.getNewAddress()
+      : undefined
 
     return {
       fundPublicKey,
@@ -85,6 +89,7 @@ export class ContractUpdater {
       changeAddress,
       finalAddress,
       utxos,
+      premiumDest,
     }
   }
 
@@ -128,7 +133,11 @@ export class ContractUpdater {
         contract.feeRate
       )
       privateParams = await this.getNewPrivateParams(utxos)
-      remotePartyInputs = await this.getPartyInputs(privateParams, utxos)
+      remotePartyInputs = await this.getPartyInputs(
+        privateParams,
+        utxos,
+        contract.premiumAmount !== undefined && contract.premiumAmount > 0
+      )
     }
 
     const dlcTxRequest: cfddlcjs.CreateDlcTransactionsRequest = {
@@ -161,6 +170,8 @@ export class ContractUpdater {
       maturityTime: Math.floor(contract.maturityTime / 1000) - 2 * 3600,
       // TODO(tibo): set refund time as parameter
       refundLocktime: Math.floor(contract.maturityTime / 1000) + 86400 * 7,
+      optionDest: remotePartyInputs.premiumDest,
+      optionPremium: contract.premiumAmount,
     }
 
     const dlcTransactions = cfddlcjs.CreateDlcTransactions(dlcTxRequest)

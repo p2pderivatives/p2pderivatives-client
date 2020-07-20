@@ -1,5 +1,4 @@
 import { Outcome } from './Outcome'
-import { PremiumInfo } from './PremiumInfo'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
 
 export enum ContractState {
@@ -29,7 +28,7 @@ export interface Contract {
   readonly maturityTime: number
   readonly feeRate: number
   readonly oracleInfo?: OracleInfo
-  readonly premiumInfo?: PremiumInfo
+  readonly premiumAmount?: number
   readonly isLocalParty?: boolean
   readonly finalOutcome?: Outcome
 }

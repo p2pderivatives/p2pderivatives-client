@@ -6,4 +6,5 @@ export interface PartyInputs {
   readonly changeAddress: string
   readonly finalAddress: string
   readonly utxos: ReadonlyArray<Utxo>
+  readonly premiumDest?: string
 }
