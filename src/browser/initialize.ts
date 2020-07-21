@@ -6,9 +6,10 @@ import levelup, { LevelUp } from 'levelup'
 import path from 'path'
 import { createLogger, format, transports } from 'winston'
 import 'winston-daily-rotate-file'
+import { IPCEvents } from '../common/models/ipc/IPCEvents'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
-import { GrpcConfig } from './api/grpc/GrpcConfig'
+import { GrpcConfig, isSecureGrpcConfig } from './api/grpc/GrpcConfig'
 import { OracleClient, OracleConfig } from './api/oracle'
 import { AppConfig } from './config/config'
 import { LevelConfigRepository } from './config/LevelConfigRepository'
@@ -22,7 +23,6 @@ import { BitcoinDEvents } from './ipc/BitcoinDEvents'
 import { DlcEvents } from './ipc/DlcEvents'
 import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
 import { FileEvents } from './ipc/FileEvents'
-import { IPCEvents } from '../common/models/ipc/IPCEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
 
@@ -147,6 +147,13 @@ export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
 
   const auth = new GrpcAuth()
   const grpcConfig = appConfig.parse<GrpcConfig>('grpc')
+  if (isSecureGrpcConfig(grpcConfig)) {
+    if (!path.isAbsolute(grpcConfig.certificatePath))
+      grpcConfig.certificatePath = path.join(
+        resourcesPath,
+        grpcConfig.certificatePath
+      )
+  }
   const grpcClient = new GrpcClient(grpcConfig, auth)
   const dlcIPCBrowser = new DlcIPCBrowser(browserWindow)
 

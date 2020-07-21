@@ -1,5 +1,6 @@
 grpc:
-  host: '3.115.1.105:444'
-  secure: false
+  host: 'server.p2pderivatives.io:443'
+  secure: true
+  certificatePath: ./p2pderivatives.io.crt
 oracle:
-  baseUrl: 'http://3.115.1.105:443'
+  baseUrl: 'https://oracle.p2pderivatives.io'

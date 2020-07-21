@@ -1,5 +1,5 @@
 grpc:
-  host: '127.0.0.1:8081'
+  host: 'localhost:8081'
   secure: false
 oracle:
   baseUrl: 'http://localhost:8080'

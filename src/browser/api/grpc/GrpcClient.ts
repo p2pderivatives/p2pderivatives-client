@@ -6,11 +6,11 @@ import { IUserClient, UserClient } from '@internal/gen-grpc/user_grpc_pb'
 import * as fs from 'fs'
 import * as grpc from 'grpc'
 import { AuthenticationService } from './AuthenticationService'
+import { DlcMessageService } from './DlcMessageService'
 import { GrpcAuth } from './GrpcAuth'
 import { GrpcConfig, isSecureGrpcConfig } from './GrpcConfig'
 import { GrpcError } from './GrpcError'
 import { UserService } from './UserService'
-import { DlcMessageService } from './DlcMessageService'
 
 export class GrpcClient {
   private _authService: AuthenticationService
