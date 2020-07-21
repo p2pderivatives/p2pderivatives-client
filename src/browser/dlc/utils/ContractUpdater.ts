@@ -1,5 +1,5 @@
 import * as cfddlcjs from 'cfd-dlc-js'
-import { DecodeRawTransactionResponse } from 'cfd-js'
+import { DecodeRawTransactionResponse, CfdError } from 'cfd-js'
 import { DateTime, Duration } from 'luxon'
 import { ContractState } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
@@ -98,7 +98,7 @@ export class ContractUpdater {
   }
 
   async toOfferedContract(
-    contract: InitialContract,
+    contract: InitialContract | AcceptedContract,
     localPartyInputs?: PartyInputs
   ): Promise<OfferedContract> {
     const collateral = contract.isLocalParty
@@ -106,6 +106,10 @@ export class ContractUpdater {
       : contract.remoteCollateral
     const commonFee = getCommonFee(contract.feeRate)
     let privateParams: PrivateParams | undefined = undefined
+
+    if ('remotePartyInputs' in contract) {
+      await this.unlockUtxos(contract)
+    }
 
     if (!localPartyInputs) {
       try {
@@ -115,8 +119,14 @@ export class ContractUpdater {
         )
         privateParams = await this.getNewPrivateParams(utxos)
         localPartyInputs = await this.getPartyInputs(privateParams, utxos)
-      } catch {
-        throw new DlcError(notEnoughUtxoErrorMessage)
+      } catch (e) {
+        if ('code' in e && e.code === 'ECONNREFUSED') {
+          throw new DlcError('Unable to connect to bitcoind')
+        }
+        if (e instanceof CfdError && e.getErrorInformation().code === 2) {
+          throw new DlcError(notEnoughUtxoErrorMessage)
+        }
+        throw new DlcError('Unknown error')
       }
     }
 
@@ -793,8 +803,8 @@ export class ContractUpdater {
     contract: AnyContract
   ): contract is OfferedContract | AcceptedContract {
     return (
-      contract.state == ContractState.Accepted ||
-      contract.state == ContractState.Offered
+      contract.state === ContractState.Accepted ||
+      contract.state === ContractState.Offered
     )
   }
 

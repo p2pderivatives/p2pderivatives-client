@@ -17,9 +17,6 @@ import ContractListTemplate from '../../templates/ContractListTemplate'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
-const contractOfferErrorMsg =
-  'Could not offer contract. You can try again by clicking on the failed contract.'
-
 const ContractOverviewPage: FC = () => {
   const dispatch = useDispatch()
   const contracts = useSelector(state => state.dlc.contracts)
@@ -32,7 +29,7 @@ const ContractOverviewPage: FC = () => {
     dispatch(dlcSelectContract())
     dispatch(contractRequest())
     if (displayError && dlcError) {
-      snackbar.createSnack(contractOfferErrorMsg, 'error')
+      snackbar.createSnack(dlcError, 'error')
       setDisplayError(false)
     }
     dispatch(dlcActionError({ error: '' }))

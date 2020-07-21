@@ -39,7 +39,7 @@ export class DlcEventHandler {
     this._dlcService = dlcService
   }
 
-  async onSendOffer(contract: Contract): Promise<OfferedContract> {
+  async onInitialize(contract: Contract): Promise<InitialContract> {
     if (!contract.oracleInfo) {
       throw new Error('Invalid state')
     }
@@ -63,6 +63,12 @@ export class DlcEventHandler {
       await this._dlcService.createContract(initialContract)
     }
 
+    return initialContract
+  }
+
+  async onSendOffer(
+    initialContract: InitialContract
+  ): Promise<OfferedContract> {
     const offeredContract = await this._contractUpdater.toOfferedContract(
       initialContract
     )
@@ -72,14 +78,18 @@ export class DlcEventHandler {
     return offeredContract
   }
 
-  async onSendOfferFail(contractId: string): Promise<FailedContract> {
+  async onSendOfferFail(
+    contractId: string,
+    reason: string
+  ): Promise<FailedContract> {
     const offeredContract = (await this.tryGetContractOrThrow(contractId, [
       ContractState.Offered,
-    ])) as OfferedContract
+      ContractState.Initial,
+    ])) as OfferedContract | InitialContract
 
     const failedContract = await this._contractUpdater.toFailedContract(
       offeredContract,
-      'Failed to send offer'
+      'Failed to send offer ' + reason
     )
 
     await this._dlcService.updateContract(failedContract)
@@ -117,6 +127,21 @@ export class DlcEventHandler {
     await this._dlcService.updateContract(acceptedContract)
 
     return acceptedContract
+  }
+
+  async onOfferAcceptFailed(contractId: string): Promise<OfferedContract> {
+    const acceptedContract = (await this.tryGetContractOrThrow(contractId, [
+      ContractState.Accepted,
+    ])) as AcceptedContract
+
+    const offeredContract = await this._contractUpdater.toOfferedContract(
+      acceptedContract,
+      acceptedContract.localPartyInputs
+    )
+
+    await this._dlcService.updateContract(offeredContract)
+
+    return offeredContract
   }
 
   async onAcceptMessage(
