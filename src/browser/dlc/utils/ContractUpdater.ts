@@ -115,8 +115,16 @@ export class ContractUpdater {
         )
         privateParams = await this.getNewPrivateParams(utxos)
         localPartyInputs = await this.getPartyInputs(privateParams, utxos)
-      } catch {
-        throw new DlcError(notEnoughUtxoErrorMessage)
+      } catch (e) {
+        if ('code' in e && e.code === 'ECONNREFUSED') {
+          throw new DlcError('Unable to connect to bitcoind')
+        }
+        const message = e.message as string
+        // TODO(tibo): better matching once cfd has proper error type.
+        if (message.includes('illegal_state')) {
+          throw new DlcError(notEnoughUtxoErrorMessage)
+        }
+        throw new DlcError('Unknown error')
       }
     }
 
@@ -793,8 +801,8 @@ export class ContractUpdater {
     contract: AnyContract
   ): contract is OfferedContract | AcceptedContract {
     return (
-      contract.state == ContractState.Accepted ||
-      contract.state == ContractState.Offered
+      contract.state === ContractState.Accepted ||
+      contract.state === ContractState.Offered
     )
   }
 

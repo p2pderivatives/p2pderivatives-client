@@ -75,8 +75,8 @@ export function* handleAccept(
     }
     yield put(dlcActionSuccess(answer._contract))
   } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(dlcActionError({ error: err.getMessage() }))
+    if ('_message' in err) {
+      yield put(dlcActionError({ error: err._message }))
     } else {
       yield put(dlcActionError({ error: 'An unknown error occured.' }))
     }
@@ -98,8 +98,8 @@ export function* handleReject(
     }
     yield put(dlcActionSuccess(answer._contract))
   } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(dlcActionError({ error: err.getMessage() }))
+    if ('_message' in err) {
+      yield put(dlcActionError({ error: err._message }))
     } else {
       yield put(dlcActionError({ error: 'An unknown error occured.' }))
     }

@@ -562,7 +562,12 @@ describe('dlc-event-handler', () => {
     contract: Contract,
     localContext = localPartyContext
   ): Promise<OfferMessage> {
-    let offeredContract = await localContext.eventHandler.onSendOffer(contract)
+    const initialContract = await localContext.eventHandler.onInitialize(
+      contract
+    )
+    let offeredContract = await localContext.eventHandler.onSendOffer(
+      initialContract
+    )
 
     expect(offeredContract.localPartyInputs.utxos.length).toBeGreaterThan(0)
 
