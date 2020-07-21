@@ -77,7 +77,7 @@ const ContractListTemplate: FC<ContractListTemplateProps> = (
           statuses.some(state => state === ContractState.Offered) &&
           c.state === ContractState.Offered
         ) {
-          show = show && c.counterPartyName !== props.username
+          show = show && !c.isLocalParty
         }
         return show
       })
