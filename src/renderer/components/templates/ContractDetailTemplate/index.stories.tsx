@@ -1,16 +1,17 @@
+import { MuiThemeProvider } from '@material-ui/core'
+import { action } from '@storybook/addon-actions'
+import { number, withKnobs } from '@storybook/addon-knobs'
 import React, { ReactElement } from 'react'
 import StoryRouter from 'storybook-react-router'
-import ContractDetailTemplate from './'
-import { MuiThemeProvider } from '@material-ui/core'
-import theme from '../../theme'
-import { contracts } from '../../stories-data/contracts'
-import { action } from '@storybook/addon-actions'
-import configureStore from '../../stories-data/createStoriesStore'
 import ProviderWrapper from '../../../provider'
+import { contracts } from '../../stories-data/contracts'
+import configureStore from '../../stories-data/createStoriesStore'
+import theme from '../../theme'
+import ContractDetailTemplate from './'
 
 export default {
   title: 'Components/Templates/ContractDetailTemplate',
-  decorators: [StoryRouter()],
+  decorators: [StoryRouter(), withKnobs],
 }
 
 const store = configureStore()
@@ -24,6 +25,7 @@ export const contractDetail = (): ReactElement => (
           acceptContract={action('Accept Contract')}
           rejectContract={action('Reject Contract')}
           cancel={action('Cancel')}
+          availableAmount={number('Available amount', 300000000)}
         />
       </MuiThemeProvider>
     </div>

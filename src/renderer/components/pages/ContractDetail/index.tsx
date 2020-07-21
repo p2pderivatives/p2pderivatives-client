@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import {
   useSelector as useReduxSelector,
   TypedUseSelectorHook,
@@ -10,6 +10,7 @@ import ContractDetailTemplate from '../../templates/ContractDetailTemplate'
 import { push } from 'connected-react-router'
 import { RouteChildrenProps } from 'react-router'
 import { acceptRequest, rejectRequest } from '../../../store/dlc/actions'
+import { BitcoinIPC } from '../../../ipc/BitcoinIPC'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
@@ -20,6 +21,17 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
   const contractId = props.match ? props.match.params.id : ''
   const contracts = useSelector(state => state.dlc.contracts)
   const contract = contracts.find(c => c.id === contractId)
+
+  const [availableAmount, setAvailableAmount] = useState(0)
+
+  const getUtxoAmount = async (): Promise<void> => {
+    const amount = await BitcoinIPC.getUtxoAmount()
+    setAvailableAmount(amount)
+  }
+
+  useEffect(() => {
+    getUtxoAmount()
+  }, [])
 
   useEffect(() => {
     if (!contract) {
@@ -50,6 +62,7 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
           acceptContract={handleAccept}
           rejectContract={handleReject}
           cancel={handleCancel}
+          availableAmount={availableAmount}
         />
       )}
     </div>

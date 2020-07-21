@@ -13,6 +13,7 @@ type ContractDetailTemplateProps = {
   acceptContract: () => void
   rejectContract: () => void
   cancel: () => void
+  availableAmount: number
 }
 
 const useStyles = makeStyles({
@@ -105,6 +106,7 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
               cancel={handleCancel}
               acceptContract={handleAccept}
               rejectContract={handleReject}
+              availableAmount={props.availableAmount}
             />
           )}
           {tabIndex === 1 && (
