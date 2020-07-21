@@ -6,6 +6,7 @@ import { DlcTypedMessage } from '../../dlc/models/messages/DlcTypedMessage'
 import { GrpcAuth } from './GrpcAuth'
 import { promisify } from './grpcPromisify'
 import { Readable } from 'stream'
+import { AuthenticationService } from './AuthenticationService'
 
 export interface DlcMessageServiceApi {
   sendDlcMessage(message: DlcTypedMessage, dest: string): Promise<void>
@@ -15,11 +16,13 @@ export interface DlcMessageServiceApi {
 export class DlcMessageStream {
   constructor(
     private readonly grpcStream: Readable,
+    private readonly authService: AuthenticationService,
     readonly cancel: () => void
   ) {}
 
   async *listen(): AsyncGenerator<DlcAbstractMessage, void, unknown> {
     try {
+      await this.authService.refresh()
       for await (const chunk of this.grpcStream) {
         const message = JSON.parse(
           new TextDecoder().decode(chunk.getPayload() as Uint8Array)
@@ -44,17 +47,18 @@ export class DlcMessageStream {
 
 export class DlcMessageService implements DlcMessageService {
   private readonly _client: IUserClient
-  private readonly _auth: GrpcAuth
+  private readonly _authService: AuthenticationService
 
-  constructor(client: IUserClient, auth: GrpcAuth) {
+  constructor(client: IUserClient, authService: AuthenticationService) {
     this._client = client
-    this._auth = auth
+    this._authService = authService
   }
 
   public async sendDlcMessage(
     message: DlcTypedMessage,
     dest: string
   ): Promise<void> {
+    await this._authService.refresh()
     const payload = new Uint8Array(
       new TextEncoder().encode(JSON.stringify(message))
     )
@@ -62,7 +66,10 @@ export class DlcMessageService implements DlcMessageService {
     dlcMessage.setDestName(dest)
     dlcMessage.setPayload(payload)
     const metaData = new Metadata()
-    metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
+    metaData.add(
+      GrpcAuth.AuthTokenMeta,
+      this._authService.getGrpcAuth().getAuthToken()
+    )
 
     const sendDlcMessageAsync = promisify<DlcMessage, Empty>(
       this._client.sendDlcMessage.bind(this._client)
@@ -73,10 +80,15 @@ export class DlcMessageService implements DlcMessageService {
 
   public getDlcMessageStream(): DlcMessageStream {
     const metaData = new Metadata()
-    metaData.add(GrpcAuth.AuthTokenMeta, this._auth.getAuthToken())
+    metaData.add(
+      GrpcAuth.AuthTokenMeta,
+      this._authService.getGrpcAuth().getAuthToken()
+    )
 
     const grpcStream = this._client.receiveDlcMessages(new Empty(), metaData)
 
-    return new DlcMessageStream(grpcStream, () => grpcStream.cancel())
+    return new DlcMessageStream(grpcStream, this._authService, () =>
+      grpcStream.cancel()
+    )
   }
 }

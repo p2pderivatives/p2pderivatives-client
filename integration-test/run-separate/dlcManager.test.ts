@@ -19,6 +19,8 @@ import {
   getNewPartyContext,
   PartyContext,
 } from './integrationTestCommons'
+import { AuthenticationService } from '../../src/browser/api/grpc/AuthenticationService'
+import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
 
 const localParty = 'alice'
 const remoteParty = 'bob'
@@ -491,7 +493,19 @@ function sendDlcMessageMock(
 }
 
 function getDlcMessageStreamMock(stream: Readable): DlcMessageStream {
-  return new DlcMessageStream(stream, () => {
-    // do nothing
-  })
+  const grpcAuth = new GrpcAuth()
+  grpcAuth.authorize('', 100000, '')
+  return new DlcMessageStream(
+    stream,
+    new AuthenticationService(
+      {
+        login: jest.fn(),
+        refresh: jest.fn(),
+        logout: jest.fn(),
+        updatePassword: jest.fn(),
+      },
+      grpcAuth
+    ),
+    jest.fn()
+  )
 }
