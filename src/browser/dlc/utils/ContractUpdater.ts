@@ -20,18 +20,22 @@ import {
   SignedContract,
   UnilateralClosedByOtherContract,
   UnilateralClosedContract,
+  AnyContract,
 } from '../models/contract'
 import { MutualClosingMessage } from '../models/messages'
 import { PartyInputs } from '../models/PartyInputs'
 import { Utxo } from '../models/Utxo'
 import * as Utils from './CfdUtils'
 import { getCommonFee } from './FeeEstimator'
+import { DlcError } from './DlcEventHandler'
 
 const csvDelay = 144
 const proposeTimeOutDuration = Duration.fromObject({ seconds: 30 })
 
 const witnessV0KeyHash = 'witness_v0_keyhash'
 const witnessV0ScriptHash = 'witness_v0_scripthash'
+
+const notEnoughUtxoErrorMessage = 'Not enough UTXO for collateral and fees.'
 
 enum DustDiscardedParty {
   local = 1,
@@ -104,12 +108,16 @@ export class ContractUpdater {
     let privateParams: PrivateParams | undefined = undefined
 
     if (!localPartyInputs) {
-      const utxos = await this.walletClient.getUtxosForAmount(
-        collateral + commonFee,
-        contract.feeRate
-      )
-      privateParams = await this.getNewPrivateParams(utxos)
-      localPartyInputs = await this.getPartyInputs(privateParams, utxos)
+      try {
+        const utxos = await this.walletClient.getUtxosForAmount(
+          collateral + commonFee,
+          contract.feeRate
+        )
+        privateParams = await this.getNewPrivateParams(utxos)
+        localPartyInputs = await this.getPartyInputs(privateParams, utxos)
+      } catch {
+        throw new DlcError(notEnoughUtxoErrorMessage)
+      }
     }
 
     return {
@@ -128,16 +136,20 @@ export class ContractUpdater {
   ): Promise<AcceptedContract> {
     let privateParams = contract.privateParams
     if (!remotePartyInputs || !privateParams) {
-      const utxos = await this.walletClient.getUtxosForAmount(
-        contract.remoteCollateral,
-        contract.feeRate
-      )
-      privateParams = await this.getNewPrivateParams(utxos)
-      remotePartyInputs = await this.getPartyInputs(
-        privateParams,
-        utxos,
-        contract.premiumAmount !== undefined && contract.premiumAmount > 0
-      )
+      try {
+        const utxos = await this.walletClient.getUtxosForAmount(
+          contract.remoteCollateral,
+          contract.feeRate
+        )
+        privateParams = await this.getNewPrivateParams(utxos)
+        remotePartyInputs = await this.getPartyInputs(
+          privateParams,
+          utxos,
+          contract.premiumAmount !== undefined && contract.premiumAmount > 0
+        )
+      } catch {
+        throw new DlcError(notEnoughUtxoErrorMessage)
+      }
     }
 
     const dlcTxRequest: cfddlcjs.CreateDlcTransactionsRequest = {
@@ -777,11 +789,20 @@ export class ContractUpdater {
     }
   }
 
+  isOfferedOrAccepted(
+    contract: AnyContract
+  ): contract is OfferedContract | AcceptedContract {
+    return (
+      contract.state == ContractState.Accepted ||
+      contract.state == ContractState.Offered
+    )
+  }
+
   async toFailedContract(
-    contract: OfferedContract | AcceptedContract,
+    contract: InitialContract | OfferedContract | AcceptedContract,
     reason: string
   ): Promise<FailedContract> {
-    await this.unlockUtxos(contract)
+    if (this.isOfferedOrAccepted(contract)) await this.unlockUtxos(contract)
     return {
       ...contract,
       state: ContractState.Failed,

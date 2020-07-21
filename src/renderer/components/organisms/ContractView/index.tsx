@@ -10,6 +10,7 @@ export type ContractViewProps = {
   acceptContract: () => void
   rejectContract: () => void
   cancel: () => void
+  availableAmount: number
 }
 
 type ContentType = ContentTypeString | ContentTypeBtc
@@ -113,6 +114,9 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
   const classes = useStyles()
   const [contract, setContract] = useState(props.data)
   const [isProposal, setIsProposal] = useState(false)
+  const [canAccept, setCanAccept] = useState(
+    props.availableAmount >= contract.remoteCollateral
+  )
 
   useEffect(() => {
     setContract(props.data)
@@ -120,6 +124,10 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
       contract.state === ContractState.Offered && !contract.isLocalParty
     )
   }, [contract, setContract, props.data])
+
+  useEffect(() => {
+    setCanAccept(props.availableAmount >= contract.remoteCollateral)
+  }, [props.availableAmount, contract.remoteCollateral])
 
   const handleAccept = (): void => {
     props.acceptContract()
@@ -186,6 +194,14 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
     ])
   }
 
+  if (isProposal) {
+    content.push({
+      title: 'Available Amount',
+      value: props.availableAmount,
+      btc: true,
+    })
+  }
+
   const getDisplayContent = (): ReactElement[] => {
     const gridItems: ReactElement[] = []
     for (const element of content) {
@@ -220,7 +236,12 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
       <div className={classes.buttonDiv}>
         {isProposal && (
           <>
-            <Button variant="contained" color="primary" onClick={handleAccept}>
+            <Button
+              disabled={!canAccept}
+              variant="contained"
+              color="primary"
+              onClick={handleAccept}
+            >
               Accept
             </Button>
             <Button

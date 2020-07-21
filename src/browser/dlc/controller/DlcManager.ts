@@ -104,11 +104,14 @@ export class DlcManager {
           rValue: values.rvalue,
           assetId: values.assetID,
         }
-        const offeredContract = await this.eventHandler.onSendOffer({
+        const initialContract = await this.eventHandler.onInitialize({
           ...contract,
           oracleInfo,
         })
-        contractId = offeredContract.id
+        contractId = initialContract.id
+        const offeredContract = await this.eventHandler.onSendOffer(
+          initialContract
+        )
         const offerMessage = toOfferMessage(offeredContract)
         await this.dlcMessageService.sendDlcMessage(
           offerMessage,
@@ -117,15 +120,19 @@ export class DlcManager {
 
         return offeredContract
       } catch (error) {
-        this.logger.error(`Could not offer contract ${contract.id}: `, {
+        this.logger.error(`Could not offer contract ${contractId}: `, {
           error: error,
           message: error.message,
         })
         if (contractId) {
           const failedContract = await this.eventHandler.onSendOfferFail(
-            contractId
+            contractId,
+            error.message
           )
-          throw new DlcError('Error offering contract', failedContract)
+          throw new DlcError(
+            `Error offering contract: ${error.message}`,
+            failedContract
+          )
         }
         throw error
       }
