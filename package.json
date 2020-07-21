@@ -22,7 +22,8 @@
       {
         "from": "settings.production.yml",
         "to": "settings.default.yml"
-      }
+      },
+      "p2pderivatives.io.crt"
     ]
   },
   "scripts": {
