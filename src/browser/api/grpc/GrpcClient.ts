@@ -35,7 +35,7 @@ export class GrpcClient {
     this._authService = new AuthenticationService(authClient, this._auth)
     const userClient = this.createClient<IUserClient>(UserClient, config)
     this._userService = new UserService(userClient, this._auth)
-    this._dlcService = new DlcMessageService(userClient, this._auth)
+    this._dlcService = new DlcMessageService(userClient, this._authService)
   }
 
   public getAuthObject(): GrpcAuth {

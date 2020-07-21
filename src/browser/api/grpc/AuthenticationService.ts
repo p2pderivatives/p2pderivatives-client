@@ -122,4 +122,8 @@ export class AuthenticationService {
     )
     return changePasswordAsync(cpRequest, metaData)
   }
+
+  public getGrpcAuth(): GrpcAuth {
+    return this._auth
+  }
 }
