@@ -98,7 +98,7 @@ export class ContractUpdater {
   }
 
   async toOfferedContract(
-    contract: InitialContract,
+    contract: InitialContract | AcceptedContract,
     localPartyInputs?: PartyInputs
   ): Promise<OfferedContract> {
     const collateral = contract.isLocalParty
@@ -106,6 +106,10 @@ export class ContractUpdater {
       : contract.remoteCollateral
     const commonFee = getCommonFee(contract.feeRate)
     let privateParams: PrivateParams | undefined = undefined
+
+    if ('remotePartyInputs' in contract) {
+      await this.unlockUtxos(contract)
+    }
 
     if (!localPartyInputs) {
       try {

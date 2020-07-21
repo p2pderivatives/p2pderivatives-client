@@ -129,6 +129,21 @@ export class DlcEventHandler {
     return acceptedContract
   }
 
+  async onOfferAcceptFailed(contractId: string): Promise<OfferedContract> {
+    const acceptedContract = (await this.tryGetContractOrThrow(contractId, [
+      ContractState.Accepted,
+    ])) as AcceptedContract
+
+    const offeredContract = await this._contractUpdater.toOfferedContract(
+      acceptedContract,
+      acceptedContract.localPartyInputs
+    )
+
+    await this._dlcService.updateContract(offeredContract)
+
+    return offeredContract
+  }
+
   async onAcceptMessage(
     from: string,
     acceptMessage: AcceptMessage

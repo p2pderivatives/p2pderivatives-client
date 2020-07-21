@@ -130,7 +130,9 @@ export class DlcManager {
             error.message
           )
           throw new DlcError(
-            `Error offering contract: ${error.message}`,
+            `Error offering contract: ${error.message ||
+              error._message ||
+              'unknown error'}`,
             failedContract
           )
         }
@@ -146,11 +148,18 @@ export class DlcManager {
           contractId
         )
         const acceptMessage = toAcceptMessage(acceptContract)
-        await this.dlcMessageService.sendDlcMessage(
-          acceptMessage,
-          acceptContract.counterPartyName
-        )
-        return acceptContract
+        try {
+          await this.dlcMessageService.sendDlcMessage(
+            acceptMessage,
+            acceptContract.counterPartyName
+          )
+          return acceptContract
+        } catch (e) {
+          const offeredContract = await this.eventHandler.onOfferAcceptFailed(
+            contractId
+          )
+          throw new DlcError(e._message, offeredContract)
+        }
       } catch (error) {
         this.logger.error(`Error accepting contract ${contractId}`, {
           message: error.message,
@@ -171,11 +180,18 @@ export class DlcManager {
           messageType: DlcMessageType.Reject,
           contractId: rejectedContract.id,
         }
-        await this.dlcMessageService.sendDlcMessage(
-          rejectMessage,
-          rejectedContract.counterPartyName
-        )
-        return rejectedContract
+        try {
+          await this.dlcMessageService.sendDlcMessage(
+            rejectMessage,
+            rejectedContract.counterPartyName
+          )
+          return rejectedContract
+        } catch (e) {
+          const offeredContract = await this.eventHandler.onOfferAcceptFailed(
+            contractId
+          )
+          throw new DlcError(e._message, offeredContract)
+        }
       } catch (error) {
         this.logger.error(`Error rejecting contract ${contractId}`, {
           message: error.message,
