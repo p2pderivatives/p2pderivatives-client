@@ -46,19 +46,27 @@ export class DlcEvents extends IPCEventsBase {
   }
 
   private async dlcEventsCallback(call: DlcCall): Promise<DlcAnswer> {
-    let answer: DlcAnswer
-    if (call.type === DlcEventType.Accept) {
-      answer = new DlcAnswer(
-        true,
-        await this._dlcManager.acceptContractOffer(call.contractId)
-      )
-    } else {
-      answer = new DlcAnswer(
-        true,
-        await this._dlcManager.rejectContractOffer(call.contractId)
+    try {
+      let answer: DlcAnswer
+      if (call.type === DlcEventType.Accept) {
+        answer = new DlcAnswer(
+          true,
+          await this._dlcManager.acceptContractOffer(call.contractId)
+        )
+      } else {
+        answer = new DlcAnswer(
+          true,
+          await this._dlcManager.rejectContractOffer(call.contractId)
+        )
+      }
+      return answer
+    } catch (error) {
+      return new DlcAnswer(
+        false,
+        undefined,
+        new IPCError('DLCERROR', 1, error.message, 'Dlc error')
       )
     }
-    return Promise.resolve(answer)
   }
 
   private async offerContractCallback(contract: Contract): Promise<DlcAnswer> {
