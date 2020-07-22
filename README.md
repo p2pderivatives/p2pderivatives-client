@@ -1,59 +1,101 @@
-# p2pderivatives-client
+# P2PDerivatives
 
-Repository for the P2PDerivatives client
+![](./src/renderer/assets/P2P_Logo_RGB_Yoko.png)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+P2PDerivatives is an application that enables users to enter into Discreet Log Contracts with each others.
 
-Ensure that protobuf compiler `protoc` is installed and added to `PATH` before running `npm install`.
+Features include:
 
-After running `npm install`, it will automatically generate an internal library `@internal/gen-grpc` from `gen-grpc` folder containing javascript protobuf files with types and `.proto` files.
+- Offering a contract to a peer
+- Accepting or rejecting a contract
+- Automatic contract settlement at maturity
 
-## Available Scripts
+The application is in a very beta stage, _DO NOT TRY TO USE IT ON MAINNET_.
 
-In the project directory, you can run:
+## Usage
 
-### `npm run electron-dev`
+Before using the application, make sure to read the [terms and conditions](./docs/Legal.md).
 
-Starts up the webapp on `localhost:3000` and creates an Electron instance that is pointed at the webapp.
+The application currently uses a server to enable communication between peers, as well as an oracle server to provide with information on trading price and signatures.
+To make it easier for people to test it, we made instances of these servers available for anybody to use.
+If you prefer, you can run the servers yourself.
+You will also need to connect the application to a running bitcoind instance.
 
-### `npm run dist`
+### Through CryptoGarage server
 
-Builds the app for Electron and creates a platform specific executable ( .exe on Windows, .dmg on MacOS, AppImage on Linux, the outputs can be further configured)
+Download the latest release of the application [here]().
 
-### `npm test`
+### Running your own servers
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+For testing locally, you can use the docker images available in this repository.
+Simply run:
 
-### `npm run mocha`
+```
+docker-compose up
+```
 
-This will run integration tests on a full electron instance. Since it is being run on electron and the current libraries are built for the local OS, you will need to rebuild them for electron, in specifically the `grpc` library.
+This will also spin a bitcoind instance on regtest.
+If you wish to use your own bitcoind instance, you can run:
 
-`npm install grpc --runtime=electron --target=7.0.0`
+```
+docker-compose server server-db oracle oracle-db
+```
 
-### `npm run eject`
+Otherwise you can visit the repositories for [the communication server]() and [the oracle server]().
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+You can then update the `./setting.production.yml` file with the parameters fitting your configuration and run `npm run dist`.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+If you just want to quickly try it out, you can also just modify the `settings.default.yml` file and run `npm run electron-dev` (you can run a second instance of the application using `npm run electron-dev-simple`).
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### Setting up bitcoind
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+You can download bitcoin core software [here](https://bitcoin.org/en/download).
+There are also other ways to install or download it depending on your operating system, which can be found easily on any search engine.
 
-## Integration Tests
+Once bitcoin-core is installed, you can use the scripts on this repository to start a node and create some wallets for testing.
 
-The client integration tests requires multiple services to run:
+(Note that these are bash scripts and will thus not work on a windows shell.
+If using windows, you might be able to use them with git bash, but this is currently untested.)
 
-- Rest Oracle [documentation](https://github.com/cryptogarageinc/p2pderivatives-oracle)
-- Grpc Server [documentation](https://github.com/cryptogarageinc/p2pderivatives-server)
-- BitcoinD instance running on `regtest`
+Start by creating a folder somewhere on your computer and call it `p2pderivatives` (or whatever you prefer), and a sub-folder `scripts`.
+Copy the content of the `./scripts` folder on this repository to the `scripts` folder you just created.
 
-You can run all of those services on your local machine using `docker-compose up`
+#### Regtest
 
-The services will need some migration to run the integration tests.
-You can seed the services for integration tests using `./services/seed-services.sh`
-or by service using a specific script  
-`docker-compose exec <service-name> /bin/sh /scripts/<my-script-name>`
+An easy way to test the application is to run a node in regtest.
+`cd` into the `scripts` folder you created, and run `./start_bitcoind.sh`.
 
-You can then run all the integration tests using `npm run integration`
+#### Testnet
+
+To start a bitcoind instance on testnet, `cd` into the `scripts` folder you created and run `BITCOIN_NET=testnet ./start_bitcoind.sh`.
+
+#### Creating a wallet
+
+You can either use the main wallet of bitcoind, or create a separate wallet (which is handy if you want to play around with two user on the same computer).
+To create a wallet, you can use the `createwallet` command of the `bitcoin-cli`.
+For example, from within the scripts folder:
+
+```
+bitcoin-cli -datadir=./bitcoind -conf="bitcoin.regtest.conf" createwallet "alice" "false" "false" "str0nGP@ssw9rd"
+```
+
+#### Generate blocks in regtest
+
+For the contract to be settled, you will have to generate blocks on regtest.
+You can do so with the following command (assuming that you have created a wallet named `alice` previously):
+
+```
+bitcoin-cli -datadir=./bitcoind -conf=bitcoin.regtest.conf generatetoaddress 9 $(bitcoin-cli -datadir=./bitcoind -conf=bitcoin.regtest.conf -rpcwallet=alice getnewaddress)
+```
+
+Replace the number `9` with the number of block you wish to generate.
+
+## Contributing
+
+Contributions are welcome.
+Have a look at the [contributing guidelines](./docs/Contributing.md) and [development document](./docs/Development.md) if you have interest.
+
+## Known limitations
+
+- The application uses the `lockunspent` rpc call of the bitcoind wallet to make sure that UTXOs are not reused across offered contracts. However, [as stated in the documentation](https://bitcoincore.org/en/doc/0.20.0/rpc/wallet/lockunspent/), the bitcoind wallet only keeps the locked transaction into memory. This means that if the wallet is restarted while a contract is in the offer state (the fund transaction is not broadcast yet), when creating a new contract, it is possible that the previously allocated UTXOs will be reused, making one of the contract invalid.
+- It is currently not possible to abort a contract once it has been offered meaning UTXOs will be locked until the contract is accepted or rejected by the counter party.
