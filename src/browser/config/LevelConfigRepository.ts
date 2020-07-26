@@ -1,10 +1,10 @@
 import { LevelUp } from 'levelup'
-import ConfigRepository from './ConfigRepository'
-import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
+import { BitcoinDConfig } from '../../common/models/bitcoind/config'
+import { Failable } from '../../common/utils/failable'
 import { getKeyPrefix, KeyPrefix } from '../storage/KeyPrefix'
 import { getRepositoryResult } from '../storage/LevelUtils'
 import { RepositoryError } from '../storage/RepositoryError'
-import { Failable } from '../../common/utils/failable'
+import ConfigRepository from './ConfigRepository'
 
 enum ConfigKey {
   BitcoinDConfigKey = 1,

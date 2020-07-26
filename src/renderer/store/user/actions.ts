@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { action } from 'typesafe-actions'
+import { User } from '../../../common/models/user'
 import { UserActionTypes } from './types'
-import { User } from '../../../common/models/user/User'
 
 export const registerRequest = (username: string, password: string) =>
   action(UserActionTypes.REGISTRATION_REQUEST, { username, password })

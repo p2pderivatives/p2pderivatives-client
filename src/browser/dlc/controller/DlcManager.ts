@@ -1,6 +1,7 @@
 import { Mutex } from 'await-semaphore'
 import { DateTime } from 'luxon'
 import { Logger } from 'winston'
+import { UpdateChannels } from '../../../common/ipc/model/update'
 import { Contract } from '../../../common/models/dlc/Contract'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
 import { Outcome } from '../../../common/models/dlc/Outcome'
@@ -11,7 +12,6 @@ import {
   DlcMessageStream,
 } from '../../api/grpc/DlcMessageService'
 import { OracleClientApi } from '../../api/oracle/oracleClient'
-import { DlcBrowserAPI } from '../../ipc/DlcBrowserAPI'
 import {
   AcceptedContract,
   AnyContract,
@@ -47,7 +47,7 @@ export class DlcManager {
     private readonly eventHandler: DlcEventHandler,
     private readonly dlcService: DlcService,
     private readonly bitcoindClient: BitcoinDClient,
-    private readonly ipcClient: DlcBrowserAPI,
+    private readonly ipcClient: UpdateChannels,
     private readonly oracleClient: OracleClientApi,
     private readonly dlcMessageService: DlcMessageServiceApi,
     private readonly logger: Logger,
@@ -236,7 +236,7 @@ export class DlcManager {
     const mutualCloseMessage = toMutualClosingMessage(
       mutualCloseProposeContract
     )
-    await this.ipcClient.dlcUpdate(mutualCloseProposeContract)
+    await this.ipcClient.updateDlc(mutualCloseProposeContract)
 
     try {
       await this.dlcMessageService.sendDlcMessage(
@@ -282,7 +282,7 @@ export class DlcManager {
           )
 
           if (!closedByOther) {
-            await this.ipcClient.dlcUpdate(maturedContract)
+            await this.ipcClient.updateDlc(maturedContract)
             const offered = await this.trySendMutualCloseOffer(
               contract,
               outcome
@@ -291,7 +291,7 @@ export class DlcManager {
               const unilateralClosed = await this.eventHandler.onUnilateralClose(
                 contract.id
               )
-              await this.ipcClient.dlcUpdate(unilateralClosed)
+              await this.ipcClient.updateDlc(unilateralClosed)
             }
           }
         }
@@ -315,7 +315,7 @@ export class DlcManager {
           const confirmedContract = await this.eventHandler.onContractConfirmed(
             contract.id
           )
-          await this.ipcClient.dlcUpdate(confirmedContract)
+          await this.ipcClient.updateDlc(confirmedContract)
         }
       } catch (error) {
         this.logger.error(`Error processing signed contract ${contract.id}`, {
@@ -348,7 +348,7 @@ export class DlcManager {
             const closedContract = await this.eventHandler.onUnilateralClose(
               contract.id
             )
-            await this.ipcClient.dlcUpdate(closedContract)
+            await this.ipcClient.updateDlc(closedContract)
           }
         } else if (confirmations >= 0) {
           // TOD(tibo): Should have an intermediary to distinguished between
@@ -356,7 +356,7 @@ export class DlcManager {
           const mutualClosedContract = await this.eventHandler.onMutualCloseConfirmed(
             contract.id
           )
-          await this.ipcClient.dlcUpdate(mutualClosedContract)
+          await this.ipcClient.updateDlc(mutualClosedContract)
         }
       } catch (error) {
         this.logger.error(
@@ -428,7 +428,7 @@ export class DlcManager {
     )
     const message = toSignMessage(contract)
     this.dlcMessageService.sendDlcMessage(message, from)
-    await this.ipcClient.dlcUpdate(contract)
+    await this.ipcClient.updateDlc(contract)
   }
 
   private async handleMutualCloseOffer(
@@ -454,7 +454,7 @@ export class DlcManager {
       }
     )
 
-    await this.ipcClient.dlcUpdate(mutualClosedContract)
+    await this.ipcClient.updateDlc(mutualClosedContract)
   }
 
   private async handleOffer(
@@ -463,7 +463,7 @@ export class DlcManager {
   ): Promise<void> {
     const offerContract = await this.eventHandler.onOfferMessage(message, from)
 
-    await this.ipcClient.dlcUpdate(offerContract)
+    await this.ipcClient.updateDlc(offerContract)
   }
 
   private async handleSign(from: string, message: SignMessage): Promise<void> {
@@ -472,7 +472,7 @@ export class DlcManager {
       message
     )
 
-    await this.ipcClient.dlcUpdate(broadcastContract)
+    await this.ipcClient.updateDlc(broadcastContract)
   }
 
   private async handleReject(
@@ -484,7 +484,7 @@ export class DlcManager {
       from
     )
 
-    await this.ipcClient.dlcUpdate(rejectedContract)
+    await this.ipcClient.updateDlc(rejectedContract)
   }
 
   private async executeSafe<T>(func: () => Promise<T>): Promise<T> {
@@ -506,7 +506,7 @@ export class DlcManager {
       const unilateralClosedByOther = await this.eventHandler.onUnilateralClosedByOther(
         contract.id
       )
-      await this.ipcClient.dlcUpdate(unilateralClosedByOther)
+      await this.ipcClient.updateDlc(unilateralClosedByOther)
       return true
     }
     return false

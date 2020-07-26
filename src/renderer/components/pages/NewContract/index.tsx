@@ -1,28 +1,32 @@
-import React, { FC, useState, useEffect } from 'react'
-
+import { push } from 'connected-react-router'
+import { DateTime, Duration } from 'luxon'
+import React, { FC, useEffect, useState } from 'react'
 import {
-  useSelector as useReduxSelector,
   TypedUseSelectorHook,
   useDispatch,
+  useSelector as useReduxSelector,
 } from 'react-redux'
-
-import NewContractTemplate from '../../templates/NewContractTemplate'
-import { ApplicationState } from '../../../store'
-import { userListRequest } from '../../../store/user/actions'
-import FileIPC from '../../../ipc/FileIPC'
-import { Outcome } from '../../../../common/models/dlc/Outcome'
-import OracleIPC from '../../../ipc/OracleIPC'
-import { merge } from '../../../util/outcome-merger'
-import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
-import { push } from 'connected-react-router'
-import { offerRequest } from '../../../store/dlc/actions'
-import { Contract } from '../../../../common/models/dlc/Contract'
 import { RouteChildrenProps } from 'react-router'
-import { BitcoinIPC } from '../../../ipc/BitcoinIPC'
+import { Contract } from '../../../../common/models/dlc/Contract'
+import { Outcome } from '../../../../common/models/dlc/Outcome'
+import { OracleAssetConfiguration } from '../../../../common/models/oracle/oracle'
+import { isFailed } from '../../../../common/utils/failable'
+import { BitcoinIPC } from '../../../ipc/consumer/BitcoinIPC'
+import FileIPC from '../../../ipc/consumer/FileIPC'
+import OracleIPC from '../../../ipc/consumer/OracleIPC'
+import { ApplicationState } from '../../../store'
+import { offerRequest } from '../../../store/dlc/actions'
+import { userListRequest } from '../../../store/user/actions'
+import { merge } from '../../../util/outcome-merger'
+import NewContractTemplate from '../../templates/NewContractTemplate'
 
 const { dialog } = window.require('electron').remote
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
+
+const oracleIPC = new OracleIPC()
+const bitcoindIPC = new BitcoinIPC()
+const fileIPC = new FileIPC()
 
 const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
   props: RouteChildrenProps<{ id: string }>
@@ -48,9 +52,14 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
     dialog.showOpenDialog({ properties: ['openFile'] }).then(async files => {
       if (files !== undefined) {
         const filepath = files.filePaths[0]
-        const parsedOutcomes = await new FileIPC().parseOutcomes(filepath)
-        const outcomes = merge(parsedOutcomes)
-        setActualOutcomes(parsedOutcomes)
+        const res = await fileIPC.events.parseOutcomes({
+          outcomesPath: filepath,
+        })
+        if (isFailed(res)) {
+          throw res.error
+        }
+        const outcomes = merge(res.value)
+        setActualOutcomes(res.value)
         setOutcomesList(outcomes)
         setTab(1)
       }
@@ -71,13 +80,23 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
   }
 
   const updateOracleInfo = async (): Promise<void> => {
-    const info = await OracleIPC.getOracleConfig('btcusd')
-    setOracleInfo(info)
+    const res = await oracleIPC.events.getAssetConfig('btcusd')
+    if (isFailed(res)) {
+      throw res.error
+    }
+    setOracleInfo({
+      startDate: DateTime.fromISO(res.value.startDate, { setZone: true }),
+      frequency: Duration.fromISO(res.value.frequency),
+      range: Duration.fromISO(res.value.range),
+    })
   }
 
   const updateUtxoAmount = async (): Promise<void> => {
-    const utxoAmount = await BitcoinIPC.getUtxoAmount()
-    setUtxoAmount(utxoAmount)
+    const res = await bitcoindIPC.events.getUtxoAmount()
+    if (isFailed(res)) {
+      throw res.error
+    }
+    setUtxoAmount(res.value)
   }
 
   useEffect(() => {

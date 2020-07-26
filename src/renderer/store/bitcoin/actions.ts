@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { action } from 'typesafe-actions'
+import { BitcoinDConfig } from '../../../common/models/bitcoind/config'
 import { BitcoinActionTypes } from './types'
-import { BitcoinDConfig } from '../../../common/models/ipc/BitcoinDConfig'
 
 export const checkRequest = (config: BitcoinDConfig) =>
   action(BitcoinActionTypes.CHECK_REQUEST, config)

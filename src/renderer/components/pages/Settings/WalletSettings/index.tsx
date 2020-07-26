@@ -1,17 +1,14 @@
 import React, { FC, useEffect, useState } from 'react'
 import {
-  useSelector as useReduxSelector,
   TypedUseSelectorHook,
   useDispatch,
+  useSelector as useReduxSelector,
 } from 'react-redux'
-
+import { BitcoinDConfig } from '../../../../../common/models/bitcoind/config'
 import { useSnackbar } from '../../../../providers/Snackbar'
-
-import WalletSettingsTemplate from '../../../templates/WalletSettingsTemplate'
 import { ApplicationState } from '../../../../store'
 import { checkRequest, configRequest } from '../../../../store/bitcoin/actions'
-
-import { BitcoinDConfig } from '../../../../../common/models/ipc/BitcoinDConfig'
+import WalletSettingsTemplate from '../../../templates/WalletSettingsTemplate'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 

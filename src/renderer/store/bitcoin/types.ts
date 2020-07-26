@@ -1,4 +1,4 @@
-import { BitcoinDConfig } from '../../../common/models/ipc/BitcoinDConfig'
+import { BitcoinDConfig } from '../../../common/models/bitcoind/config'
 
 export enum BitcoinActionTypes {
   CHECK_REQUEST = '@@bitcoin/CHECK_REQUEST',

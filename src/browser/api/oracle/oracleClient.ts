@@ -4,8 +4,12 @@ import {
   OracleAssetConfiguration,
   OracleRvalue,
   OracleSignature,
-} from '../../../common/oracle/oracle'
-import { Failable, isSuccessful } from '../../../common/utils/failable'
+} from '../../../common/models/oracle/oracle'
+import {
+  FailableAsync,
+  isSuccessful,
+  Success,
+} from '../../../common/utils/failable'
 import {
   APIAssetConfig,
   APIAssets,
@@ -18,7 +22,7 @@ import { OracleConfig } from './oracleConfig'
 import { UnknownServerError } from './unknownServerError'
 
 export const HeaderRequestIDTag = 'Request-Id'
-export type FailableOracle<R> = Failable<R, OracleError>
+export type OracleFailbleAsync<R> = FailableAsync<R, OracleError>
 export interface OracleError {
   requestID: string
   httpStatusCode: number
@@ -27,19 +31,14 @@ export interface OracleError {
 }
 
 export interface OracleClientApi {
-  getOraclePublicKey(): Promise<FailableOracle<string>>
-  getAssets(): Promise<FailableOracle<string[]>>
-  getOracleConfig(
-    assetID: string
-  ): Promise<FailableOracle<OracleAssetConfiguration>>
-  getRvalue(
-    assetID: string,
-    date: DateTime
-  ): Promise<FailableOracle<OracleRvalue>>
+  getOraclePublicKey(): OracleFailbleAsync<string>
+  getAssets(): OracleFailbleAsync<string[]>
+  getOracleConfig(assetID: string): OracleFailbleAsync<OracleAssetConfiguration>
+  getRvalue(assetID: string, date: DateTime): OracleFailbleAsync<OracleRvalue>
   getSignature(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleSignature>>
+  ): OracleFailbleAsync<OracleSignature>
 }
 
 export const ROUTE_ORACLE_PUBLIC_KEY = 'oracle/publickey'
@@ -58,7 +57,7 @@ export default class OracleClient implements OracleClientApi {
     })
   }
 
-  async getOraclePublicKey(): Promise<FailableOracle<string>> {
+  async getOraclePublicKey(): OracleFailbleAsync<string> {
     const resp = await this.get<APIOraclePublicKey>(ROUTE_ORACLE_PUBLIC_KEY)
     if (isSuccessful(resp)) {
       // transform response data
@@ -72,13 +71,13 @@ export default class OracleClient implements OracleClientApi {
     }
   }
 
-  async getAssets(): Promise<FailableOracle<string[]>> {
+  async getAssets(): OracleFailbleAsync<string[]> {
     return this.get<APIAssets>(ROUTE_ASSET)
   }
 
   async getOracleConfig(
     assetID: string
-  ): Promise<FailableOracle<OracleAssetConfiguration>> {
+  ): OracleFailbleAsync<OracleAssetConfiguration> {
     const resp = await this.get<APIAssetConfig>(`asset/${assetID}/config`)
 
     if (isSuccessful(resp)) {
@@ -100,7 +99,7 @@ export default class OracleClient implements OracleClientApi {
   async getRvalue(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleRvalue>> {
+  ): OracleFailbleAsync<OracleRvalue> {
     const resp = await this.getDLCData<APIRvalue>('rvalue', assetID, date)
     if (isSuccessful(resp)) {
       // transform response data
@@ -122,7 +121,7 @@ export default class OracleClient implements OracleClientApi {
   async getSignature(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleSignature>> {
+  ): OracleFailbleAsync<OracleSignature> {
     const resp = await this.getDLCData<APISignature>('signature', assetID, date)
     if (isSuccessful(resp)) {
       // transform response data
@@ -147,7 +146,7 @@ export default class OracleClient implements OracleClientApi {
     route: APIDLCRoute<T>,
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<T>> {
+  ): OracleFailbleAsync<T> {
     const utcDate = date.toUTC()
     const options: ToISOTimeOptions = {
       suppressMilliseconds: true,
@@ -155,10 +154,10 @@ export default class OracleClient implements OracleClientApi {
     return this.get<T>(`asset/${assetID}/${route}/${utcDate.toISO(options)}`)
   }
 
-  private async get<T>(url: string): Promise<FailableOracle<T>> {
+  private async get<T>(url: string): OracleFailbleAsync<T> {
     try {
       const resp = await this._httpClient.get<T>(url)
-      return { success: true, value: resp.data }
+      return Success(resp.data)
     } catch (err) {
       if (!err.isAxiosError) {
         throw err

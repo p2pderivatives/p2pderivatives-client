@@ -1,13 +1,12 @@
 import electron from 'electron'
-import path from 'path'
 import { promises as fs } from 'fs'
 import yaml from 'js-yaml'
-
-import ConfigRepository from './ConfigRepository'
-import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
-import { RepositoryError } from '../storage/RepositoryError'
-import { ErrorCode } from '../storage/ErrorCode'
+import path from 'path'
+import { BitcoinDConfig } from '../../common/models/bitcoind/config'
 import { Failable } from '../../common/utils/failable'
+import { ErrorCode } from '../storage/ErrorCode'
+import { RepositoryError } from '../storage/RepositoryError'
+import ConfigRepository from './ConfigRepository'
 
 export default class FileConfigRepository implements ConfigRepository {
   private readonly userDataDir = electron.app.getPath('userData')

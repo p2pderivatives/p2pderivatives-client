@@ -3,15 +3,18 @@ import { Semaphore } from 'await-semaphore'
 import { DateTime, Settings } from 'luxon'
 import { Readable } from 'stream'
 import winston from 'winston'
+import { AuthenticationService } from '../../src/browser/api/grpc/AuthenticationService'
 import {
   DlcMessageServiceApi,
   DlcMessageStream,
 } from '../../src/browser/api/grpc/DlcMessageService'
+import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
 import { OracleClientApi } from '../../src/browser/api/oracle/oracleClient'
 import { DlcManager } from '../../src/browser/dlc/controller/DlcManager'
 import { DlcTypedMessage } from '../../src/browser/dlc/models/messages'
-import { DlcBrowserAPI } from '../../src/browser/ipc/DlcBrowserAPI'
+import { UpdateChannels } from '../../src/common/ipc/model/update'
 import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
+import { Success } from '../../src/common/utils/failable'
 import {
   assertContractState,
   createWallets,
@@ -19,8 +22,6 @@ import {
   getNewPartyContext,
   PartyContext,
 } from './integrationTestCommons'
-import { AuthenticationService } from '../../src/browser/api/grpc/AuthenticationService'
-import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
 
 const localParty = 'alice'
 const remoteParty = 'bob'
@@ -31,11 +32,11 @@ let remotePartyManager: DlcManager
 let localPartyContext: PartyContext
 let remotePartyContext: PartyContext
 
-const localPartyIpcMock: jest.Mocked<DlcBrowserAPI> = {
-  dlcUpdate: jest.fn(),
+const localPartyIpcMock: jest.Mocked<UpdateChannels> = {
+  updateDlc: jest.fn(),
 }
-const remotePartyIpcMock: jest.Mocked<DlcBrowserAPI> = {
-  dlcUpdate: jest.fn(),
+const remotePartyIpcMock: jest.Mocked<UpdateChannels> = {
+  updateDlc: jest.fn(),
 }
 
 const outcomes = [
@@ -220,8 +221,8 @@ describe('dlc-manager', () => {
     }
 
     let release = await semaphore.acquire()
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     const offeredContract = await localPartyManager.sendContractOffer(contract)
     const contractId = offeredContract.id
@@ -239,8 +240,8 @@ describe('dlc-manager', () => {
       ContractState.Offered
     )
 
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     await remotePartyManager.acceptContractOffer(contractId)
     release = await semaphore.acquire()
@@ -259,11 +260,11 @@ describe('dlc-manager', () => {
 
     await localPartyContext.client.generateBlocksToWallet(6)
 
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    localPartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     jest.advanceTimersByTime(11000)
 
@@ -286,11 +287,11 @@ describe('dlc-manager', () => {
   async function bothReceiveMutualClose(contractId: string): Promise<void> {
     const semaphore = new Semaphore(1)
     let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    localPartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     jest.advanceTimersByTime(11000)
 
@@ -319,11 +320,11 @@ describe('dlc-manager', () => {
   ): Promise<void> {
     const semaphore = new Semaphore(1)
     let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    localPartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     jest.advanceTimersByTime(10000)
 
@@ -358,8 +359,8 @@ describe('dlc-manager', () => {
     const semaphore = new Semaphore(1)
     throwOnSend = true
     let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    localPartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     jest.advanceTimersByTime(10000)
 
@@ -377,8 +378,8 @@ describe('dlc-manager', () => {
 
     jest.advanceTimersByTime(1000)
 
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     release = await semaphore.acquire()
 
@@ -392,8 +393,8 @@ describe('dlc-manager', () => {
   async function unilateralCloseFromRemote(contractId: string): Promise<void> {
     const semaphore = new Semaphore(1)
     let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    localPartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     ignoreSend = true
     jest.advanceTimersByTime(10000)
@@ -408,8 +409,8 @@ describe('dlc-manager', () => {
     )
 
     throwOnSend = true
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    remotePartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     jest.advanceTimersByTime(1000)
 
@@ -441,8 +442,8 @@ describe('dlc-manager', () => {
     const semaphore = new Semaphore(1)
     ignoreSend = true
     let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
+    localPartyIpcMock.updateDlc.mockImplementation(() =>
+      Promise.resolve(Success(release()))
     )
     jest.advanceTimersByTime(10000)
 

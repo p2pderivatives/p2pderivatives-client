@@ -1,39 +1,48 @@
 import { expectSaga } from 'redux-saga-test-plan'
-import bitcoinSagas from '../sagas'
-import { BitcoinAPI } from '../../../ipc/BitcoinAPI'
-import { BitcoinDConfig } from '../../../../common/models/ipc/BitcoinDConfig'
+import { getContext } from 'redux-saga/effects'
 import {
-  checkSuccess,
-  checkRequest,
-  checkError,
+  BitcoindChannels,
+  BitcoindFailableAsync,
+} from '../../../../common/ipc/model/bitcoind'
+import { BitcoinDConfig } from '../../../../common/models/bitcoind/config'
+import { Success } from '../../../../common/utils/failable'
+import {
   balanceRequest,
   balanceSuccess,
+  checkError,
+  checkRequest,
+  checkSuccess,
   configRequest,
   configRetrieved,
 } from '../actions'
-import { getContext } from 'redux-saga/effects'
-import { IPCError } from '../../../../common/models/ipc/IPCError'
+import bitcoinSagas from '../sagas'
 
-class MockAuthAPI implements BitcoinAPI {
-  getConfig(): Promise<BitcoinDConfig> {
-    return new Promise((resolve, reject) => {
-      const config: BitcoinDConfig = { network: 'regtest', wallet: 'test' }
-      resolve(config)
-    })
+const mockError = {
+  success: false,
+  error: {
+    type: 'bitcoind',
+    code: 1,
+    message: 'test message',
+    name: 'test name',
+  },
+} as const
+
+class MockAuthAPI implements BitcoindChannels {
+  getBalance(): BitcoindFailableAsync<number> {
+    return Promise.resolve(Success(1.5))
   }
-  checkConfig(config: BitcoinDConfig): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!config.host) {
-        resolve()
-      } else {
-        throw new IPCError('general', -1, 'test error', 'test_error')
-      }
-    })
+  checkConfig(data: BitcoinDConfig): BitcoindFailableAsync<void> {
+    if (!data.host) {
+      return Promise.resolve(Success())
+    } else {
+      return Promise.resolve(mockError)
+    }
   }
-  getBalance(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      resolve(1.5)
-    })
+  getConfig(): BitcoindFailableAsync<BitcoinDConfig> {
+    return Promise.resolve(Success({ network: 'regtest', wallet: 'test' }))
+  }
+  getUtxoAmount(): BitcoindFailableAsync<number> {
+    throw new Error('Method not implemented.')
   }
 }
 
@@ -51,7 +60,7 @@ describe('bitcoin saga', () => {
   it('should handle bad config', () => {
     return expectSaga(bitcoinSagas)
       .provide([[getContext('bitcoinAPI'), bitcoinAPI]])
-      .put(checkError('test error'))
+      .put(checkError(mockError.error.message))
       .dispatch(checkRequest({ host: 'notlocalhost' }))
       .run()
   })

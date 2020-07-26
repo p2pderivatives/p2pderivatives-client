@@ -1,17 +1,16 @@
 import Client, {
   ClientConstructorOption,
-  WalletTransaction,
   ListUnspentOptions,
   UnspentTxInfo,
+  WalletTransaction,
 } from 'bitcoin-core'
-
 import {
   BitcoinDConfig,
   BitcoinNetwork,
-} from '../../../common/models/ipc/BitcoinDConfig'
-import * as Utils from '../../dlc/utils/CfdUtils'
-import { Utxo } from '../../dlc/models/Utxo'
+} from '../../../common/models/bitcoind/config'
 import { btcToSats, satsToBtc } from '../../../common/utils/conversion'
+import { Utxo } from '../../dlc/models/Utxo'
+import * as Utils from '../../dlc/utils/CfdUtils'
 
 export default class BitcoinDClient {
   private rpcUser = ''

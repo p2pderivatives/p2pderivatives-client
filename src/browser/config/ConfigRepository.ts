@@ -1,4 +1,4 @@
-import { BitcoinDConfig } from '../../common/models/ipc/BitcoinDConfig'
+import { BitcoinDConfig } from '../../common/models/bitcoind/config'
 import { Failable } from '../../common/utils/failable'
 import { RepositoryError } from '../storage/RepositoryError'
 

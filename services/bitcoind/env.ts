@@ -1,7 +1,7 @@
 import fs from 'fs'
 import yaml from 'js-yaml'
 import path from 'path'
-import { BitcoinDConfig } from '../../src/common/models/ipc/BitcoinDConfig'
+import { BitcoinDConfig } from '../../src/common/models/bitcoind/config'
 
 export const TEST_BITCOIND_CONFIG: Readonly<Required<BitcoinDConfig>> = {
   host: process.env.BITCOIND_HOST || 'localhost',
@@ -20,7 +20,7 @@ export const TEST_VECTORS: {
   }
 } = load()
 
-function load() {
+function load(): typeof TEST_VECTORS {
   try {
     return yaml.safeLoad(
       fs.readFileSync(path.resolve(__dirname, './vectors/vector.yml'), 'utf8')

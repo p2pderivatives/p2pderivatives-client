@@ -1,18 +1,15 @@
 import { LevelUp } from 'levelup'
+import { Failable, Success } from '../../common/utils/failable'
 import { ErrorCode } from './ErrorCode'
 import { RepositoryError } from './RepositoryError'
-import { Failable } from '../../common/utils/failable'
 
 export async function getRepositoryResult<T>(
   db: LevelUp,
   key: string
 ): Promise<Failable<T, RepositoryError>> {
   try {
-    const value = await db.get(key)
-    return {
-      success: true,
-      value: value as T,
-    }
+    const value = (await db.get(key)) as T
+    return Success(value)
   } catch (error) {
     if (error.notFound) {
       return {

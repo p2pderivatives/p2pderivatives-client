@@ -43,10 +43,7 @@ workflows:
       - build:
           requires:
             - dependencies-cache
-      - jest-tests:
-          requires:
-            - build
-      - mocha-tests:
+      - unit-tests:
           requires:
             - build
       - integration-tests:
@@ -189,7 +186,7 @@ jobs:
           name: build
           command: npm run build # ci to false avoid linter warnings as errors
 
-  jest-tests:
+  unit-tests:
     executor: client-runner
     steps:
       - attach_workspace:
@@ -204,22 +201,6 @@ jobs:
           path: ./reports/jest
       - store_artifacts:
           path: ./reports/jest
-
-  mocha-tests:
-    executor: client-browsers-runner
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Rebuild grpc for electron
-          command: npm rebuild grpc --runtime=electron --target=7.0.0
-      - run:
-          name: Run mocha test
-          command: npm run mocha:ci
-      - store_test_results:
-          path: ./reports/mocha
-      - store_artifacts:
-          path: ./reports/mocha
 
   integration-tests:
     executor: client-runner
@@ -342,7 +323,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-             - pkg
+            - pkg
 
   release:
     docker:
@@ -350,7 +331,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: 
+      - run:
           name: Install ghr command
           command: go get github.com/tcnksm/ghr
       - run:
@@ -361,4 +342,3 @@ jobs:
             -r p2pderivatives-client \
             -replace \
             ${CIRCLE_TAG} pkg/
- 

@@ -48,10 +48,8 @@
     "build-native-cfd": "npm rebuild cfd-js cfd-dlc-js",
     "build-native-cfd:electron": "npm run build-native-cfd -- --runtime=electron --target=7.0.0",
     "dist": "npm run build && electron-builder --publish never",
-    "lint": "eslint src test integration-test --ext .ts,.tsx ",
-    "lint:ci": "eslint --max-warnings=0 --format junit --output-file ./reports/linter/eslint.xml src test integration-test --ext .ts,.tsx ",
-    "mocha": "electron-mocha ./test/*.ts",
-    "mocha:ci": "cross-env MOCHA_FILE=./reports/mocha/mocha.xml electron-mocha ./test/*.ts --reporter mocha-junit-reporter",
+    "lint": "eslint src integration-test --ext .ts,.tsx ",
+    "lint:ci": "eslint --max-warnings=0 --format junit --output-file ./reports/linter/eslint.xml src integration-test --ext .ts,.tsx ",
     "storybook": "start-storybook"
   },
   "browserslist": {

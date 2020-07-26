@@ -1,6 +1,6 @@
 import { TEST_BITCOIND_CONFIG, TEST_VECTORS } from '../services/bitcoind/env'
 import BitcoinDClient from '../src/browser/api/bitcoind'
-import { BitcoinDConfig } from '../src/common/models/ipc/BitcoinDConfig'
+import { BitcoinDConfig } from '../src/common/models/bitcoind/config'
 
 export const defaultWalletConfig: Readonly<BitcoinDConfig> = {
   rpcUsername: TEST_BITCOIND_CONFIG.rpcUsername,

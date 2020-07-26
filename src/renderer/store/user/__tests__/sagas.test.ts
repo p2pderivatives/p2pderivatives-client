@@ -1,46 +1,53 @@
 import { expectSaga } from 'redux-saga-test-plan'
-import userSagas from '../sagas'
-import { UserAPI } from '../../../ipc/UserAPI'
-import {
-  registerRequest,
-  registerError,
-  registerSuccess,
-  unregisterSuccess,
-  unregisterRequest,
-  unregisterError,
-  userListSuccess,
-  userListRequest,
-} from '../actions'
 import { getContext } from 'redux-saga/effects'
-import { User } from '../../../../common/models/user/User'
-import { IPCError } from '../../../../common/models/ipc/IPCError'
+import {
+  RegisterUserAnswer,
+  RegisterUserCall,
+  UserChannels,
+  UserFailableAsync,
+} from '../../../../common/ipc/model/user'
+import { User } from '../../../../common/models/user'
+import { Success } from '../../../../common/utils/failable'
+import {
+  registerError,
+  registerRequest,
+  registerSuccess,
+  unregisterError,
+  unregisterRequest,
+  unregisterSuccess,
+  userListRequest,
+  userListSuccess,
+} from '../actions'
+import userSagas from '../sagas'
 
 let failUnregister = false
-
-class MockUserAPI implements UserAPI {
-  getUserList(): Promise<User[]> {
-    return new Promise((resolve, reject) => {
-      resolve([new User('test1'), new User('test2')])
-    })
+const userList = [{ name: 'test1' }, { name: 'test2' }]
+const mockError = {
+  success: false,
+  error: {
+    type: 'user',
+    code: -1,
+    message: 'test message',
+    name: 'test error',
+  },
+} as const
+class MockUserAPI implements UserChannels {
+  register(data: RegisterUserCall): UserFailableAsync<RegisterUserAnswer> {
+    if (data.username === 'test') {
+      return Promise.resolve(Success({ name: 'test', id: 'X' }))
+    } else {
+      return Promise.resolve(mockError)
+    }
   }
-  registerUser(password: string, name: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (name === 'test') {
-        resolve()
-      } else {
-        throw new IPCError('general', -1, 'test error', 'test_error')
-      }
-    })
+  unregister(): UserFailableAsync<void> {
+    if (!failUnregister) {
+      return Promise.resolve(Success())
+    } else {
+      return Promise.resolve(mockError)
+    }
   }
-
-  unregisterUser(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!failUnregister) {
-        resolve()
-      } else {
-        throw new IPCError('general', -1, 'test error', 'test_error')
-      }
-    })
+  getAllUsers(): UserFailableAsync<User[]> {
+    return Promise.resolve(Success(userList))
   }
 }
 
@@ -58,7 +65,7 @@ describe('login saga', () => {
   it('should handle failed user registration', () => {
     return expectSaga(userSagas)
       .provide([[getContext('userAPI'), userAPI]])
-      .put(registerError('test error'))
+      .put(registerError(mockError.error.message))
       .dispatch(registerRequest('error', 'test'))
       .run()
   })
@@ -75,7 +82,7 @@ describe('login saga', () => {
     failUnregister = true
     return expectSaga(userSagas)
       .provide([[getContext('userAPI'), userAPI]])
-      .put(unregisterError('test error'))
+      .put(unregisterError(mockError.error.message))
       .dispatch(unregisterRequest())
       .run()
   })
@@ -83,7 +90,7 @@ describe('login saga', () => {
   it('should get user list', () => {
     return expectSaga(userSagas)
       .provide([[getContext('userAPI'), userAPI]])
-      .put(userListSuccess([new User('test1'), new User('test2')]))
+      .put(userListSuccess(userList))
       .dispatch(userListRequest())
       .run()
   })

@@ -4,8 +4,12 @@ import {
   OracleAssetConfiguration,
   OracleRvalue,
   OracleSignature,
-} from '../../../../common/oracle/oracle'
-import { isFailed, isSuccessful } from '../../../../common/utils/failable'
+} from '../../../../common/models/oracle/oracle'
+import {
+  Failable,
+  isFailed,
+  isSuccessful,
+} from '../../../../common/utils/failable'
 import {
   APIAssetConfig,
   APIAssets,
@@ -15,7 +19,6 @@ import {
   APISignature,
 } from '../apitypes'
 import OracleClient, {
-  FailableOracle,
   HeaderRequestIDTag,
   OracleError,
   ROUTE_ASSET,
@@ -201,7 +204,7 @@ describe('Oracle Client', () => {
     mockedAxios.get.mockRejectedValue(mockedAxiosError)
 
     // act
-    const results: FailableOracle<unknown>[] = [
+    const results: Failable<unknown, OracleError>[] = [
       await client.getOraclePublicKey(),
       await client.getAssets(),
       await client.getOracleConfig(''),

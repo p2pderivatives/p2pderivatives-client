@@ -1,31 +1,33 @@
-import { all, call, fork, put, takeEvery, getContext } from 'redux-saga/effects'
-import { DlcActionTypes } from './types'
+import { SagaIterator } from 'redux-saga'
+import { all, call, fork, getContext, put, takeEvery } from 'redux-saga/effects'
+import { DlcEventType } from '../../../common/constants/DlcEventType'
+import { DlcChannels } from '../../../common/ipc/model/dlc'
+import { isFailed } from '../../../common/utils/failable'
+import { ReturnTypeAsync } from '../../../common/utils/types'
 import {
+  acceptRequest,
   contractError,
   contractSuccess,
+  dlcActionError,
+  dlcActionSuccess,
   offerRequest,
   rejectRequest,
-  dlcActionSuccess,
-  dlcActionError,
-  acceptRequest,
 } from './actions'
-import { SagaIterator } from 'redux-saga'
-import { DlcRendererAPI } from '../../ipc/DlcRendererAPI'
-import { IPCError } from '../../../common/models/ipc/IPCError'
-import { DlcEventType } from '../../../common/constants/DlcEventType'
-import { DlcAnswerProps } from '../../../common/models/ipc/DlcAnswer'
+import { DlcActionTypes } from './types'
 
 export function* handleContracts(): SagaIterator {
   try {
-    const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const contracts = yield call(dlcAPI.getContracts)
-    yield put(contractSuccess(contracts))
-  } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(contractError(err.getMessage()))
+    const dlcAPI: DlcChannels = yield getContext('dlcAPI')
+    const res = (yield call(dlcAPI.getAllContracts)) as ReturnTypeAsync<
+      typeof dlcAPI.getAllContracts
+    >
+    if (isFailed(res)) {
+      yield put(contractError(res.error.message))
     } else {
-      yield put(contractError('An unknown error occured.'))
+      yield put(contractSuccess(res.value))
     }
+  } catch (err) {
+    yield put(contractError('An unknown error occured.'))
   }
 }
 
@@ -33,30 +35,23 @@ export function* handleOffer(
   action: ReturnType<typeof offerRequest>
 ): SagaIterator {
   try {
-    const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const answer = (yield call(
+    const dlcAPI: DlcChannels = yield getContext('dlcAPI')
+    const res = (yield call(
       dlcAPI.offerContract,
       action.payload
-    )) as DlcAnswerProps
-    if (!answer._contract) {
-      throw answer._error
-    }
-    if (!answer._success && answer._contract && answer._error) {
+    )) as ReturnTypeAsync<typeof dlcAPI.offerContract>
+    if (isFailed(res)) {
       yield put(
         dlcActionError({
-          error: answer._error._message,
-          contract: answer._contract,
+          error: res.error.message,
+          contract: res.error.contract,
         })
       )
     } else {
-      yield put(dlcActionSuccess(answer._contract))
+      yield put(dlcActionSuccess(res.value))
     }
   } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(dlcActionError({ error: err.getMessage() }))
-    } else {
-      yield put(dlcActionError({ error: 'An unknown error occured.' }))
-    }
+    yield put(dlcActionError({ error: 'An unknown error occured.' }))
   }
 }
 
@@ -64,22 +59,18 @@ export function* handleAccept(
   action: ReturnType<typeof acceptRequest>
 ): SagaIterator {
   try {
-    const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const answer = (yield call(
-      dlcAPI.dlcCall,
-      DlcEventType.Accept,
-      action.payload
-    )) as DlcAnswerProps
-    if (!answer._success || !answer._contract) {
-      throw answer._error
-    }
-    yield put(dlcActionSuccess(answer._contract))
-  } catch (err) {
-    if ('_message' in err) {
-      yield put(dlcActionError({ error: err._message }))
+    const dlcAPI: DlcChannels = yield getContext('dlcAPI')
+    const res = (yield call(dlcAPI.dlcCall, {
+      type: DlcEventType.Accept,
+      contractId: action.payload,
+    })) as ReturnTypeAsync<typeof dlcAPI.dlcCall>
+    if (isFailed(res)) {
+      yield put(dlcActionError({ error: res.error.message }))
     } else {
-      yield put(dlcActionError({ error: 'An unknown error occured.' }))
+      yield put(dlcActionSuccess(res.value))
     }
+  } catch (err) {
+    yield put(dlcActionError({ error: 'An unknown error occured.' }))
   }
 }
 
@@ -87,22 +78,18 @@ export function* handleReject(
   action: ReturnType<typeof rejectRequest>
 ): SagaIterator {
   try {
-    const dlcAPI: DlcRendererAPI = yield getContext('dlcAPI')
-    const answer = (yield call(
-      dlcAPI.dlcCall,
-      DlcEventType.Reject,
-      action.payload
-    )) as DlcAnswerProps
-    if (!answer._success || !answer._contract) {
-      throw answer._error
-    }
-    yield put(dlcActionSuccess(answer._contract))
-  } catch (err) {
-    if ('_message' in err) {
-      yield put(dlcActionError({ error: err._message }))
+    const dlcAPI: DlcChannels = yield getContext('dlcAPI')
+    const res = (yield call(dlcAPI.dlcCall, {
+      type: DlcEventType.Reject,
+      contractId: action.payload,
+    })) as ReturnTypeAsync<typeof dlcAPI.dlcCall>
+    if (isFailed(res)) {
+      yield put(dlcActionError({ error: res.error.message }))
     } else {
-      yield put(dlcActionError({ error: 'An unknown error occured.' }))
+      yield put(dlcActionSuccess(res.value))
     }
+  } catch (err) {
+    yield put(dlcActionError({ error: 'An unknown error occured.' }))
   }
 }
 

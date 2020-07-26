@@ -3,11 +3,11 @@ import { createHashHistory } from 'history'
 import { applyMiddleware, createStore, Store } from 'redux'
 import { composeWithDevTools } from 'redux-devtools-extension'
 import createSagaMiddleware from 'redux-saga'
-import { AuthenticationIPC } from './ipc/AuthenticationIPC'
-import { BitcoinIPC } from './ipc/BitcoinIPC'
-import { UserIPC } from './ipc/UserIPC'
+import { AuthenticationIPC } from './ipc/consumer/AuthenticationIPC'
+import { BitcoinIPC } from './ipc/consumer/BitcoinIPC'
+import { DlcIPCRenderer } from './ipc/consumer/DlcIPCRenderer'
+import { UserIPC } from './ipc/consumer/UserIPC'
 import { ApplicationState, createRootReducer, rootSaga } from './store'
-import { DlcIPCRenderer } from './ipc/DlcIPCRenderer'
 
 export const history = createHashHistory()
 
@@ -19,10 +19,10 @@ export default function configureStore(
   // create the redux-saga middleware
   const sagaMiddleware = createSagaMiddleware({
     context: {
-      authAPI: new AuthenticationIPC(),
-      userAPI: new UserIPC(),
-      bitcoinAPI: new BitcoinIPC(),
-      dlcAPI: new DlcIPCRenderer(),
+      authAPI: new AuthenticationIPC().events,
+      userAPI: new UserIPC().events,
+      bitcoinAPI: new BitcoinIPC().events,
+      dlcAPI: new DlcIPCRenderer().events,
     },
   })
 

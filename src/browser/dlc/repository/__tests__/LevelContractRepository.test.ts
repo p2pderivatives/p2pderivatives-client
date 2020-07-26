@@ -1,7 +1,7 @@
 import level from 'level-test'
 import { DateTime } from 'luxon'
 import { ContractState } from '../../../../common/models/dlc/Contract'
-import { isSuccessful } from '../../../../common/utils/failable'
+import { isFailed, isSuccessful } from '../../../../common/utils/failable'
 import { ErrorCode } from '../../../storage/ErrorCode'
 import { RepositoryError } from '../../../storage/RepositoryError'
 import {
@@ -103,7 +103,7 @@ test('Test create contract has contract and can be retrieved', async () => {
     expect(hasContract).toBeTruthy()
     const result = await contractRepo.getContract(contracts[i].id)
 
-    if (isSuccessful(result)) {
+    if (isSuccessful<AnyContract, RepositoryError>(result)) {
       const value = result.value
       expect(value).toEqual(contracts[i])
     } else {
@@ -149,7 +149,7 @@ test('Test get unknown contract returns error', async () => {
 
   // Assert
 
-  if (!isSuccessful(result)) {
+  if (isFailed<AnyContract, RepositoryError>(result)) {
     const error = result.error
     expect(error.errorCode).toEqual(ErrorCode.NotFound)
   } else {
@@ -171,7 +171,7 @@ test('Test update contract is updated', async () => {
 
   // Assert
   const result = await contractRepo.getContract(contract.id)
-  if (isSuccessful(result)) {
+  if (isSuccessful<AnyContract, RepositoryError>(result)) {
     const value = result.value
     expect(value.state).toEqual(ContractState.Rejected)
   } else {
@@ -269,7 +269,7 @@ test('Get contracts with state returns all contract in state', async () => {
   const result = await contractRepo.getContract(contract.id)
 
   // Assert
-  if (!isSuccessful(result)) {
+  if (!isSuccessful<AnyContract, RepositoryError>(result)) {
     const error = result.error
     expect(error.errorCode).toEqual(ErrorCode.NotFound)
   } else {
