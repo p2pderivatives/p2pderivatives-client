@@ -84,12 +84,12 @@ describe('dlc-manager', () => {
       const localDlcMessageService: DlcMessageServiceApi = {
         getDlcMessageStream: () => getDlcMessageStreamMock(localStream),
         sendDlcMessage: (message: DlcTypedMessage, dest: string) =>
-          sendDlcMessageMock(message, dest, remoteStream),
+          sendDlcMessageMock(message, dest, localParty, remoteStream),
       }
       const remoteDlcMessageService: DlcMessageServiceApi = {
         getDlcMessageStream: () => getDlcMessageStreamMock(remoteStream),
         sendDlcMessage: (message: DlcTypedMessage, dest: string) =>
-          sendDlcMessageMock(message, dest, localStream),
+          sendDlcMessageMock(message, dest, remoteParty, localStream),
       }
       const logger = winston.createLogger({
         level: 'debug',
@@ -471,6 +471,7 @@ describe('dlc-manager', () => {
 function sendDlcMessageMock(
   message: DlcTypedMessage,
   dest: string,
+  from: string,
   destStream: Readable
 ): Promise<void> {
   if (throwOnSend) {
@@ -486,6 +487,7 @@ function sendDlcMessageMock(
   )
   const dlcMessage = new DlcMessage()
   dlcMessage.setDestName(dest)
+  dlcMessage.setOrgName(from)
   dlcMessage.setPayload(payload)
 
   destStream.push(dlcMessage)
