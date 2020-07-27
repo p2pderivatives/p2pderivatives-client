@@ -66,6 +66,7 @@ export class DlcService {
   getRefundableContracts(): Promise<AnyContract[]> {
     const query: ExtendedContractQuery = {
       maturedBefore: DateTime.utc().minus(RefundTimeout),
+      states: [ContractState.Confirmed],
     }
 
     return this._repository.getContracts(query)

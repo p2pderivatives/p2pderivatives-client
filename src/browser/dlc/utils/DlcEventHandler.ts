@@ -355,9 +355,8 @@ export class DlcEventHandler {
 
   async onContractRefund(contractId: string): Promise<Contract> {
     const contract = (await this.tryGetContractOrThrow(contractId, [
-      ContractState.Signed,
-      ContractState.Broadcast,
-    ])) as SignedContract
+      ContractState.Confirmed,
+    ])) as ConfirmedContract
 
     const refundedContract = await this._contractUpdater.toRefundedContract(
       contract
