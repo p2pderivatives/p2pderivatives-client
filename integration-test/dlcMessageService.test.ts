@@ -4,6 +4,7 @@ import { GrpcClient } from '../src/browser/api/grpc/GrpcClient'
 import {
   DlcMessageType,
   RejectMessage,
+  DlcAbstractMessage,
 } from '../src/browser/dlc/models/messages'
 
 function sleep(ms: number): Promise<unknown> {
@@ -33,7 +34,7 @@ describe('dlc-message-service', () => {
         username: 'sendReceive2',
         pass: DEFAULT_PASS,
       }
-      await client1.getUserService().registerUser(user1.username, user2.pass)
+      await client1.getUserService().registerUser(user1.username, user1.pass)
       await client2.getUserService().registerUser(user2.username, user2.pass)
       await client1.getAuthenticationService().login(user1.username, user1.pass)
       await client2.getAuthenticationService().login(user2.username, user2.pass)
@@ -61,6 +62,58 @@ describe('dlc-message-service', () => {
         expect(message.payload).toEqual(sentMessage)
         expect(endMessage.done).toBeTruthy()
       }
+    })
+  })
+  describe('ping or invalid ignored', () => {
+    test('no error', async () => {
+      const user3 = {
+        username: 'pingignore',
+        pass: DEFAULT_PASS,
+      }
+      const user4 = {
+        username: 'pingignore2',
+        pass: DEFAULT_PASS,
+      }
+      let auth3 = new GrpcAuth()
+      let client3 = new GrpcClient(TEST_GRPC_CONFIG, auth3)
+      let auth4 = new GrpcAuth()
+      let client4 = new GrpcClient(TEST_GRPC_CONFIG, auth4)
+      await client3.getUserService().registerUser(user3.username, user3.pass)
+      await client4.getUserService().registerUser(user4.username, user4.pass)
+      await client3.getAuthenticationService().login(user3.username, user3.pass)
+      await client4.getAuthenticationService().login(user4.username, user4.pass)
+
+      const stream = client3.getDlcService().getDlcMessageStream()
+      const generator = stream.listen()
+
+      // Let time to the stream to be properly set up.
+      await sleep(100)
+
+      const conStream = client4.getUserService().getConnectedUsers()
+
+      for await (const _ of conStream) {
+        // consume the stream
+      }
+
+      let message: DlcAbstractMessage | void | undefined = undefined
+
+      const getMessagePromise = (async (): Promise<void> => {
+        message = (await generator.next()).value
+      })()
+
+      await Promise.race([
+        getMessagePromise,
+        new Promise(accept =>
+          setTimeout(() => {
+            accept()
+          }, 200)
+        ),
+      ])
+
+      expect(message).toBeUndefined()
+
+      stream.cancel()
+      await getMessagePromise
     })
   })
 })

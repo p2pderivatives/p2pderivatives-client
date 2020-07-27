@@ -24,14 +24,26 @@ export class DlcMessageStream {
     try {
       await this.authService.refresh()
       for await (const chunk of this.grpcStream) {
+        const payload = chunk.getPayload()
+        // ignore ping or invalid messages
+        if (typeof payload === 'string') {
+          continue
+        }
         const message = JSON.parse(
-          new TextDecoder().decode(chunk.getPayload() as Uint8Array)
+          new TextDecoder().decode(payload as Uint8Array)
         )
         const abstractMessage: DlcAbstractMessage = {
           from: chunk.getOrgName(),
           payload: message,
         }
 
+        // ignore ping or invalid messages
+        if (
+          abstractMessage.from === '' ||
+          Object.keys(abstractMessage.payload).length === 0
+        ) {
+          continue
+        }
         yield abstractMessage
       }
     } catch (error) {
