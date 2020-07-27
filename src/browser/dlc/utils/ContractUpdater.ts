@@ -769,7 +769,7 @@ export class ContractUpdater {
   }
 
   async toRefundedContract(
-    contract: SignedContract
+    contract: ConfirmedContract
   ): Promise<RefundedContract> {
     const reqJson: cfddlcjs.AddSignaturesToRefundTxRequest = {
       refundTxHex: contract.refundTxHex,
