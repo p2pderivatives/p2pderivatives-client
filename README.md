@@ -23,7 +23,7 @@ You will also need to connect the application to a running bitcoind instance.
 
 ### Through CryptoGarage server
 
-Download the latest release of the application [here]().
+Download the latest release of the application [here](https://github.com/p2pderivatives/p2pderivatives-client/releases).
 
 ### Running your own servers
 
@@ -41,7 +41,7 @@ If you wish to use your own bitcoind instance, you can run:
 docker-compose server server-db oracle oracle-db
 ```
 
-Otherwise you can visit the repositories for [the communication server]() and [the oracle server]().
+Otherwise you can visit the repositories for [the communication server](https://github.com/p2pderivatives/p2pderivatives-server) and [the oracle server](https://github.com/p2pderivatives/p2pderivatives-oracle).
 
 You can then update the `./setting.production.yml` file with the parameters fitting your configuration and run `npm run dist`.
 
@@ -71,7 +71,7 @@ To start a bitcoind instance on testnet, `cd` into the `scripts` folder you crea
 
 #### Creating a wallet
 
-You can either use the main wallet of bitcoind, or create a separate wallet (which is handy if you want to play around with two user on the same computer).
+You can either use the main wallet of bitcoind, or create a separate wallet (which is handy if you want to play around with two users on the same computer).
 To create a wallet, you can use the `createwallet` command of the `bitcoin-cli`.
 For example, from within the scripts folder:
 
@@ -99,3 +99,4 @@ Have a look at the [contributing guidelines](./docs/Contributing.md) and [develo
 
 - The application uses the `lockunspent` rpc call of the bitcoind wallet to make sure that UTXOs are not reused across offered contracts. However, [as stated in the documentation](https://bitcoincore.org/en/doc/0.20.0/rpc/wallet/lockunspent/), the bitcoind wallet only keeps the locked transaction into memory. This means that if the wallet is restarted while a contract is in the offer state (the fund transaction is not broadcast yet), when creating a new contract, it is possible that the previously allocated UTXOs will be reused, making one of the contract invalid.
 - It is currently not possible to abort a contract once it has been offered meaning UTXOs will be locked until the contract is accepted or rejected by the counter party.
+- A lot of bugs are probably waiting to be found!
