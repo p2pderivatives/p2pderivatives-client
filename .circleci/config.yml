@@ -86,6 +86,13 @@ workflows:
           <<: *tag_only
           requires:
             - dependencies-no-cache
+      - release:
+          context: github-release
+          <<: *tag_only
+          requires:
+            - linux-packaging
+            - windows-packaging
+            - macos-packaging
 
 jobs:
   dependencies:
@@ -332,3 +339,26 @@ jobs:
             mkdir pkg && cp dist/*.${PKG_SUFFIX}* pkg
       - store_artifacts:
           path: ./pkg
+      - persist_to_workspace:
+          root: .
+          paths:
+             - pkg
+
+  release:
+    docker:
+      - image: cimg/go:1.14.6
+    steps:
+      - attach_workspace:
+          at: .
+      - run: 
+          name: Install ghr command
+          command: go get github.com/tcnksm/ghr
+      - run:
+          name: Upload binaries to github release
+          command: |
+            ghr \
+            -u p2pderivatives \
+            -r p2pderivatives-client \
+            -replace \
+            ${CIRCLE_TAG} pkg/
+ 
