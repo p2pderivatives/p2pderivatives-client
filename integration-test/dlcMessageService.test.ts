@@ -74,10 +74,10 @@ describe('dlc-message-service', () => {
         username: 'pingignore2',
         pass: DEFAULT_PASS,
       }
-      let auth3 = new GrpcAuth()
-      let client3 = new GrpcClient(TEST_GRPC_CONFIG, auth3)
-      let auth4 = new GrpcAuth()
-      let client4 = new GrpcClient(TEST_GRPC_CONFIG, auth4)
+      const auth3 = new GrpcAuth()
+      const client3 = new GrpcClient(TEST_GRPC_CONFIG, auth3)
+      const auth4 = new GrpcAuth()
+      const client4 = new GrpcClient(TEST_GRPC_CONFIG, auth4)
       await client3.getUserService().registerUser(user3.username, user3.pass)
       await client4.getUserService().registerUser(user4.username, user4.pass)
       await client3.getAuthenticationService().login(user3.username, user3.pass)
@@ -91,6 +91,7 @@ describe('dlc-message-service', () => {
 
       const conStream = client4.getUserService().getConnectedUsers()
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const _ of conStream) {
         // consume the stream
       }
