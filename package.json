@@ -79,7 +79,7 @@
     "await-semaphore": "^0.1.3",
     "axios": "^0.19.2",
     "bitcoin-core": "github:wleev/bitcoin-core#test-version",
-    "cfd-dlc-js": "github:cryptogarageinc/cfd-dlc-js#v0.0.6",
+    "cfd-dlc-js": "github:cryptogarageinc/cfd-dlc-js#v0.0.7",
     "cfd-js": "github:cryptogarageinc/cfd-js#v0.1.16",
     "connected-react-router": "^6.6.1",
     "date-fns": "^2.9.0",
