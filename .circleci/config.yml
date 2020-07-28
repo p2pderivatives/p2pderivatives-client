@@ -86,6 +86,13 @@ workflows:
           <<: *tag_only
           requires:
             - dependencies-no-cache
+      - release:
+          context: github-packages-docker-credentials
+          <<: *tag_only
+          requires:
+            - linux-packaging
+            - windows-packaging
+            - macos-packaging
 
 jobs:
   dependencies:
@@ -332,3 +339,25 @@ jobs:
             mkdir pkg && cp dist/*.${PKG_SUFFIX}* pkg
       - store_artifacts:
           path: ./pkg
+      - persist_to_workspace:
+          root: .
+          paths:
+             - pkg
+
+  release:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - attach_workspace:
+          at: pkg
+      - run:
+          name: Upload binaries to github release
+          command: |
+            for filename in ./pkg; do
+              curl \
+              -H "Authorization: token ${DOCKER_HUB_PASS}" \
+              -H "Content-Type: $(file -b --mime-type $filename)" \
+              --data-binary @$filename \
+              "https://uploads.github.com/repos/cryptogarageinc/p2pderivatives-client/releases/${CIRCLE_TAG}/assets?name=$(basename $filename)"
+            done
+        
