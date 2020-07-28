@@ -158,9 +158,9 @@ describe('dlc-event-handler', () => {
     const carolCollateral = oneBtc
     await localPartyContext.client.sendToAddress(carolAddress, carolCollateral)
     await localPartyContext.client.generateBlocksToWallet(1)
-    expect(sendOffer({ localContext: noBtcPartyContext })).rejects.toThrow(
-      Error
-    )
+    await expect(
+      sendOffer({ localContext: noBtcPartyContext })
+    ).rejects.toThrow(Error)
   })
 
   test('6-on-accept-not-enough-with-fee-should-throw', async () => {
@@ -168,7 +168,7 @@ describe('dlc-event-handler', () => {
     const carolCollateral = oneBtc
     await localPartyContext.client.sendToAddress(carolAddress, carolCollateral)
     await localPartyContext.client.generateBlocksToWallet(1)
-    const offerMessage = await sendOffer()
+    const offerMessage = await sendOffer({ remoteContext: noBtcPartyContext })
     expect(
       noBtcPartyContext.eventHandler.onOfferAccepted(offerMessage.contractId)
     ).rejects.toThrow(Error)
@@ -442,7 +442,7 @@ describe('dlc-event-handler', () => {
 
     expect(getOracleInfoMock).not.toHaveBeenCalled()
 
-    expect(
+    await expect(
       remotePartyContext.client.getTransaction(
         mutualClosedOfferContract.mutualCloseTxId
       )
