@@ -22,8 +22,8 @@ executors:
     docker:
       - image: electronuserland/builder
     environment:
-      BUILD_ARG: -l snap
-      PKG_SUFFIX: snap
+      BUILD_ARG: -l
+      PKG_SUFFIX: AppImage
 
 tag_only: &tag_only
   filters:
