@@ -482,6 +482,33 @@ describe('dlc-event-handler', () => {
     )
   })
 
+  test('18-on-accept-with-premium-just-enough-with-fee-should-work', async () => {
+    const carolAddress = await noBtcPartyContext.client.getNewAddress()
+    const carolCollateralAndPremium = oneBtc + oneBtc
+    const feeRate = 2
+    const estimatedFee = getCommonFee(feeRate) + 100 * feeRate
+    await localPartyContext.client.sendToAddress(
+      carolAddress,
+      carolCollateralAndPremium + estimatedFee
+    )
+    await localPartyContext.client.sendToAddress(
+      carolAddress,
+      oneBtc + estimatedFee
+    )
+    await localPartyContext.client.generateBlocksToWallet(1)
+    const offerMessage = await sendOffer({
+      localContext: noBtcPartyContext,
+      premiumAmount: oneBtc,
+    })
+    await localPartyContext.eventHandler.onOfferMessage(
+      offerMessage,
+      localParty
+    )
+    await expect(
+      localPartyContext.eventHandler.onOfferAccepted(offerMessage.contractId)
+    ).resolves.toBeDefined()
+  })
+
   async function sendOffer(
     params: {
       localContext?: PartyContext
