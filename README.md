@@ -27,7 +27,11 @@ Download the latest release of the application [here](https://github.com/p2pderi
 
 ### Running your own servers
 
-For testing locally, you can use the docker images available in this repository.
+For testing locally, you can use the docker images available in this repository.  
+The docker images are made available through github packages , which requires authentication to pull any image (even for public repository). You will thus need to log in first with your github account or use an authentication token to pull those images:
+```
+docker login https://docker.pkg.github.com -u USERNAME --password-stdin
+```   
 Simply run:
 
 ```
