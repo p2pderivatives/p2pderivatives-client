@@ -1,5 +1,5 @@
 import * as cfddlcjs from 'cfd-dlc-js'
-import { DecodeRawTransactionResponse, CfdError } from 'cfd-js'
+import { CfdError, DecodeRawTransactionResponse } from 'cfd-js'
 import { DateTime, Duration } from 'luxon'
 import { ContractState } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
@@ -10,6 +10,7 @@ import {
   ConfirmedContract,
   FailedContract,
   InitialContract,
+  isContractOfState,
   MaturedContract,
   MutualClosedContract,
   MutualCloseProposedContract,
@@ -20,14 +21,13 @@ import {
   SignedContract,
   UnilateralClosedByOtherContract,
   UnilateralClosedContract,
-  AnyContract,
 } from '../models/contract'
 import { MutualClosingMessage } from '../models/messages'
 import { PartyInputs } from '../models/PartyInputs'
 import { Utxo } from '../models/Utxo'
 import * as Utils from './CfdUtils'
-import { getCommonFee } from './FeeEstimator'
 import { DlcError } from './DlcEventHandler'
+import { getCommonFee } from './FeeEstimator'
 
 const csvDelay = 144
 const proposeTimeOutDuration = Duration.fromObject({ seconds: 30 })
@@ -801,20 +801,12 @@ export class ContractUpdater {
     }
   }
 
-  isOfferedOrAccepted(
-    contract: AnyContract
-  ): contract is OfferedContract | AcceptedContract {
-    return (
-      contract.state === ContractState.Accepted ||
-      contract.state === ContractState.Offered
-    )
-  }
-
   async toFailedContract(
     contract: InitialContract | OfferedContract | AcceptedContract,
     reason: string
   ): Promise<FailedContract> {
-    if (this.isOfferedOrAccepted(contract)) await this.unlockUtxos(contract)
+    const states = [ContractState.Offered, ContractState.Accepted] as const
+    if (isContractOfState(contract, ...states)) await this.unlockUtxos(contract)
     return {
       ...contract,
       state: ContractState.Failed,

@@ -52,3 +52,11 @@ export type AnyContract =
   | SignedContract
   | UnilateralClosedContract
   | UnilateralClosedByOtherContract
+
+export type ContractToState<C extends AnyContract = AnyContract> = C['state']
+export type StateToContract<S extends ContractToState<AnyContract>> = Extract<AnyContract, { state: S }>
+
+export function isContractOfState<S extends ContractToState>(contract: AnyContract, ...states: S[]): contract is StateToContract<S> {
+  return contract.state in states
+}
+
