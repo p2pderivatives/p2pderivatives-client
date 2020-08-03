@@ -509,6 +509,11 @@ describe('dlc-event-handler', () => {
     ).resolves.toBeDefined()
   })
 
+  test('19-no-remote-collateral-should-work', async () => {
+    const offerMessage = await sendOffer({ remoteCollateral: 0 })
+    await acceptOffer(offerMessage)
+  })
+
   async function sendOffer(
     params: {
       localContext?: PartyContext
@@ -521,8 +526,12 @@ describe('dlc-event-handler', () => {
   ): Promise<OfferMessage> {
     const localContext = params.localContext || localPartyContext
     const remoteContext = params.remoteContext || remotePartyContext
-    const localCollateral = params.localCollateral || 1 * oneBtc
-    const remoteCollateral = params.remoteCollateral || 1 * oneBtc
+    const localCollateral =
+      params.localCollateral === undefined ? 1 * oneBtc : params.localCollateral
+    const remoteCollateral =
+      params.remoteCollateral === undefined
+        ? 1 * oneBtc
+        : params.remoteCollateral
     const outcomes = params.outcomes || baseOutcomes
     const premiumAmount = params.premiumAmount || 0
     const contract: Contract = {

@@ -104,7 +104,7 @@ export class ContractUpdater {
     const collateral = contract.isLocalParty
       ? contract.localCollateral
       : contract.remoteCollateral
-    const commonFee = getCommonFee(contract.feeRate)
+    const halfCommonFee = Math.ceil(getCommonFee(contract.feeRate) / 2)
     const premiumAmount = contract.premiumAmount || 0
     let privateParams: PrivateParams | undefined = undefined
 
@@ -115,7 +115,7 @@ export class ContractUpdater {
     if (!localPartyInputs) {
       try {
         const utxos = await this.walletClient.getUtxosForAmount(
-          collateral + commonFee + premiumAmount,
+          collateral + halfCommonFee + premiumAmount,
           contract.feeRate
         )
         privateParams = await this.getNewPrivateParams(utxos)
@@ -148,8 +148,9 @@ export class ContractUpdater {
     let privateParams = contract.privateParams
     if (!remotePartyInputs || !privateParams) {
       try {
+        const halfCommonFee = Math.ceil(getCommonFee(contract.feeRate) / 2)
         const utxos = await this.walletClient.getUtxosForAmount(
-          contract.remoteCollateral,
+          contract.remoteCollateral + halfCommonFee,
           contract.feeRate
         )
         privateParams = await this.getNewPrivateParams(utxos)
