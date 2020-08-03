@@ -2,7 +2,7 @@
 
 set -e
 
-for i in {1..23}
+for i in {1..24}
 do
   docker-compose up -d bitcoind
   jest --config jest.config.integration-separate.js --reporters=default --runInBand -t=" $i-"
