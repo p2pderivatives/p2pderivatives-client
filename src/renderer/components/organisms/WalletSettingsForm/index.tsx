@@ -39,6 +39,9 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
   const [port, setPort] = useState(
     props.config && props.config.port ? props.config.port.toString() : ''
   )
+  const [proxy, setProxy] = useState(
+    props.config && props.config.sockProxy ? props.config.sockProxy : ''
+  )
   const [wallet, setWallet] = useState(props.config ? props.config.wallet : '')
   const [walletPass, setWalletPass] = useState(
     props.config ? props.config.walletPassphrase : ''
@@ -58,6 +61,7 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
     const tempConfig: BitcoinDConfig = {}
     if (ip) tempConfig.host = ip
     if (port) tempConfig.port = parseInt(port)
+    if (proxy) tempConfig.sockProxy = proxy
     if (wallet) tempConfig.wallet = wallet
     if (walletPass) tempConfig.walletPassphrase = walletPass
     if (rpcUser) tempConfig.rpcUsername = rpcUser
@@ -92,7 +96,7 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
         </Grid>
         <Grid item xs={12} className={classes.item}>
           <TextInput
-            label="IP Address"
+            label="IP Address or hostname"
             placeholder="Leave blank for localhost"
             fullWidth
             id="ip"
@@ -111,6 +115,17 @@ const WalletSettingsForm: FC<WalletSettingsFormProps> = (
             name="port"
             value={port}
             onChange={(e): void => setPort(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} className={classes.item}>
+          <TextInput
+            label="Socks proxy address to connect through Tor"
+            placeholder={'Leave blank for default or if unused.'}
+            fullWidth
+            id="proxy"
+            name="proxy"
+            value={proxy}
+            onChange={(e): void => setProxy(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} className={classes.item}>

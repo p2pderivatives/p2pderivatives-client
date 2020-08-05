@@ -17,7 +17,6 @@
     "noImplicitAny": true,
     "outDir": "../../build",
     "rootDir": "../",
-    "types": ["../types/bitcoin-core"]
   },
   "exclude": ["./**/*.test.ts"]
 }
