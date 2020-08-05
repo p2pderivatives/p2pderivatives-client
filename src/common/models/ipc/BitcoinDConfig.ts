@@ -8,4 +8,5 @@ export interface BitcoinDConfig {
   rpcPassword?: string
   wallet?: string
   walletPassphrase?: string
+  sockProxy?: string
 }

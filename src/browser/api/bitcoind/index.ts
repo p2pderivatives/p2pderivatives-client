@@ -1,17 +1,19 @@
-import Client, {
-  ClientConstructorOption,
-  WalletTransaction,
+import {
+  AddressType,
+  Client,
+  ClientOption,
   ListUnspentOptions,
   UnspentTxInfo,
-} from 'bitcoin-core'
-
+  WalletTransaction,
+} from 'bitcoin-simple-rpc'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 import {
   BitcoinDConfig,
   BitcoinNetwork,
 } from '../../../common/models/ipc/BitcoinDConfig'
-import * as Utils from '../../dlc/utils/CfdUtils'
-import { Utxo } from '../../dlc/models/Utxo'
 import { btcToSats, satsToBtc } from '../../../common/utils/conversion'
+import { Utxo } from '../../dlc/models/Utxo'
+import * as Utils from '../../dlc/utils/CfdUtils'
 
 export default class BitcoinDClient {
   private rpcUser = ''
@@ -32,22 +34,11 @@ export default class BitcoinDClient {
   }
 
   public async configure(options: BitcoinDConfig): Promise<void> {
-    const clientConfig: ClientConstructorOption = {}
-    if (options.rpcUsername) {
-      this.rpcUser = options.rpcUsername
-      clientConfig['username'] = this.rpcUser
-    }
-    if (options.rpcPassword) {
-      this.rpcPassword = options.rpcPassword
-      clientConfig['password'] = this.rpcPassword
-    }
     if (options.network) {
       this.network = options.network
-      clientConfig['network'] = this.network
     }
     if (options.host) {
       this.host = options.host
-      clientConfig['host'] = this.host
     }
     if (options.port) {
       this.port = options.port
@@ -56,28 +47,42 @@ export default class BitcoinDClient {
       if (this.network === 'testnet') this.port = 18332
       if (this.network === 'regtest') this.port = 18443
     }
-    clientConfig['port'] = this.port
 
-    if (options.wallet) {
-      this.wallet = options.wallet
+    const clientConfig: ClientOption = {
+      baseURL: getBaseUrl(this.host, this.port),
     }
-    clientConfig['wallet'] = this.wallet
+
+    if (this.host.includes('.onion')) {
+      const proxy = options.sockProxy || 'socks5h://127.0.0.1:9050'
+      clientConfig.httpAgent = new SocksProxyAgent(proxy)
+      clientConfig.httpsAgent = new SocksProxyAgent(proxy)
+    }
+
+    if (options.rpcUsername && options.rpcPassword) {
+      this.rpcUser = options.rpcUsername
+      this.rpcPassword = options.rpcPassword
+      clientConfig.auth = { username: this.rpcUser, password: this.rpcPassword }
+    }
+
+    const client = new Client(clientConfig)
+    const walletList = await client.listWallets()
+    if (options.wallet || walletList.length > 1) {
+      clientConfig.baseURL = clientConfig.baseURL.concat('wallet/')
+      if (options.wallet) {
+        this.wallet = options.wallet
+        if (!walletList.includes(this.wallet)) {
+          await client.loadWallet(this.wallet)
+        }
+        clientConfig.baseURL = clientConfig.baseURL.concat(this.wallet)
+      }
+      this.client = new Client(clientConfig)
+    } else {
+      this.client = client
+    }
 
     if (options.walletPassphrase) {
       this.walletPassphrase = options.walletPassphrase
-    }
-
-    clientConfig.useWalletURL = true
-
-    this.client = new Client(clientConfig)
-    if (this.wallet) {
-      const wallets = await this.client.listWallets()
-      if (!wallets.includes(this.wallet)) {
-        await this.client.loadWallet(this.wallet)
-      }
-    }
-    if (options.walletPassphrase) {
-      await this.client.walletPassphrase(this.walletPassphrase, 10)
+      await this.client.walletPassphrase(this.walletPassphrase, 1)
     }
     await this.client.getNetworkInfo()
   }
@@ -118,7 +123,7 @@ export default class BitcoinDClient {
 
   public async getNewAddress(
     label = '',
-    addressType = 'bech32'
+    addressType: AddressType = 'bech32'
   ): Promise<string> {
     return await this.getClient().getNewAddress(label, addressType)
   }
@@ -234,4 +239,19 @@ export default class BitcoinDClient {
   public async importPublicKey(pubKey: string): Promise<void> {
     await this.getClient().importPubKey(pubKey, '', false)
   }
+}
+
+export function getBaseUrl(host: string, port: number): string {
+  if (host.startsWith('btcrpc')) {
+    host = host.replace('btcrpc', 'http')
+  }
+  const queryPos = host.indexOf('?')
+  if (queryPos >= 0) {
+    host = host.substring(0, queryPos)
+  }
+  if (host.startsWith('http')) {
+    return host
+  }
+
+  return `http://${host}:${port}/`
 }
