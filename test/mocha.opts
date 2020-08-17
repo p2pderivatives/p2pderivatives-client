@@ -1,3 +1,0 @@
---require ./test/ts-node-reg.js
---renderer
---require-main ./test/main

@@ -1,32 +1,36 @@
-import { all, call, fork, put, takeEvery, getContext } from 'redux-saga/effects'
-import { BitcoinActionTypes } from './types'
+import { SagaIterator } from 'redux-saga'
+import { all, call, fork, getContext, put, takeEvery } from 'redux-saga/effects'
+import { BitcoindChannels } from '../../../common/ipc/model/bitcoind'
+import { isFailed } from '../../../common/utils/failable'
+import { ReturnTypeAsync } from '../../../common/utils/types'
 import {
-  checkRequest,
-  checkError,
-  checkSuccess,
+  balanceError,
   balanceRequest,
   balanceSuccess,
-  balanceError,
-  configRetrieved,
+  checkError,
+  checkRequest,
+  checkSuccess,
   configNone,
+  configRetrieved,
 } from './actions'
-import { BitcoinAPI } from '../../ipc/BitcoinAPI'
-import { IPCError } from '../../../common/models/ipc/IPCError'
-import { SagaIterator } from 'redux-saga'
+import { BitcoinActionTypes } from './types'
 
 export function* handleCheck(
   action: ReturnType<typeof checkRequest>
 ): SagaIterator {
   try {
-    const bitcoinAPI: BitcoinAPI = yield getContext('bitcoinAPI')
-    yield call(bitcoinAPI.checkConfig, action.payload)
-    yield put(checkSuccess())
-  } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(checkError(err.getMessage()))
+    const bitcoinAPI: BitcoindChannels = yield getContext('bitcoinAPI')
+    const res = (yield call(
+      bitcoinAPI.checkConfig,
+      action.payload
+    )) as ReturnTypeAsync<typeof bitcoinAPI.checkConfig>
+    if (isFailed(res)) {
+      yield put(checkError(res.error.message))
     } else {
-      yield put(checkError('An unknown error occured.'))
+      yield put(checkSuccess())
     }
+  } catch (err) {
+    yield put(checkError('An unknown error occured.'))
   }
 }
 
@@ -34,23 +38,31 @@ export function* handleBalance(
   action: ReturnType<typeof balanceRequest>
 ): SagaIterator {
   try {
-    const bitcoinAPI: BitcoinAPI = yield getContext('bitcoinAPI')
-    const balance = yield call(bitcoinAPI.getBalance)
-    yield put(balanceSuccess(balance))
-  } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(balanceError(err.getMessage()))
+    const bitcoinAPI: BitcoindChannels = yield getContext('bitcoinAPI')
+    const res = (yield call(bitcoinAPI.getBalance)) as ReturnTypeAsync<
+      typeof bitcoinAPI.getBalance
+    >
+    if (isFailed(res)) {
+      yield put(checkError(res.error.message))
     } else {
-      yield put(balanceError('An unknown error occured.'))
+      yield put(balanceSuccess(res.value))
     }
+  } catch (err) {
+    yield put(balanceError('An unknown error occured.'))
   }
 }
 
 export function* handleConfig(): SagaIterator {
   try {
-    const bitcoinAPI: BitcoinAPI = yield getContext('bitcoinAPI')
-    const config = yield call(bitcoinAPI.getConfig)
-    yield put(configRetrieved(config))
+    const bitcoinAPI: BitcoindChannels = yield getContext('bitcoinAPI')
+    const res = (yield call(bitcoinAPI.getConfig)) as ReturnTypeAsync<
+      typeof bitcoinAPI.getConfig
+    >
+    if (isFailed(res)) {
+      // do nothing
+    } else {
+      yield put(configRetrieved(res.value))
+    }
   } catch (err) {
     yield put(configNone())
   }

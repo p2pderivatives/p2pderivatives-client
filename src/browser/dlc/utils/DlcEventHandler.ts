@@ -2,8 +2,9 @@ import { DateTime } from 'luxon'
 import { v4 } from 'uuid'
 import { Contract, ContractState } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
-import { isSuccessful } from '../../../common/utils/failable'
+import { isFailed } from '../../../common/utils/failable'
 import { ErrorCode } from '../../storage/ErrorCode'
+import { RepositoryError } from '../../storage/RepositoryError'
 import {
   AcceptedContract,
   AnyContract,
@@ -372,7 +373,7 @@ export class DlcEventHandler {
   ): Promise<AnyContract> {
     const result = await this._dlcService.getContract(contractId)
 
-    if (!isSuccessful(result)) {
+    if (isFailed<AnyContract, RepositoryError>(result)) {
       const error = result.error
 
       if (error.errorCode === ErrorCode.NotFound) {

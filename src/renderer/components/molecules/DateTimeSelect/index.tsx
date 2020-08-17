@@ -1,11 +1,11 @@
-import React, { FC, useState, useEffect, ReactElement } from 'react'
-import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
-import { FormControl, InputLabel, Select, makeStyles } from '@material-ui/core'
+import { FormControl, InputLabel, makeStyles, Select } from '@material-ui/core'
+import { DateTime } from 'luxon'
+import React, { FC, ReactElement, useEffect, useState } from 'react'
+import { OracleAssetConfiguration } from '../../../../common/models/oracle/oracle'
 import {
   generateRange,
   getFirstValidDate,
 } from '../../../util/timerange-generator'
-import { DateTime } from 'luxon'
 
 type DateTimeSelectProps = {
   oracleInfo: OracleAssetConfiguration

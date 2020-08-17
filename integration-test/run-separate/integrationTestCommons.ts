@@ -3,13 +3,15 @@ import level from 'level-test'
 import { LevelUp } from 'levelup'
 import { TEST_BITCOIND_CONFIG } from '../../services/bitcoind/env'
 import BitcoinDClient from '../../src/browser/api/bitcoind'
+import { AnyContract } from '../../src/browser/dlc/models/contract'
 import { LevelContractRepository } from '../../src/browser/dlc/repository/LevelContractRepository'
 import { DlcService } from '../../src/browser/dlc/service/DlcService'
 import * as Utils from '../../src/browser/dlc/utils/CfdUtils'
 import { ContractUpdater } from '../../src/browser/dlc/utils/ContractUpdater'
 import { DlcEventHandler } from '../../src/browser/dlc/utils/DlcEventHandler'
+import { RepositoryError } from '../../src/browser/storage/RepositoryError'
 import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
-import { isSuccessful } from '../../src/common/utils/failable'
+import { isFailed } from '../../src/common/utils/failable'
 
 const localParty = 'alice'
 const remoteParty = 'bob'
@@ -106,7 +108,7 @@ export async function assertContractState(
 ): Promise<Contract> {
   const result = await dlcService.getContract(contractId)
 
-  if (!isSuccessful(result)) {
+  if (isFailed<AnyContract, RepositoryError>(result)) {
     throw result.error
   }
 

@@ -13,8 +13,6 @@ import { RejectedContract } from './RejectedContract'
 import { SignedContract } from './SignedContract'
 import { UnilateralClosedByOtherContract } from './UnilateralClosedByOtherContract'
 import { UnilateralClosedContract } from './UnilateralClosedContract'
-import { StatelessContract } from './StatelessContract'
-import { ContractState, Contract } from '../../../../common/models/dlc/Contract'
 
 export { toAcceptMessage } from './AcceptedContract'
 export type { AcceptedContract } from './AcceptedContract'

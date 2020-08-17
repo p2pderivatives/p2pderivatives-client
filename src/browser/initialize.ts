@@ -6,7 +6,7 @@ import levelup, { LevelUp } from 'levelup'
 import path from 'path'
 import { createLogger, format, transports } from 'winston'
 import 'winston-daily-rotate-file'
-import { IPCEvents } from '../common/models/ipc/IPCEvents'
+import { EventIPCRegister, setEventIPCHandler } from '../common/ipc/IPC'
 import { GrpcAuth } from './api/grpc/GrpcAuth'
 import { GrpcClient } from './api/grpc/GrpcClient'
 import { GrpcConfig, isSecureGrpcConfig } from './api/grpc/GrpcConfig'
@@ -18,13 +18,14 @@ import { LevelContractRepository } from './dlc/repository/LevelContractRepositor
 import { DlcService } from './dlc/service/DlcService'
 import { ContractUpdater } from './dlc/utils/ContractUpdater'
 import { DlcEventHandler } from './dlc/utils/DlcEventHandler'
-import { AuthenticationEvents } from './ipc/AuthenticationEvents'
-import { BitcoinDEvents } from './ipc/BitcoinDEvents'
-import { DlcEvents } from './ipc/DlcEvents'
-import { DlcIPCBrowser } from './ipc/DlcIPCBrowser'
-import { FileEvents } from './ipc/FileEvents'
-import { OracleEvents } from './ipc/OracleEvents'
-import { UserEvents } from './ipc/UserEvents'
+import { DlcUpdate } from './ipc/consumer/DlcUpdate'
+import { AuthenticationEvents } from './ipc/event/AuthenticationEvents'
+import { BitcoinDEvents } from './ipc/event/BitcoinDEvents'
+import { DlcEvents } from './ipc/event/DlcEvents'
+import { FileEvents } from './ipc/event/FileEvents'
+import { OracleEvents } from './ipc/event/OracleEvents'
+import { UserEvents } from './ipc/event/UserEvents'
+import { ElectronIPCMainHandler } from './ipc/handler/ElectronIPCMainHandler'
 
 const logger = createLogger({
   level: 'info',
@@ -32,6 +33,8 @@ const logger = createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [new transports.Console()],
 })
+
+setEventIPCHandler(new ElectronIPCMainHandler())
 
 async function initializeDB(userName: string): Promise<LevelUp> {
   const userPath = app.getPath('userData')
@@ -88,7 +91,7 @@ async function finalizeDB(db: LevelUp): Promise<void> {
 async function loginCallBack(
   userName: string,
   oracleClient: OracleClient,
-  dlcIPCBrowser: DlcIPCBrowser,
+  dlcUpdateIPCConsumer: DlcUpdate,
   grpcClient: GrpcClient
 ): Promise<() => Promise<void>> {
   const db = await initializeDB(userName)
@@ -100,14 +103,13 @@ async function loginCallBack(
   const contractRepository = new LevelContractRepository(db as LevelUp)
   const dlcService = new DlcService(contractRepository)
   const contractUpdater = new ContractUpdater(bitcoinEvents.getClient())
-
   const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
 
   const dlcManager = new DlcManager(
     eventHandler,
     dlcService,
     bitcoinEvents.getClient(),
-    dlcIPCBrowser,
+    dlcUpdateIPCConsumer.events,
     oracleClient,
     grpcClient.getDlcService(),
     logger,
@@ -126,7 +128,7 @@ async function loginCallBack(
 async function logoutCallback(
   db: LevelUp,
   dlcManager: DlcManager,
-  ipcEvents: IPCEvents[]
+  ipcEvents: EventIPCRegister[]
 ): Promise<void> {
   dlcManager.finalize()
   for (const ipcEvent of ipcEvents) {
@@ -155,7 +157,7 @@ export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
       )
   }
   const grpcClient = new GrpcClient(grpcConfig, auth)
-  const dlcIPCBrowser = new DlcIPCBrowser(browserWindow)
+  const dlcIPCConsumer = new DlcUpdate(browserWindow)
 
   const oracleConfig = appConfig.parse<OracleConfig>('oracle')
   const oracleClient = new OracleClient(oracleConfig)
@@ -163,7 +165,7 @@ export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
   const authLoginCallback = (
     userName: string
   ): Promise<() => Promise<void>> => {
-    return loginCallBack(userName, oracleClient, dlcIPCBrowser, grpcClient)
+    return loginCallBack(userName, oracleClient, dlcIPCConsumer, grpcClient)
   }
 
   const authEvents = new AuthenticationEvents(grpcClient, authLoginCallback)

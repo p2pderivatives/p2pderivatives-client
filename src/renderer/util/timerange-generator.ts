@@ -1,5 +1,5 @@
-import { OracleAssetConfiguration } from '../../common/oracle/oracle'
-import { DateTime, ToRelativeUnit, DurationObject, Duration } from 'luxon'
+import { DateTime, Duration, DurationObject, ToRelativeUnit } from 'luxon'
+import { OracleAssetConfiguration } from '../../common/models/oracle/oracle'
 
 export interface DateRanges {
   years: number[]

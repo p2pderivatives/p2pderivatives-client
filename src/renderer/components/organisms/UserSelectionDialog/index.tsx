@@ -1,13 +1,10 @@
-import React, { FC, useState, useEffect, ReactElement } from 'react'
-
-import { createMuiTheme, MuiThemeProvider, makeStyles } from '@material-ui/core'
+import { createMuiTheme, makeStyles, MuiThemeProvider } from '@material-ui/core'
 import Dialog from '@material-ui/core/Dialog'
 import DialogContent from '@material-ui/core/DialogContent'
-
 import MUIDataTable, { SelectableRows } from 'mui-datatables'
-
+import React, { FC, ReactElement, useEffect, useState } from 'react'
+import { User } from '../../../../common/models/user'
 import Button from '../../atoms/Button'
-import { User } from '../../../../common/models/user/User'
 
 export type UserSelectionDialogProps = {
   open?: boolean
@@ -121,7 +118,7 @@ const UserSelectionDialog: FC<UserSelectionDialogProps> = (
     selectableRows: 'single' as SelectableRows,
     onRowsSelect: (currentRowsSelected: RowObj[]): void => {
       if (currentRowsSelected.length > 0) {
-        setUsername(props.users[currentRowsSelected[0].dataIndex]._name)
+        setUsername(props.users[currentRowsSelected[0].dataIndex].name)
       } else {
         setUsername('')
       }

@@ -1,52 +1,59 @@
 import { expectSaga } from 'redux-saga-test-plan'
-import loginSagas from '../sagas'
-import { AuthenticationAPI } from '../../../ipc/AuthenticationAPI'
+import { getContext } from 'redux-saga/effects'
 import {
-  loginSuccess,
-  loginRequest,
-  loginError,
-  logoutSuccess,
-  logoutRequest,
-  logoutError,
+  AuthChannels,
+  AuthFailableAsync,
+  ChangePasswordCall,
+  LoginCall,
+} from '../../../../common/ipc/model/authentication'
+import { Success } from '../../../../common/utils/failable'
+import {
   changePasswordRequest,
   changePasswordSuccess,
+  loginError,
+  loginRequest,
+  loginSuccess,
+  logoutError,
+  logoutRequest,
+  logoutSuccess,
 } from '../actions'
-import { getContext } from 'redux-saga/effects'
-import { IPCError } from '../../../../common/models/ipc/IPCError'
+import loginSagas from '../sagas'
 
 let failLogout = false
 
-class MockAuthAPI implements AuthenticationAPI {
-  login(username: string, password: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (username === 'test') {
-        resolve()
-      } else {
-        throw new IPCError('general', -1, 'test error', 'test_error')
-        //reject()
-      }
-    })
-  }
+const mockError = {
+  success: false,
+  error: {
+    type: 'authentication',
+    code: -1,
+    message: 'test message',
+    name: 'test error',
+  },
+} as const
 
-  logout(): Promise<void> {
-    return new Promise(resolve => {
-      if (!failLogout) {
-        resolve()
-      } else {
-        throw new IPCError('general', -1, 'test error', 'test_error')
-      }
-    })
+class MockAuthAPI implements AuthChannels {
+  login(data: LoginCall): AuthFailableAsync<void> {
+    if (data.username === 'test') {
+      return Promise.resolve(Success())
+    } else {
+      return Promise.resolve(mockError)
+    }
   }
-
-  refresh(): Promise<void> {
-    return Promise.resolve()
+  logout(): AuthFailableAsync<void> {
+    if (!failLogout) {
+      return Promise.resolve(Success())
+    } else {
+      return Promise.resolve(mockError)
+    }
   }
-  changePassword(oldPassword: string, newPassword: string): Promise<void> {
-    return Promise.resolve()
+  changePassword(data: ChangePasswordCall): AuthFailableAsync<void> {
+    return Promise.resolve(Success())
   }
-
-  getUser(): Promise<string> {
-    return Promise.resolve('John Doe')
+  refresh(): AuthFailableAsync<void> {
+    return Promise.resolve(Success())
+  }
+  getUser(): AuthFailableAsync<string> {
+    return Promise.resolve(Success('John Doe'))
   }
 }
 
@@ -64,7 +71,7 @@ describe('login saga', () => {
   it('should handle failed logging in', () => {
     return expectSaga(loginSagas)
       .provide([[getContext('authAPI'), authAPI]])
-      .put(loginError('test error'))
+      .put(loginError(mockError.error.message))
       .dispatch(loginRequest('error', 'test'))
       .run()
   })
@@ -81,7 +88,7 @@ describe('login saga', () => {
     failLogout = true
     return expectSaga(loginSagas)
       .provide([[getContext('authAPI'), authAPI]])
-      .put(logoutError('test error'))
+      .put(logoutError(mockError.error.message))
       .dispatch(logoutRequest())
       .run()
   })

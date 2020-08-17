@@ -1,9 +1,9 @@
-import React, { ReactElement } from 'react'
-import UserSelectionDialog from './'
 import { MuiThemeProvider } from '@material-ui/core'
-import theme from '../../theme'
-import { User } from '../../../../common/models/user/User'
 import { action } from '@storybook/addon-actions'
+import React, { ReactElement } from 'react'
+import { User } from '../../../../common/models/user'
+import theme from '../../theme'
+import UserSelectionDialog from './'
 
 export default {
   title: 'Components/Organisms/UserSelectionDialog',
@@ -13,9 +13,9 @@ export default {
 }
 
 const testUsers: User[] = [
-  new User('Jane Doe'),
-  new User('Joe Exotic'),
-  new User('Dirk Daggers'),
+  { name: 'Jane Doe' },
+  { name: 'Joe Exotic' },
+  { name: 'Dirk Daggers' },
 ]
 
 export const userSelectionDialog = (): ReactElement => (

@@ -1,4 +1,4 @@
-import { User } from '../../../common/models/user/User'
+import { User } from '../../../common/models/user'
 
 export enum UserActionTypes {
   REGISTRATION_REQUEST = '@@user/REGISTRATION_REQUEST',

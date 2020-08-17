@@ -1,39 +1,38 @@
-import { all, call, fork, put, takeEvery, getContext } from 'redux-saga/effects'
-import { UserActionTypes } from './types'
-import {
-  registerError,
-  registerSuccess,
-  registerRequest,
-  unregisterRequest,
-  unregisterSuccess,
-  unregisterError,
-  userListSuccess,
-  userListError,
-} from './actions'
-import { UserAPI } from '../../ipc/UserAPI'
-import { IPCError } from '../../../common/models/ipc/IPCError'
-import { AUTH_ERROR } from '../../../common/constants/Errors'
 import { push } from 'connected-react-router'
 import { SagaIterator } from 'redux-saga'
+import { all, call, fork, getContext, put, takeEvery } from 'redux-saga/effects'
+import { AUTH_ERROR } from '../../../common/constants/Errors'
+import { UserChannels } from '../../../common/ipc/model/user'
+import { isFailed } from '../../../common/utils/failable'
+import { ReturnTypeAsync } from '../../../common/utils/types'
+import {
+  registerError,
+  registerRequest,
+  registerSuccess,
+  unregisterError,
+  unregisterRequest,
+  unregisterSuccess,
+  userListError,
+  userListSuccess,
+} from './actions'
+import { UserActionTypes } from './types'
 
 function* handleRegistration(
   action: ReturnType<typeof registerRequest>
 ): SagaIterator {
   try {
-    const userAPI: UserAPI = yield getContext('userAPI')
-
-    yield call(
-      userAPI.registerUser,
-      action.payload.password,
-      action.payload.username
-    )
-    yield put(registerSuccess())
-  } catch (err) {
-    if (err instanceof IPCError && err.getMessage()) {
-      yield put(registerError(err.getMessage()))
+    const userAPI: UserChannels = yield getContext('userAPI')
+    const res = (yield call(userAPI.register, {
+      username: action.payload.username,
+      password: action.payload.password,
+    })) as ReturnTypeAsync<typeof userAPI.register>
+    if (isFailed(res)) {
+      yield put(registerError(res.error.message))
     } else {
-      yield put(registerError('An unknown error occured.'))
+      yield put(registerSuccess())
     }
+  } catch (err) {
+    yield put(registerError('An unknown error occured.'))
   }
 }
 
@@ -41,35 +40,42 @@ function* handleUnregistration(
   action: ReturnType<typeof unregisterRequest>
 ): SagaIterator {
   try {
-    const userAPI: UserAPI = yield getContext('userAPI')
-
-    yield call(userAPI.unregisterUser)
-    yield put(unregisterSuccess())
-  } catch (err) {
-    if (err instanceof IPCError && (err as IPCError).getType() === AUTH_ERROR) {
-      yield put(push('/'))
-    } else if (err instanceof IPCError && err.getMessage()) {
-      yield put(unregisterError(err.getMessage()))
+    const userAPI: UserChannels = yield getContext('userAPI')
+    const res = (yield call(userAPI.unregister)) as ReturnTypeAsync<
+      typeof userAPI.unregister
+    >
+    if (isFailed(res)) {
+      if (res.error.type === AUTH_ERROR) {
+        yield put(push('/'))
+      } else {
+        yield put(unregisterError(res.error.message))
+      }
     } else {
-      yield put(unregisterError('An unknown error occured.'))
+      yield put(unregisterSuccess())
     }
+  } catch (err) {
+    yield put(unregisterError('An unknown error occured.'))
   }
 }
 
 function* handleUserList(): SagaIterator {
   try {
-    const userAPI: UserAPI = yield getContext('userAPI')
+    const userAPI: UserChannels = yield getContext('userAPI')
 
-    const users = yield call(userAPI.getUserList)
-    yield put(userListSuccess(users))
-  } catch (err) {
-    if (err instanceof IPCError && (err as IPCError).getType() === AUTH_ERROR) {
-      yield put(push('/'))
-    } else if (err instanceof IPCError && err.getMessage()) {
-      yield put(userListError(err.getMessage()))
+    const res = (yield call(userAPI.getAllUsers)) as ReturnTypeAsync<
+      typeof userAPI.getAllUsers
+    >
+    if (isFailed(res)) {
+      if (res.error.type === AUTH_ERROR) {
+        yield put(push('/'))
+      } else {
+        yield put(userListError(res.error.message))
+      }
     } else {
-      yield put(userListError('An unknown error occured.'))
+      yield put(userListSuccess(res.value))
     }
+  } catch (err) {
+    yield put(userListError('An unknown error occured.'))
   }
 }
 

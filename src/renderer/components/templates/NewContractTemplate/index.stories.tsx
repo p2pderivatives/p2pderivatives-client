@@ -1,14 +1,14 @@
+import { MuiThemeProvider } from '@material-ui/core'
+import { action } from '@storybook/addon-actions'
+import { DateTime, Duration } from 'luxon'
 import React, { ReactElement } from 'react'
 import StoryRouter from 'storybook-react-router'
-import { action } from '@storybook/addon-actions'
-import NewContractTemplate from './'
-import { MuiThemeProvider } from '@material-ui/core'
-import theme from '../../theme'
-import { User } from '../../../../common/models/user/User'
-import { DateTime, Duration } from 'luxon'
-import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
-import configureStore from '../../stories-data/createStoriesStore'
+import { OracleAssetConfiguration } from '../../../../common/models/oracle/oracle'
+import { User } from '../../../../common/models/user'
 import ProviderWrapper from '../../../provider'
+import configureStore from '../../stories-data/createStoriesStore'
+import theme from '../../theme'
+import NewContractTemplate from './'
 
 export default {
   title: 'Components/Templates/NewContractTemplate',
@@ -18,9 +18,9 @@ export default {
 const store = configureStore()
 
 const testUsers: User[] = [
-  new User('Jane Doe'),
-  new User('Joe Exotic'),
-  new User('Dirk Daggers'),
+  { name: 'Jane Doe' },
+  { name: 'Joe Exotic' },
+  { name: 'Dirk Daggers' },
 ]
 
 const oracleInfo: OracleAssetConfiguration = {

@@ -1,18 +1,19 @@
+import { push } from 'connected-react-router'
 import React, { FC, useEffect, useState } from 'react'
 import {
-  useSelector as useReduxSelector,
   TypedUseSelectorHook,
   useDispatch,
+  useSelector as useReduxSelector,
 } from 'react-redux'
-import { ApplicationState } from '../../../store'
-
-import ContractDetailTemplate from '../../templates/ContractDetailTemplate'
-import { push } from 'connected-react-router'
 import { RouteChildrenProps } from 'react-router'
+import { isFailed } from '../../../../common/utils/failable'
+import { BitcoinIPC } from '../../../ipc/consumer/BitcoinIPC'
+import { ApplicationState } from '../../../store'
 import { acceptRequest, rejectRequest } from '../../../store/dlc/actions'
-import { BitcoinIPC } from '../../../ipc/BitcoinIPC'
+import ContractDetailTemplate from '../../templates/ContractDetailTemplate'
 
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
+const bitcoinIPC = new BitcoinIPC()
 
 const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
   props: RouteChildrenProps<{ id: string }>
@@ -25,8 +26,11 @@ const ContractDetailPage: FC<RouteChildrenProps<{ id: string }>> = (
   const [availableAmount, setAvailableAmount] = useState(0)
 
   const getUtxoAmount = async (): Promise<void> => {
-    const amount = await BitcoinIPC.getUtxoAmount()
-    setAvailableAmount(amount)
+    const res = await bitcoinIPC.events.getUtxoAmount()
+    if (isFailed(res)) {
+      throw res.error
+    }
+    setAvailableAmount(res.value)
   }
 
   useEffect(() => {

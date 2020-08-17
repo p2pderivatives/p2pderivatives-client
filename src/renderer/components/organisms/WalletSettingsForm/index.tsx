@@ -1,17 +1,14 @@
-import React, { FC, useState, useEffect } from 'react'
-
+import { makeStyles } from '@material-ui/core'
+import Grid from '@material-ui/core/Grid'
+import MenuItem from '@material-ui/core/MenuItem'
+import Select from '@material-ui/core/Select'
+import React, { FC, useEffect, useState } from 'react'
 import {
   BitcoinDConfig,
   BitcoinNetwork,
-} from '../../../../common/models/ipc/BitcoinDConfig'
-
-import { makeStyles } from '@material-ui/core'
-import Grid from '@material-ui/core/Grid'
-import Select from '@material-ui/core/Select'
-import MenuItem from '@material-ui/core/MenuItem'
-
-import TextInput from '../../atoms/TextInput'
+} from '../../../../common/models/bitcoind/config'
 import Button from '../../atoms/Button'
+import TextInput from '../../atoms/TextInput'
 
 export type WalletSettingsFormProps = {
   checkSettings: (config: BitcoinDConfig) => void

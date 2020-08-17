@@ -1,6 +1,6 @@
-import { generateRange } from '../timerange-generator'
-import { OracleAssetConfiguration } from '../../../common/oracle/oracle'
 import { DateTime, Duration } from 'luxon'
+import { OracleAssetConfiguration } from '../../../common/models/oracle/oracle'
+import { generateRange } from '../timerange-generator'
 
 describe('timerange generator tests', () => {
   it('should generate correctly for range P1W and freq T1H', () => {
