@@ -10,10 +10,7 @@ export enum ContractState {
   Broadcast,
   Confirmed,
   Mature,
-  UnilateralClosed,
-  UnilateralClosedByOther,
-  MutualCloseProposed,
-  MutualClosed,
+  Closed,
   Refunded,
   Failed,
 }

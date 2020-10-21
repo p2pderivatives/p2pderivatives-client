@@ -3,7 +3,6 @@ import { DateTime } from 'luxon'
 import { Logger } from 'winston'
 import { Contract } from '../../../common/models/dlc/Contract'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
-import { Outcome } from '../../../common/models/dlc/Outcome'
 import { isSuccessful } from '../../../common/utils/failable'
 import BitcoinDClient from '../../api/bitcoind'
 import {
@@ -14,14 +13,11 @@ import { OracleClientApi } from '../../api/oracle/oracleClient'
 import { DlcBrowserAPI } from '../../ipc/DlcBrowserAPI'
 import {
   AcceptedContract,
-  AnyContract,
   MaturedContract,
-  MutualCloseProposedContract,
   OfferedContract,
   RejectedContract,
   SignedContract,
   toAcceptMessage,
-  toMutualClosingMessage,
   toOfferMessage,
   toSignMessage,
 } from '../models/contract'
@@ -29,7 +25,6 @@ import {
   AcceptMessage,
   DlcAbstractMessage,
   DlcMessageType,
-  MutualClosingMessage,
   OfferMessage,
   RejectMessage,
   SignMessage,
@@ -205,7 +200,6 @@ export class DlcManager {
   private async periodicChecks(): Promise<void> {
     await this.executeSafe(async () => {
       try {
-        await this.checkForMutualCloseProposedContracts()
         await this.checkForConfirmedThatMaturedContracts()
         await this.checkForSignedOrBroadcastThatConfirmedContracts()
         await this.checkForRefundableContracts()
@@ -222,34 +216,6 @@ export class DlcManager {
     } catch (err) {
       //TODO(tibo): check that the error is about the tx)
       return -1
-    }
-  }
-
-  private async trySendMutualCloseOffer(
-    contract: AnyContract,
-    outcome: Outcome
-  ): Promise<boolean> {
-    const mutualCloseProposeContract = await this.eventHandler.onSendMutualCloseOffer(
-      contract.id,
-      outcome
-    )
-    const mutualCloseMessage = toMutualClosingMessage(
-      mutualCloseProposeContract
-    )
-    await this.ipcClient.dlcUpdate(mutualCloseProposeContract)
-
-    try {
-      await this.dlcMessageService.sendDlcMessage(
-        mutualCloseMessage,
-        contract.counterPartyName
-      )
-      return true
-    } catch (error) {
-      this.logger.warn(
-        `Could not send message to ${contract.counterPartyName}`,
-        { message: error.message, error }
-      )
-      return false
     }
   }
 
@@ -277,22 +243,15 @@ export class DlcManager {
             value.value,
             value.signature
           )
+
           const closedByOther = await this.checkAndUpdateClosedByOther(
             maturedContract
           )
 
           if (!closedByOther) {
             await this.ipcClient.dlcUpdate(maturedContract)
-            const offered = await this.trySendMutualCloseOffer(
-              contract,
-              outcome
-            )
-            if (!offered) {
-              const unilateralClosed = await this.eventHandler.onUnilateralClose(
-                contract.id
-              )
-              await this.ipcClient.dlcUpdate(unilateralClosed)
-            }
+            const closed = await this.eventHandler.onClosed(contract.id)
+            await this.ipcClient.dlcUpdate(closed)
           }
         }
       } catch (error) {
@@ -326,47 +285,6 @@ export class DlcManager {
     }
   }
 
-  private async checkForMutualCloseProposedContracts(): Promise<void> {
-    const contracts = (await this.dlcService.getMutualCloseOfferedContracts()) as MutualCloseProposedContract[]
-    const utcNow = DateTime.utc()
-
-    for (const contract of contracts) {
-      try {
-        const confirmations = await this.getTxConfirmations(
-          contract.mutualCloseTxId
-        )
-        if (
-          confirmations < 0 &&
-          DateTime.fromMillis(contract.proposeTimeOut) <= utcNow
-        ) {
-          const clothedByOther = await this.checkAndUpdateClosedByOther(
-            contract
-          )
-          if (!clothedByOther) {
-            // TODO(tibo): Should move to intermediary state and later verify
-            // that cet and closeTx are confirmed.
-            const closedContract = await this.eventHandler.onUnilateralClose(
-              contract.id
-            )
-            await this.ipcClient.dlcUpdate(closedContract)
-          }
-        } else if (confirmations >= 0) {
-          // TOD(tibo): Should have an intermediary to distinguished between
-          // mutual close broadcast and confirmed.
-          const mutualClosedContract = await this.eventHandler.onMutualCloseConfirmed(
-            contract.id
-          )
-          await this.ipcClient.dlcUpdate(mutualClosedContract)
-        }
-      } catch (error) {
-        this.logger.error(
-          `Error processing mutual proposed contract ${contract.id}`,
-          { error, message: error.message }
-        )
-      }
-    }
-  }
-
   private async checkForRefundableContracts(): Promise<void> {
     const contracts = await this.dlcService.getRefundableContracts()
 
@@ -392,12 +310,6 @@ export class DlcManager {
         switch (message.messageType) {
           case DlcMessageType.Accept:
             await this.handleAcceptMessage(from, message as AcceptMessage)
-            break
-          case DlcMessageType.MutualCloseOffer:
-            await this.handleMutualCloseOffer(
-              from,
-              message as MutualClosingMessage
-            )
             break
           case DlcMessageType.Offer:
             await this.handleOffer(from, message as OfferMessage)
@@ -429,32 +341,6 @@ export class DlcManager {
     const message = toSignMessage(contract)
     this.dlcMessageService.sendDlcMessage(message, from)
     await this.ipcClient.dlcUpdate(contract)
-  }
-
-  private async handleMutualCloseOffer(
-    from: string,
-    message: MutualClosingMessage
-  ): Promise<void> {
-    const mutualClosedContract = await this.eventHandler.onMutualCloseOffer(
-      from,
-      message,
-      async (assetId: string, maturityTime: DateTime) => {
-        const result = await this.oracleClient.getSignature(
-          assetId,
-          maturityTime
-        )
-        if (isSuccessful(result)) {
-          return {
-            value: result.value.value,
-            signature: result.value.signature,
-          }
-        }
-
-        throw result.error
-      }
-    )
-
-    await this.ipcClient.dlcUpdate(mutualClosedContract)
   }
 
   private async handleOffer(
@@ -497,13 +383,13 @@ export class DlcManager {
   }
 
   private async checkAndUpdateClosedByOther(
-    contract: MaturedContract | MutualCloseProposedContract
+    contract: MaturedContract
   ): Promise<boolean> {
     const clothedByOther =
-      (await this.getTxConfirmations(contract.otherPartyFinalCetId)) >= 0
+      (await this.getTxConfirmations(contract.finalCetId)) >= 0
 
     if (clothedByOther) {
-      const unilateralClosedByOther = await this.eventHandler.onUnilateralClosedByOther(
+      const unilateralClosedByOther = await this.eventHandler.onClosedByOther(
         contract.id
       )
       await this.ipcClient.dlcUpdate(unilateralClosedByOther)

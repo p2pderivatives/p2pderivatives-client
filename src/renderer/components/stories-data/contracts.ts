@@ -70,7 +70,7 @@ export const contracts: Contract[] = [
   },
   {
     id: 'testid3',
-    state: ContractState.MutualClosed,
+    state: ContractState.Closed,
     counterPartyName: 'UserD',
     feeRate: 2,
     localCollateral: 201000000,
@@ -104,7 +104,7 @@ export const contracts: Contract[] = [
   },
   {
     id: 'testid4',
-    state: ContractState.MutualClosed,
+    state: ContractState.Closed,
     counterPartyName: 'UserE',
     feeRate: 2,
     localCollateral: 201000000,
@@ -138,7 +138,7 @@ export const contracts: Contract[] = [
   },
   {
     id: 'testid6',
-    state: ContractState.MutualClosed,
+    state: ContractState.Closed,
     counterPartyName: 'UserF',
     feeRate: 2,
     localCollateral: 201000000,
@@ -172,7 +172,7 @@ export const contracts: Contract[] = [
   },
   {
     id: 'testid7',
-    state: ContractState.MutualClosed,
+    state: ContractState.Closed,
     counterPartyName: 'UserG',
     feeRate: 2,
     localCollateral: 201000000,

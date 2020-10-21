@@ -1,31 +1,29 @@
 import { DateTime } from 'luxon'
-import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
 import {
+  ClosedContract,
   OfferedContract,
   toAcceptMessage,
-  toMutualClosingMessage,
   toOfferMessage,
-  MutualClosedContract,
-  UnilateralClosedContract,
   toSignMessage,
 } from '../../src/browser/dlc/models/contract'
 import {
-  assertContractState,
-  createWallets,
-  getNewPartyContext,
-  PartyContext,
-  OracleContext,
-  getNewMockedOracleContext,
-} from './integrationTestCommons'
-import {
   AcceptMessage,
-  OfferMessage,
-  SignMessage,
-  RejectMessage,
   DlcMessageType,
+  OfferMessage,
+  RejectMessage,
+  SignMessage,
 } from '../../src/browser/dlc/models/messages'
 import { getCommonFee } from '../../src/browser/dlc/utils/FeeEstimator'
+import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
 import { Outcome } from '../../src/common/models/dlc/Outcome'
+import {
+  assertContractState,
+  createWallets,
+  getNewMockedOracleContext,
+  getNewPartyContext,
+  OracleContext,
+  PartyContext,
+} from './integrationTestCommons'
 
 const localParty = 'alice'
 const remoteParty = 'bob'
@@ -79,67 +77,32 @@ describe('dlc-event-handler', () => {
     }
   })
 
-  test('1-mutual-closing', async () => {
+  test('1-unilateral-closing', async () => {
     const offerMessage = await sendOffer()
     await acceptOffer(offerMessage)
-    const mutualClosedOfferContract = await localPartyContext.eventHandler.onSendMutualCloseOffer(
-      offerMessage.contractId,
-      baseOutcomes[0]
-    )
-    const mutualClosingMessage = toMutualClosingMessage(
-      mutualClosedOfferContract
-    )
-
-    assertContractState(
-      localPartyContext.dlcService,
-      mutualClosingMessage.contractId,
-      ContractState.MutualCloseProposed
-    )
-
-    const getOracleInfoMock = jest.fn()
-    const mutualClosedContract = await remotePartyContext.eventHandler.onMutualCloseOffer(
-      localParty,
-      mutualClosingMessage,
-      getOracleInfoMock
-    )
-
-    expect(getOracleInfoMock).not.toHaveBeenCalled()
-
-    assertContractState(
-      remotePartyContext.dlcService,
-      mutualClosedContract.id,
-      ContractState.MutualClosed
-    )
-  })
-
-  test('2-unilateral-closing', async () => {
-    const offerMessage = await sendOffer()
-    await acceptOffer(offerMessage)
-    await localPartyContext.eventHandler.onUnilateralClose(
-      offerMessage.contractId
-    )
+    await localPartyContext.eventHandler.onClosed(offerMessage.contractId)
 
     const contract = (await assertContractState(
       localPartyContext.dlcService,
       offerMessage.contractId,
-      ContractState.UnilateralClosed
-    )) as UnilateralClosedContract
+      ContractState.Closed
+    )) as ClosedContract
 
-    await remotePartyContext.eventHandler.onUnilateralClosedByOther(contract.id)
+    await remotePartyContext.eventHandler.onClosedByOther(contract.id)
 
     await assertContractState(
       remotePartyContext.dlcService,
       contract.id,
-      ContractState.UnilateralClosedByOther
+      ContractState.Closed
     )
   })
 
-  test('3-rejected', async () => {
+  test('2-rejected', async () => {
     const offerMessage = await sendOffer()
     await rejectOffer(offerMessage)
   })
 
-  test('4-on-offer-just-enough-with-fee-should-work', async () => {
+  test('3-on-offer-just-enough-with-fee-should-work', async () => {
     const carolAddress = await noBtcPartyContext.client.getNewAddress()
     const feeRate = 2
     const carolCollateral = oneBtc
@@ -153,7 +116,7 @@ describe('dlc-event-handler', () => {
     await acceptOffer(offerMessage, noBtcPartyContext)
   })
 
-  test('5-on-offer-not-enough-with-fee-should-throw', async () => {
+  test('4-on-offer-not-enough-with-fee-should-throw', async () => {
     const carolAddress = await noBtcPartyContext.client.getNewAddress()
     const carolCollateral = oneBtc
     await localPartyContext.client.sendToAddress(carolAddress, carolCollateral)
@@ -163,7 +126,7 @@ describe('dlc-event-handler', () => {
     ).rejects.toThrow(Error)
   })
 
-  test('6-on-accept-not-enough-with-fee-should-throw', async () => {
+  test('5-on-accept-not-enough-with-fee-should-throw', async () => {
     const carolAddress = await noBtcPartyContext.client.getNewAddress()
     const carolCollateral = oneBtc
     await localPartyContext.client.sendToAddress(carolAddress, carolCollateral)
@@ -174,39 +137,7 @@ describe('dlc-event-handler', () => {
     ).rejects.toThrow(Error)
   })
 
-  test('7-with-dust-payout-mutual-closed-dust-is-discarded', async () => {
-    const offerMessage = await sendOffer({
-      localCollateral: 0.5 * oneBtc,
-      remoteCollateral: 0.5 * oneBtc,
-      outcomes: outcomesWithDust,
-    })
-    await acceptOffer(offerMessage)
-    const mutualClosedOfferContract = await localPartyContext.eventHandler.onSendMutualCloseOffer(
-      offerMessage.contractId,
-      outcomesWithDust[0]
-    )
-    const mutualClosingMessage = toMutualClosingMessage(
-      mutualClosedOfferContract
-    )
-
-    const mutualClosedContract = await remotePartyContext.eventHandler.onMutualCloseOffer(
-      localParty,
-      mutualClosingMessage,
-      () => {
-        throw Error()
-      }
-    )
-
-    const contract = (await assertContractState(
-      remotePartyContext.dlcService,
-      mutualClosedContract.id,
-      ContractState.MutualClosed
-    )) as MutualClosedContract
-
-    expect(contract.finalOutcome.remote).toEqual(0)
-  })
-
-  test('8-with-dust-payout-unilateral-local-closed-dust-is-discarded', async () => {
+  test('6-with-dust-payout-local-closed-dust-is-discarded', async () => {
     const offerMessage = await sendOffer({
       localCollateral: 0.5 * oneBtc,
       remoteCollateral: 0.5 * oneBtc,
@@ -214,20 +145,20 @@ describe('dlc-event-handler', () => {
     })
     await acceptOffer(offerMessage)
 
-    const localContract = await localPartyContext.eventHandler.onUnilateralClose(
+    const localContract = await localPartyContext.eventHandler.onClosed(
       offerMessage.contractId
     )
 
     expect(localContract.finalOutcome.remote).toEqual(0)
 
-    const remoteContract = await remotePartyContext.eventHandler.onUnilateralClosedByOther(
+    const remoteContract = await remotePartyContext.eventHandler.onClosedByOther(
       offerMessage.contractId
     )
 
     expect(remoteContract.finalOutcome.remote).toEqual(0)
   })
 
-  test('9-with-dust-payout-unilateral-remote-closed-dust-is-discarded', async () => {
+  test('7-with-dust-payout-unilateral-remote-closed-dust-is-discarded', async () => {
     const offerMessage = await sendOffer({
       localCollateral: 0.5 * oneBtc,
       remoteCollateral: 0.5 * oneBtc,
@@ -235,92 +166,59 @@ describe('dlc-event-handler', () => {
     })
     await acceptOffer(offerMessage)
 
-    const remoteContract = await remotePartyContext.eventHandler.onUnilateralClose(
+    const remoteContract = await remotePartyContext.eventHandler.onClosed(
       offerMessage.contractId
     )
 
     expect(remoteContract.finalOutcome.remote).toEqual(0)
 
-    const localContract = await localPartyContext.eventHandler.onUnilateralClosedByOther(
+    const localContract = await localPartyContext.eventHandler.onClosedByOther(
       offerMessage.contractId
     )
 
     expect(localContract.finalOutcome.remote).toEqual(0)
   })
 
-  test('10-process-two-contracts-both-succeed', async () => {
+  test('8-process-two-contracts-both-succeed', async () => {
     const offerMessage1 = await sendOffer()
     const offerMessage2 = await sendOffer()
     const firstId = offerMessage1.contractId
     const secondId = offerMessage2.contractId
     await acceptOffer(offerMessage1)
     await acceptOffer(offerMessage2)
-    const mutualClosedOfferContract1 = await localPartyContext.eventHandler.onSendMutualCloseOffer(
-      firstId,
-      baseOutcomes[0]
-    )
-    const mutualClosedOfferContract2 = await localPartyContext.eventHandler.onSendMutualCloseOffer(
-      secondId,
-      baseOutcomes[0]
-    )
-    const mutualClosingMessage1 = toMutualClosingMessage(
-      mutualClosedOfferContract1
-    )
-    const mutualClosingMessage2 = toMutualClosingMessage(
-      mutualClosedOfferContract2
+
+    const closedContract1 = await remotePartyContext.eventHandler.onClosed(
+      firstId
     )
 
-    assertContractState(
-      localPartyContext.dlcService,
-      firstId,
-      ContractState.MutualCloseProposed
-    )
-
-    assertContractState(
-      localPartyContext.dlcService,
-      secondId,
-      ContractState.MutualCloseProposed
-    )
-
-    const mutualClosedContract1 = await remotePartyContext.eventHandler.onMutualCloseOffer(
-      localParty,
-      mutualClosingMessage1,
-      () => {
-        throw Error()
-      }
-    )
-
-    const mutualClosedContract2 = await remotePartyContext.eventHandler.onMutualCloseOffer(
-      localParty,
-      mutualClosingMessage2,
-      () => {
-        throw Error()
-      }
+    const closedContract2 = await remotePartyContext.eventHandler.onClosed(
+      secondId
     )
 
     assertContractState(
       remotePartyContext.dlcService,
-      mutualClosedContract1.id,
-      ContractState.MutualClosed
+      closedContract1.id,
+      ContractState.Closed
     )
 
     assertContractState(
       remotePartyContext.dlcService,
-      mutualClosedContract2.id,
-      ContractState.MutualClosed
+      closedContract2.id,
+      ContractState.Closed
     )
   })
 
-  test('11-invalid-cet-sign-on-accept-throws', async () => {
+  test('9-invalid-cet-sign-on-accept-throws', async () => {
     const offerMessage = await sendOffer()
     const offeredContract = await testOnOfferMessage(offerMessage)
     const acceptMessage = await testOnOfferAccepted(offeredContract)
-    const badCetSignatures = [...acceptMessage.cetSignatures]
-    badCetSignatures[0] =
-      nextHex(badCetSignatures[0]) + badCetSignatures[0].substring(1)
+    const badCetAdaptorPairs = [...acceptMessage.cetAdaptorPairs]
+    badCetAdaptorPairs[0].signature =
+      nextHex(badCetAdaptorPairs[0].signature) +
+      badCetAdaptorPairs[0].signature.substring(1)
     const badAcceptMessage: AcceptMessage = {
       ...acceptMessage,
-      cetSignatures: badCetSignatures,
+      cetAdaptorPairs: badCetAdaptorPairs,
     }
 
     expect(
@@ -331,7 +229,7 @@ describe('dlc-event-handler', () => {
     ).rejects.toThrow(Error)
   })
 
-  test('12-invalid-cets-sign-on-sign-message-throws', async () => {
+  test('10-invalid-cets-sign-on-sign-message-throws', async () => {
     const offerMessage = await sendOffer()
     const offeredContract = await testOnOfferMessage(offerMessage)
     const acceptMessage = await testOnOfferAccepted(offeredContract)
@@ -341,12 +239,13 @@ describe('dlc-event-handler', () => {
     )
 
     const signMessage = toSignMessage(signedContract)
-    const badCetSignatures = [...signMessage.cetSignatures]
-    badCetSignatures[0] =
-      nextHex(badCetSignatures[0]) + badCetSignatures[0].substring(1)
+    const badAdaptorCetPairs = [...signMessage.cetAdaptorPairs]
+    badAdaptorCetPairs[0].signature =
+      nextHex(badAdaptorCetPairs[0].signature) +
+      badAdaptorCetPairs[0].signature.substring(1)
     const badSignMessage: SignMessage = {
       ...signMessage,
-      cetSignatures: badCetSignatures,
+      cetAdaptorPairs: badAdaptorCetPairs,
     }
 
     expect(
@@ -354,7 +253,7 @@ describe('dlc-event-handler', () => {
     ).rejects.toThrow(Error)
   })
 
-  test('13-invalid-refund-sign-on-accept-throws', async () => {
+  test('11-invalid-refund-sign-on-accept-throws', async () => {
     const offerMessage = await sendOffer()
     const offeredContract = await testOnOfferMessage(offerMessage)
     const acceptMessage = await testOnOfferAccepted(offeredContract)
@@ -374,7 +273,7 @@ describe('dlc-event-handler', () => {
     ).rejects.toThrow(Error)
   })
 
-  test('14-invalid-refund-sign-on-sign-message-throws', async () => {
+  test('12-invalid-refund-sign-on-sign-message-throws', async () => {
     const offerMessage = await sendOffer()
     const offeredContract = await testOnOfferMessage(offerMessage)
     const acceptMessage = await testOnOfferAccepted(offeredContract)
@@ -397,7 +296,7 @@ describe('dlc-event-handler', () => {
     ).rejects.toThrow(Error)
   })
 
-  test('15-just-enough-with-fee-first-rejected-second-should-work', async () => {
+  test('13-just-enough-with-fee-first-rejected-second-should-work', async () => {
     const carolAddress = await noBtcPartyContext.client.getNewAddress()
     const feeRate = 2
     const carolCollateral = oneBtc
@@ -416,73 +315,49 @@ describe('dlc-event-handler', () => {
     await acceptOffer(offerMessage2, noBtcPartyContext)
   })
 
-  test('16-local-mutual-closes-remote-can-see-transaction', async () => {
+  test('14-local-closes-remote-can-see-transaction', async () => {
     const offerMessage = await sendOffer()
     await acceptOffer(offerMessage)
-    const mutualClosedOfferContract = await remotePartyContext.eventHandler.onSendMutualCloseOffer(
-      offerMessage.contractId,
-      baseOutcomes[0]
-    )
-    const mutualClosingMessage = toMutualClosingMessage(
-      mutualClosedOfferContract
+    const closedContract = await localPartyContext.eventHandler.onClosed(
+      offerMessage.contractId
     )
 
-    assertContractState(
-      remotePartyContext.dlcService,
-      mutualClosingMessage.contractId,
-      ContractState.MutualCloseProposed
+    await assertContractState(
+      localPartyContext.dlcService,
+      closedContract.id,
+      ContractState.Closed
     )
-
-    const getOracleInfoMock = jest.fn()
-    await localPartyContext.eventHandler.onMutualCloseOffer(
-      remoteParty,
-      mutualClosingMessage,
-      getOracleInfoMock
-    )
-
-    expect(getOracleInfoMock).not.toHaveBeenCalled()
 
     await expect(
-      remotePartyContext.client.getTransaction(
-        mutualClosedOfferContract.mutualCloseTxId
-      )
+      remotePartyContext.client.getTransaction(closedContract.finalCetId)
     ).resolves.toBeDefined()
   })
 
-  test('17-mutual-closing-with-premium', async () => {
+  test('15-closing-with-premium', async () => {
     const offerMessage = await sendOffer({ premiumAmount: 10000 })
     await acceptOffer(offerMessage)
-    const mutualClosedOfferContract = await localPartyContext.eventHandler.onSendMutualCloseOffer(
-      offerMessage.contractId,
-      baseOutcomes[0]
-    )
-    const mutualClosingMessage = toMutualClosingMessage(
-      mutualClosedOfferContract
+    const closedContract = await localPartyContext.eventHandler.onClosed(
+      offerMessage.contractId
     )
 
     assertContractState(
       localPartyContext.dlcService,
-      mutualClosingMessage.contractId,
-      ContractState.MutualCloseProposed
+      closedContract.id,
+      ContractState.Closed
     )
 
-    const getOracleInfoMock = jest.fn()
-    const mutualClosedContract = await remotePartyContext.eventHandler.onMutualCloseOffer(
-      localParty,
-      mutualClosingMessage,
-      getOracleInfoMock
+    const closedByOtherContract = await remotePartyContext.eventHandler.onClosedByOther(
+      offerMessage.contractId
     )
-
-    expect(getOracleInfoMock).not.toHaveBeenCalled()
 
     assertContractState(
       remotePartyContext.dlcService,
-      mutualClosedContract.id,
-      ContractState.MutualClosed
+      closedByOtherContract.id,
+      ContractState.Closed
     )
   })
 
-  test('18-on-accept-with-premium-just-enough-with-fee-should-work', async () => {
+  test('16-on-accept-with-premium-just-enough-with-fee-should-work', async () => {
     const carolAddress = await noBtcPartyContext.client.getNewAddress()
     const carolCollateralAndPremium = oneBtc + oneBtc
     const feeRate = 2
@@ -509,8 +384,11 @@ describe('dlc-event-handler', () => {
     ).resolves.toBeDefined()
   })
 
-  test('19-no-remote-collateral-should-work', async () => {
-    const offerMessage = await sendOffer({ remoteCollateral: 0 })
+  test('17-no-remote-collateral-should-work', async () => {
+    const offerMessage = await sendOffer({
+      localCollateral: 2 * oneBtc,
+      remoteCollateral: 0,
+    })
     await acceptOffer(offerMessage)
   })
 

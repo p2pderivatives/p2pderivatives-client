@@ -17,7 +17,7 @@ describe('Oracle Client', () => {
     expect(isSuccessful(result)).toBeTruthy()
     if (isSuccessful(result)) {
       const actual = result.value
-      expect(actual).toHaveLength(66)
+      expect(actual).toHaveLength(64)
     }
   })
 

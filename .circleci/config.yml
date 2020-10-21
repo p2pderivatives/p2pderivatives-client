@@ -305,7 +305,7 @@ jobs:
       - run:
           name: Run Integration tests separate
           command: |
-            for i in {1..22}; do echo "$i"; done > tests.txt
+            for i in {1..18}; do echo "$i"; done > tests.txt
             TESTNAME=$(circleci tests split tests.txt)
             split="${TESTNAME//[$'\t\r\n']/ }"
             npm run integration-separate:ci -- $split

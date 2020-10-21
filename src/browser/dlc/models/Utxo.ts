@@ -3,4 +3,5 @@ export interface Utxo {
   readonly vout: number
   readonly amount: number
   readonly address: string
+  readonly maxWitnessLength: number
 }

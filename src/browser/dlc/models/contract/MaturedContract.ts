@@ -7,5 +7,5 @@ export interface MaturedContract extends StatelessContract<SignedContract> {
   readonly state: ContractState.Mature
   readonly finalOutcome: Outcome
   readonly oracleSignature: string
-  readonly otherPartyFinalCetId: string
+  readonly finalCetId: string
 }

@@ -15,6 +15,8 @@ import { btcToSats, satsToBtc } from '../../../common/utils/conversion'
 import { Utxo } from '../../dlc/models/Utxo'
 import * as Utils from '../../dlc/utils/CfdUtils'
 
+const P2WPKHMaxWitnessSize = 108
+
 export default class BitcoinDClient {
   private rpcUser = ''
   private rpcPassword = ''
@@ -190,6 +192,8 @@ export default class BitcoinDClient {
           vout: utxo.vout,
           amount: btcToSats(utxo.amount),
           address: utxo.address,
+          //TODO(tibo): consider other type of addresses.
+          maxWitnessLength: P2WPKHMaxWitnessSize,
         }
       })
 

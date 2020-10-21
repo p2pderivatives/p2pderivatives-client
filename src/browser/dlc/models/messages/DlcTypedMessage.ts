@@ -3,7 +3,6 @@ export enum DlcMessageType {
   Accept = 2,
   Reject = 3,
   Sign = 4,
-  MutualCloseOffer = 5,
 }
 
 export interface DlcTypedMessage {

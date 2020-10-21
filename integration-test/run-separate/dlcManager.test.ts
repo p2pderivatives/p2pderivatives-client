@@ -63,7 +63,6 @@ const now = DateTime.fromObject({
 const oracleContext = getNewMockedOracleContext(outcomes[0].message)
 
 let throwOnSend = false
-let ignoreSend = false
 
 describe('dlc-manager', () => {
   beforeEach(async () => {
@@ -173,29 +172,9 @@ describe('dlc-manager', () => {
     remotePartyManager.finalize()
   })
 
-  test('20-mutual-closing-both-send', async () => {
+  test('18-closed-by-local', async () => {
     const contractId = await commonTests()
-    await bothReceiveMutualClose(contractId)
-  })
-
-  test('21-mutual-closing-local-send', async () => {
-    const contractId = await commonTests()
-    await onlyLocalSendsMutualClosing(contractId)
-  })
-
-  test('22-unilateral-close-by-local', async () => {
-    const contractId = await commonTests()
-    await unilateralCloseFromLocal(contractId)
-  })
-
-  test('23-unilateral-close-by-remote', async () => {
-    const contractId = await commonTests()
-    await unilateralCloseFromRemote(contractId)
-  })
-
-  test('24-unilateral-close-by-local-after-timeout', async () => {
-    const contractId = await commonTests()
-    await unilateralCloseFromLocalAfterProposeTimeout(contractId)
+    await closedByLocal(contractId)
   })
 
   async function commonTests(): Promise<string> {
@@ -283,78 +262,7 @@ describe('dlc-manager', () => {
     return contractId
   }
 
-  async function bothReceiveMutualClose(contractId: string): Promise<void> {
-    const semaphore = new Semaphore(1)
-    let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    jest.advanceTimersByTime(11000)
-
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.MutualClosed
-    )
-
-    await assertContractState(
-      remotePartyContext.dlcService,
-      contractId,
-      ContractState.MutualClosed
-    )
-  }
-
-  async function onlyLocalSendsMutualClosing(
-    contractId: string
-  ): Promise<void> {
-    const semaphore = new Semaphore(1)
-    let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    jest.advanceTimersByTime(10000)
-
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.MutualCloseProposed
-    )
-
-    await assertContractState(
-      remotePartyContext.dlcService,
-      contractId,
-      ContractState.MutualClosed
-    )
-
-    jest.advanceTimersByTime(10000)
-
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.MutualClosed
-    )
-  }
-
-  async function unilateralCloseFromLocal(contractId: string): Promise<void> {
+  async function closedByLocal(contractId: string): Promise<void> {
     const semaphore = new Semaphore(1)
     throwOnSend = true
     let release = await semaphore.acquire()
@@ -365,12 +273,11 @@ describe('dlc-manager', () => {
 
     release = await semaphore.acquire()
     release = await semaphore.acquire()
-    release = await semaphore.acquire()
 
     await assertContractState(
       localPartyContext.dlcService,
       contractId,
-      ContractState.UnilateralClosed
+      ContractState.Closed
     )
 
     await localPartyContext.client.generateBlocksToWallet(10)
@@ -380,90 +287,13 @@ describe('dlc-manager', () => {
     remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
       Promise.resolve(release())
     )
+
     release = await semaphore.acquire()
 
     await assertContractState(
       remotePartyContext.dlcService,
       contractId,
-      ContractState.UnilateralClosedByOther
-    )
-  }
-
-  async function unilateralCloseFromRemote(contractId: string): Promise<void> {
-    const semaphore = new Semaphore(1)
-    let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    ignoreSend = true
-    jest.advanceTimersByTime(10000)
-
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.MutualCloseProposed
-    )
-
-    throwOnSend = true
-    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    jest.advanceTimersByTime(1000)
-
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      remotePartyContext.dlcService,
-      contractId,
-      ContractState.UnilateralClosed
-    )
-
-    Settings.now = (): number => now.plus({ seconds: 30 }).valueOf()
-    jest.advanceTimersByTime(10000)
-
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.UnilateralClosedByOther
-    )
-  }
-
-  async function unilateralCloseFromLocalAfterProposeTimeout(
-    contractId: string
-  ): Promise<void> {
-    const semaphore = new Semaphore(1)
-    ignoreSend = true
-    let release = await semaphore.acquire()
-    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
-      Promise.resolve(release())
-    )
-    jest.advanceTimersByTime(10000)
-
-    release = await semaphore.acquire()
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.MutualCloseProposed
-    )
-
-    Settings.now = (): number => now.plus({ seconds: 30 }).valueOf()
-    jest.advanceTimersByTime(100000)
-
-    release = await semaphore.acquire()
-
-    await assertContractState(
-      localPartyContext.dlcService,
-      contractId,
-      ContractState.UnilateralClosed
+      ContractState.Closed
     )
   }
 })
@@ -476,10 +306,6 @@ function sendDlcMessageMock(
 ): Promise<void> {
   if (throwOnSend) {
     throw Error('Throw on send')
-  }
-
-  if (ignoreSend) {
-    return Promise.resolve()
   }
 
   const payload = new Uint8Array(
