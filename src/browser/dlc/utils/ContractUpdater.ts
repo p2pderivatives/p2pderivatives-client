@@ -1,6 +1,7 @@
 import * as cfddlcjs from 'cfd-dlc-js'
+import * as CfdUtils from './CfdUtils'
+import { AdaptorPair } from '../models/AdaptorPair'
 import { CfdError, DecodeRawTransactionResponse } from 'cfd-js'
-import { DateTime, Duration } from 'luxon'
 import { ContractState } from '../../../common/models/dlc/Contract'
 import { Outcome } from '../../../common/models/dlc/Outcome'
 import BitcoinDClient from '../../api/bitcoind'
@@ -12,25 +13,18 @@ import {
   InitialContract,
   isContractOfState,
   MaturedContract,
-  MutualClosedContract,
-  MutualCloseProposedContract,
+  ClosedContract,
   OfferedContract,
   PrivateParams,
   RefundedContract,
   RejectedContract,
   SignedContract,
-  UnilateralClosedByOtherContract,
-  UnilateralClosedContract,
 } from '../models/contract'
-import { MutualClosingMessage } from '../models/messages'
 import { PartyInputs } from '../models/PartyInputs'
 import { Utxo } from '../models/Utxo'
 import * as Utils from './CfdUtils'
 import { DlcError } from './DlcEventHandler'
 import { getCommonFee } from './FeeEstimator'
-
-const csvDelay = 144
-const proposeTimeOutDuration = Duration.fromObject({ seconds: 30 })
 
 const witnessV0KeyHash = 'witness_v0_keyhash'
 const witnessV0ScriptHash = 'witness_v0_scripthash'
@@ -143,7 +137,7 @@ export class ContractUpdater {
     contract: OfferedContract,
     remotePartyInputs?: PartyInputs,
     refundRemoteSignature?: string,
-    remoteCetSignatures?: ReadonlyArray<string>
+    remoteCetAdaptorPairs?: ReadonlyArray<AdaptorPair>
   ): Promise<AcceptedContract> {
     let privateParams = contract.privateParams
     if (!remotePartyInputs || !privateParams) {
@@ -164,34 +158,39 @@ export class ContractUpdater {
       }
     }
 
+    const payouts: { local: number; remote: number }[] = []
+    const messages = []
+    contract.outcomes.forEach(outcome => {
+      payouts.push({
+        local: outcome.local,
+        remote: outcome.remote,
+      })
+      messages.push(outcome.message)
+    })
+
     const dlcTxRequest: cfddlcjs.CreateDlcTransactionsRequest = {
-      outcomes: contract.outcomes.map(outcome => {
-        return {
-          messages: [outcome.message],
-          local: outcome.local,
-          remote: outcome.remote,
-        }
-      }),
-      oracleRPoints: [contract.oracleInfo.rValue],
-      oraclePubkey: contract.oracleInfo.publicKey,
+      payouts,
       localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      localSweepPubkey: contract.localPartyInputs.sweepPublicKey,
-      localFinalAddress: contract.localPartyInputs.finalAddress,
+      localFinalScriptPubkey: CfdUtils.getScriptForAddress(
+        contract.localPartyInputs.finalAddress
+      ),
       remoteFundPubkey: remotePartyInputs.fundPublicKey,
-      remoteSweepPubkey: remotePartyInputs.sweepPublicKey,
-      remoteFinalAddress: remotePartyInputs.finalAddress,
+      remoteFinalScriptPubkey: CfdUtils.getScriptForAddress(
+        remotePartyInputs.finalAddress
+      ),
       localInputAmount: this.getTotalInputAmount(contract.localPartyInputs),
       localCollateralAmount: contract.localCollateral,
       remoteInputAmount: this.getTotalInputAmount(remotePartyInputs),
       remoteCollateralAmount: contract.remoteCollateral,
-      csvDelay: csvDelay,
       localInputs: [...contract.localPartyInputs.utxos],
       remoteInputs: [...remotePartyInputs.utxos],
-      localChangeAddress: contract.localPartyInputs.changeAddress,
-      remoteChangeAddress: remotePartyInputs.changeAddress,
+      localChangeScriptPubkey: CfdUtils.getScriptForAddress(
+        contract.localPartyInputs.changeAddress
+      ),
+      remoteChangeScriptPubkey: CfdUtils.getScriptForAddress(
+        remotePartyInputs.changeAddress
+      ),
       feeRate: contract.feeRate,
-      // Substract two hours to avoid the nLockTime for now
-      maturityTime: Math.floor(contract.maturityTime / 1000) - 2 * 3600,
       // TODO(tibo): set refund time as parameter
       refundLocktime: Math.floor(contract.maturityTime / 1000) + 86400 * 7,
       optionDest: remotePartyInputs.premiumDest,
@@ -210,8 +209,7 @@ export class ContractUpdater {
     }
     const fundTxOutAmount = Number(fundTransaction.vout[0].value)
     const refundTxHex = dlcTransactions.refundTxHex
-    const localCetsHex = dlcTransactions.localCetsHex
-    const remoteCetsHex = dlcTransactions.remoteCetsHex
+    const cetsHex = dlcTransactions.cetsHex
 
     if (
       fundTransaction.vout[0].scriptPubKey &&
@@ -222,12 +220,12 @@ export class ContractUpdater {
       )
     }
 
-    remoteCetSignatures =
-      remoteCetSignatures ||
-      this.getCetSignatures(
+    remoteCetAdaptorPairs =
+      remoteCetAdaptorPairs ||
+      this.getCetAdaptorSignatures(
         contract,
         privateParams,
-        localCetsHex,
+        cetsHex,
         fundTxId,
         fundTxOutAmount,
         remotePartyInputs
@@ -253,30 +251,32 @@ export class ContractUpdater {
       fundTxOutAmount,
       refundTxHex,
       refundRemoteSignature,
-      localCetsHex,
-      remoteCetsHex,
-      remoteCetSignatures: remoteCetSignatures,
+      cetsHex,
+      remoteCetAdaptorPairs,
     }
   }
 
-  private getCetSignatures(
+  private getCetAdaptorSignatures(
     contract: AcceptedContract | OfferedContract | SignedContract,
     privateParams: PrivateParams,
     cetsHex: ReadonlyArray<string>,
     fundTxId: string,
     fundTxOutAmount: number,
     remotePartyInputs: PartyInputs
-  ): string[] {
-    const cetSignRequest: cfddlcjs.GetRawCetSignaturesRequest = {
+  ): AdaptorPair[] {
+    const cetSignRequest: cfddlcjs.CreateCetAdaptorSignaturesRequest = {
       cetsHex: [...cetsHex],
       privkey: privateParams.fundPrivateKey,
       fundTxId: fundTxId,
       localFundPubkey: contract.localPartyInputs.fundPublicKey,
       remoteFundPubkey: remotePartyInputs.fundPublicKey,
       fundInputAmount: fundTxOutAmount,
+      oraclePubkey: contract.oracleInfo.publicKey,
+      oracleRValue: contract.oracleInfo.rValue,
+      messages: contract.outcomes.map(x => x.message),
     }
 
-    return cfddlcjs.GetRawCetSignatures(cetSignRequest).hex
+    return cfddlcjs.CreateCetAdaptorSignatures(cetSignRequest).adaptorPairs
   }
 
   getRefundTxSignature(
@@ -336,20 +336,23 @@ export class ContractUpdater {
     contract: AcceptedContract | SignedContract,
     verifyRemote: boolean
   ): boolean {
-    const cets = verifyRemote ? contract.localCetsHex : contract.remoteCetsHex
-    let signatures: string[] = []
+    const cets = contract.cetsHex
+    let adaptorPairs: AdaptorPair[] = []
 
-    if (!verifyRemote && 'localCetSignatures' in contract) {
-      signatures = [...contract.localCetSignatures]
+    if (!verifyRemote && 'localCetAdaptorPairs' in contract) {
+      adaptorPairs = [...contract.localCetAdaptorPairs]
     } else if (verifyRemote) {
-      signatures = [...contract.remoteCetSignatures]
+      adaptorPairs = [...contract.remoteCetAdaptorPairs]
     } else {
       throw Error('Invalid State')
     }
 
-    const verifyCetSignaturesRequest: cfddlcjs.VerifyCetSignaturesRequest = {
+    const verifyCetSignaturesRequest: cfddlcjs.VerifyCetAdaptorSignaturesRequest = {
       cetsHex: [...cets],
-      signatures,
+      adaptorPairs,
+      messages: contract.outcomes.map(x => x.message),
+      oracleRValue: contract.oracleInfo.rValue,
+      oraclePubkey: contract.oracleInfo.publicKey,
       localFundPubkey: contract.localPartyInputs.fundPublicKey,
       remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
       fundTxId: contract.fundTxId,
@@ -357,7 +360,7 @@ export class ContractUpdater {
       verifyRemote,
     }
 
-    const hasValidCetSigs = cfddlcjs.VerifyCetSignatures(
+    const hasValidCetSigs = cfddlcjs.VerifyCetAdaptorSignatures(
       verifyCetSignaturesRequest
     ).valid
 
@@ -392,7 +395,7 @@ export class ContractUpdater {
     localFundTxSignatures?: ReadonlyArray<string>,
     localFundTxPubkeys?: ReadonlyArray<string>,
     localRefundSignature?: string,
-    localCetSignatures?: ReadonlyArray<string>
+    localCetAdaptorSignatures?: ReadonlyArray<AdaptorPair>
   ): Promise<SignedContract> {
     localFundTxSignatures =
       localFundTxSignatures || this.getFundTxSignatures(contract)
@@ -410,12 +413,12 @@ export class ContractUpdater {
         contract.remotePartyInputs
       )
 
-    localCetSignatures =
-      localCetSignatures ||
-      this.getCetSignatures(
+    localCetAdaptorSignatures =
+      localCetAdaptorSignatures ||
+      this.getCetAdaptorSignatures(
         contract,
         contract.privateParams,
-        [...contract.remoteCetsHex],
+        [...contract.cetsHex],
         contract.fundTxId,
         contract.fundTxOutAmount,
         contract.remotePartyInputs
@@ -427,7 +430,7 @@ export class ContractUpdater {
       fundTxSignatures: localFundTxSignatures,
       localUtxoPublicKeys: localFundTxPubkeys,
       refundLocalSignature: localRefundSignature,
-      localCetSignatures,
+      localCetAdaptorPairs: localCetAdaptorSignatures,
     }
   }
 
@@ -462,139 +465,8 @@ export class ContractUpdater {
     return { ...contract, state: ContractState.Broadcast }
   }
 
-  async ToMutualClosedProposed(
-    contract: MaturedContract,
-    outcome: Outcome
-  ): Promise<MutualCloseProposedContract> {
-    const mutualClosingRequest = {
-      localFinalAddress: contract.localPartyInputs.finalAddress,
-      remoteFinalAddress: contract.remotePartyInputs.finalAddress,
-      localAmount: outcome.local,
-      remoteAmount: outcome.remote,
-      fundTxId: contract.fundTxId,
-      feeRate: contract.feeRate,
-    }
-
-    const mutualClosingTxHex = cfddlcjs.CreateMutualClosingTransaction(
-      mutualClosingRequest
-    ).hex
-
-    const mutualClosingTx = Utils.decodeRawTransaction(
-      mutualClosingTxHex,
-      this.walletClient.getNetwork()
-    )
-
-    this.importTxIfRequired(mutualClosingTx, contract)
-
-    const finalOutcome = this.getFinalOutcomeWithDiscardedDust(
-      mutualClosingTx,
-      contract
-    )
-
-    const signRequest: cfddlcjs.GetRawMutualClosingTxSignatureRequest = {
-      fundTxId: contract.fundTxId,
-      mutualClosingHex: mutualClosingTxHex,
-      privkey: contract.privateParams.fundPrivateKey,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-      fundInputAmount: contract.fundTxOutAmount,
-    }
-
-    const signature = cfddlcjs.GetRawMutualClosingTxSignature(signRequest).hex
-
-    return {
-      ...contract,
-      finalOutcome,
-      state: ContractState.MutualCloseProposed,
-      mutualCloseTx: mutualClosingTxHex,
-      mutualCloseTxId: mutualClosingTx.txid,
-      ownMutualClosingSignature: signature,
-      proposeTimeOut: DateTime.utc()
-        .plus(proposeTimeOutDuration)
-        .toMillis(),
-    }
-  }
-
-  async toMutualClosed(
-    contract: MaturedContract,
-    mutualClosingMessage: MutualClosingMessage
-  ): Promise<MutualClosedContract> {
-    const mutualClosingRequest = {
-      localFinalAddress: contract.localPartyInputs.finalAddress,
-      remoteFinalAddress: contract.remotePartyInputs.finalAddress,
-      localAmount: mutualClosingMessage.outcome.local,
-      remoteAmount: mutualClosingMessage.outcome.remote,
-      fundTxId: contract.fundTxId,
-      feeRate: contract.feeRate,
-    }
-
-    let mutualClosingTxHex = cfddlcjs.CreateMutualClosingTransaction(
-      mutualClosingRequest
-    ).hex
-
-    const signRequest: cfddlcjs.GetRawMutualClosingTxSignatureRequest = {
-      fundTxId: contract.fundTxId,
-      mutualClosingHex: mutualClosingTxHex,
-      privkey: contract.privateParams.fundPrivateKey,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-      fundInputAmount: contract.fundTxOutAmount,
-    }
-
-    const signature = cfddlcjs.GetRawMutualClosingTxSignature(signRequest).hex
-
-    const signatures = contract.isLocalParty
-      ? [signature, mutualClosingMessage.signature]
-      : [mutualClosingMessage.signature, signature]
-
-    const addSigsRequest: cfddlcjs.AddSignaturesToMutualClosingTxRequest = {
-      mutualClosingTxHex: mutualClosingTxHex,
-      signatures,
-      fundTxId: contract.fundTxId,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-    }
-
-    mutualClosingTxHex = cfddlcjs.AddSignaturesToMutualClosingTx(addSigsRequest)
-      .hex
-
-    const mutualClosingTx = Utils.decodeRawTransaction(
-      mutualClosingTxHex,
-      this.walletClient.getNetwork()
-    )
-
-    const finalOutcome = this.getFinalOutcomeWithDiscardedDust(
-      mutualClosingTx,
-      contract
-    )
-
-    await this.walletClient.sendRawTransaction(mutualClosingTxHex)
-
-    return {
-      ...contract,
-      finalOutcome,
-      state: ContractState.MutualClosed,
-      mutualCloseTx: mutualClosingTxHex,
-      mutualCloseTxId: mutualClosingTx.txid,
-      mutualCloseSignature: mutualClosingMessage.signature,
-    }
-  }
-
-  toMutualClosedConfirmed(
-    contract: MutualCloseProposedContract
-  ): MutualClosedContract {
-    return {
-      ...contract,
-      state: ContractState.MutualClosed,
-    }
-  }
-
-  async toUnilateralClosed(
-    contract: MaturedContract
-  ): Promise<UnilateralClosedContract> {
-    const cets = contract.isLocalParty
-      ? contract.localCetsHex
-      : contract.remoteCetsHex
+  async toClosed(contract: MaturedContract): Promise<ClosedContract> {
+    const cets = contract.cetsHex
 
     const outcomeIndex = contract.outcomes.findIndex(
       outcome => outcome.message === contract.finalOutcome.message
@@ -602,30 +474,20 @@ export class ContractUpdater {
 
     let cetHex = cets[outcomeIndex]
 
-    const signRequest: cfddlcjs.GetRawCetSignatureRequest = {
+    const signRequest: cfddlcjs.SignCetRequest = {
       cetHex,
-      privkey: contract.privateParams.fundPrivateKey,
+      fundPrivkey: contract.privateParams.fundPrivateKey,
       fundTxId: contract.fundTxId,
       localFundPubkey: contract.localPartyInputs.fundPublicKey,
       remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
       fundInputAmount: contract.fundTxOutAmount,
+      adaptorSignature: contract.isLocalParty
+        ? contract.remoteCetAdaptorPairs[outcomeIndex].signature
+        : contract.localCetAdaptorPairs[outcomeIndex].signature,
+      oracleSignature: contract.oracleSignature,
     }
 
-    const cetSign = cfddlcjs.GetRawCetSignature(signRequest).hex
-
-    const signatures = contract.isLocalParty
-      ? [cetSign, contract.remoteCetSignatures[outcomeIndex]]
-      : [contract.localCetSignatures[outcomeIndex], cetSign]
-
-    const addSignRequest: cfddlcjs.AddSignaturesToCetRequest = {
-      cetHex,
-      signatures,
-      fundTxId: contract.fundTxId,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-    }
-
-    cetHex = cfddlcjs.AddSignaturesToCet(addSignRequest).hex
+    cetHex = cfddlcjs.SignCet(signRequest).hex
 
     const cet = Utils.decodeRawTransaction(
       cetHex,
@@ -638,80 +500,17 @@ export class ContractUpdater {
 
     const finalOutcome = this.getFinalOutcomeWithDiscardedDust(cet, contract)
 
-    if (
-      (contract.isLocalParty && finalOutcome.local === 0) ||
-      (!contract.isLocalParty && finalOutcome.remote === 0)
-    ) {
-      await this.walletClient.sendRawTransaction(cetHex)
-      return {
-        ...contract,
-        finalOutcome,
-        state: ContractState.UnilateralClosed,
-        finalCetTxId: cet.txid,
-      }
-    }
-
-    const outcomeAmount = contract.isLocalParty
-      ? contract.outcomes[outcomeIndex].local
-      : contract.outcomes[outcomeIndex].remote
-
-    const partyInputs = contract.isLocalParty
-      ? contract.localPartyInputs
-      : contract.remotePartyInputs
-    const closingTxRequest: cfddlcjs.CreateClosingTransactionRequest = {
-      address: partyInputs.finalAddress,
-      amount: outcomeAmount,
-      cetTxId: cet.txid,
-    }
-
-    let closingTxHex = cfddlcjs.CreateClosingTransaction(closingTxRequest).hex
-
-    const remoteSweepKey = contract.isLocalParty
-      ? contract.remotePartyInputs.sweepPublicKey
-      : contract.localPartyInputs.sweepPublicKey
-
-    const signClosingRequest: cfddlcjs.SignClosingTransactionRequest = {
-      closingTxHex,
-      cetTxId: cet.txid,
-      amount: cet.vout[0].value,
-      localFundPrivkey: contract.privateParams.fundPrivateKey,
-      localSweepPubkey: partyInputs.sweepPublicKey,
-      remoteSweepPubkey: remoteSweepKey,
-      oraclePubkey: contract.oracleInfo.publicKey,
-      oracleRPoints: [contract.oracleInfo.rValue],
-      oracleSigs: [contract.oracleSignature],
-      messages: [contract.outcomes[outcomeIndex].message],
-      csvDelay: csvDelay,
-    }
-
-    closingTxHex = cfddlcjs.SignClosingTransaction(signClosingRequest).hex
-
-    const closingTx = Utils.decodeRawTransaction(
-      closingTxHex,
-      this.walletClient.getNetwork()
-    )
-
     await this.walletClient.sendRawTransaction(cetHex)
-    await this.walletClient.sendRawTransaction(closingTxHex)
-
     return {
       ...contract,
       finalOutcome,
-      state: ContractState.UnilateralClosed,
-      finalCetTxId: cet.txid,
-      closingTxId: closingTx.txid,
-      closingTxHex,
+      state: ContractState.Closed,
     }
   }
 
-  async toUnilateralClosedByOther(
-    contract: MaturedContract | MutualCloseProposedContract
-  ): Promise<UnilateralClosedByOtherContract> {
+  async toClosedByOther(contract: MaturedContract): Promise<ClosedContract> {
     const finalCetTxHex = (
-      await this.walletClient.getTransaction(
-        contract.otherPartyFinalCetId,
-        true
-      )
+      await this.walletClient.getTransaction(contract.finalCetId, true)
     ).hex
 
     const finalCetTx = Utils.decodeRawTransaction(
@@ -728,7 +527,7 @@ export class ContractUpdater {
     return {
       ...contract,
       finalOutcome,
-      state: ContractState.UnilateralClosedByOther,
+      state: ContractState.Closed,
     }
   }
 
@@ -748,10 +547,7 @@ export class ContractUpdater {
 
     // Keep track of other party CET if necessary to be able to watch it through the
     // bitcoind wallet
-    const otherPartyCets = contract.isLocalParty
-      ? contract.remoteCetsHex
-      : contract.localCetsHex
-    const finalCetHex = otherPartyCets[finalOutcomeIndex]
+    const finalCetHex = contract.cetsHex[finalOutcomeIndex]
     const finalCet = Utils.decodeRawTransaction(
       finalCetHex,
       this.walletClient.getNetwork()
@@ -762,7 +558,7 @@ export class ContractUpdater {
       state: ContractState.Mature,
       finalOutcome: contract.outcomes[finalOutcomeIndex],
       oracleSignature,
-      otherPartyFinalCetId: finalCet.txid,
+      finalCetId: finalCet.txid,
     }
   }
 
@@ -829,7 +625,7 @@ export class ContractUpdater {
 
   private getDustDiscardedParty(
     tx: DecodeRawTransactionResponse,
-    contract: ConfirmedContract | MaturedContract | MutualCloseProposedContract,
+    contract: ConfirmedContract | MaturedContract,
     ownTransaction = true
   ): DustDiscardedParty {
     if (tx.vout && tx.vout.length === 1) {
@@ -872,7 +668,7 @@ export class ContractUpdater {
 
   private getFinalOutcomeWithDiscardedDust(
     tx: DecodeRawTransactionResponse,
-    contract: MaturedContract | MutualCloseProposedContract,
+    contract: MaturedContract,
     ownTransaction = true
   ): Outcome {
     const discardedParty = this.getDustDiscardedParty(

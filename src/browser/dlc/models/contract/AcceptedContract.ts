@@ -4,6 +4,7 @@ import { PartyInputs } from '../PartyInputs'
 import { OfferedContract } from './OfferedContract'
 import { StatelessContract } from './StatelessContract'
 import { PrivateParams } from './PrivateParams'
+import { AdaptorPair } from '../AdaptorPair'
 
 export interface AcceptedContract extends StatelessContract<OfferedContract> {
   readonly state: ContractState.Accepted
@@ -14,9 +15,8 @@ export interface AcceptedContract extends StatelessContract<OfferedContract> {
   readonly fundTxOutAmount: number
   readonly refundTxHex: string
   readonly refundRemoteSignature: string
-  readonly localCetsHex: ReadonlyArray<string>
-  readonly remoteCetsHex: ReadonlyArray<string>
-  readonly remoteCetSignatures: ReadonlyArray<string>
+  readonly cetsHex: ReadonlyArray<string>
+  readonly remoteCetAdaptorPairs: ReadonlyArray<AdaptorPair>
 }
 
 export function toAcceptMessage(contract: AcceptedContract): AcceptMessage {
@@ -24,7 +24,7 @@ export function toAcceptMessage(contract: AcceptedContract): AcceptMessage {
     messageType: DlcMessageType.Accept,
     contractId: contract.id,
     remotePartyInputs: contract.remotePartyInputs,
-    cetSignatures: contract.remoteCetSignatures,
+    cetAdaptorPairs: contract.remoteCetAdaptorPairs,
     refundSignature: contract.refundRemoteSignature,
   }
 }

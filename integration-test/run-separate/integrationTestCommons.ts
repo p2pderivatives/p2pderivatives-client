@@ -1,4 +1,4 @@
-import * as cfddlcjs from 'cfd-dlc-js'
+import * as cfdjs from 'cfd-js'
 import level from 'level-test'
 import { LevelUp } from 'levelup'
 import { TEST_BITCOIND_CONFIG } from '../../services/bitcoind/env'
@@ -45,16 +45,16 @@ export async function createWallets(): Promise<void> {
 }
 
 export function getNewMockedOracleContext(message: string): OracleContext {
-  const oracleKeyPair = Utils.createKeyPair()
+  const oracleKeyPair = Utils.createSchnorrKeyPair()
   const oraclePrivateKey = oracleKeyPair.privkey
   const oraclePublicKey = oracleKeyPair.pubkey
-  const kRPair = Utils.createKeyPair()
+  const kRPair = Utils.createSchnorrKeyPair()
   const oracleKValue = kRPair.privkey
-  const oracleRValue = cfddlcjs.GetSchnorrPublicNonce({ kValue: oracleKValue })
-    .hex
-  const signature = cfddlcjs.SchnorrSign({
+  const oracleRValue = kRPair.pubkey
+  const signature = cfdjs.SchnorrSign({
     privkey: oraclePrivateKey,
-    kValue: oracleKValue,
+    nonceOrAux: oracleKValue,
+    isNonce: true,
     message,
   }).hex
   return {

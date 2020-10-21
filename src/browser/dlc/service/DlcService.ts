@@ -5,8 +5,8 @@ import { RepositoryError } from '../../storage/RepositoryError'
 import {
   AnyContract,
   BroadcastContract,
+  ClosedContract,
   ConfirmedContract,
-  MutualCloseProposedContract,
   SignedContract,
 } from '../models/contract'
 import { ExtendedContractQuery } from './ContractQuery'
@@ -53,14 +53,12 @@ export class DlcService {
     >
   }
 
-  getMutualCloseOfferedContracts(): Promise<MutualCloseProposedContract[]> {
+  getClosedContracts(): Promise<ClosedContract[]> {
     const query: ExtendedContractQuery = {
-      states: [ContractState.MutualCloseProposed],
+      states: [ContractState.Closed],
     }
 
-    return this._repository.getContracts(query) as Promise<
-      MutualCloseProposedContract[]
-    >
+    return this._repository.getContracts(query) as Promise<ClosedContract[]>
   }
 
   getRefundableContracts(): Promise<AnyContract[]> {

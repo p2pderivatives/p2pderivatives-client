@@ -1,7 +1,5 @@
-import { DateTime } from 'luxon'
 import { v4 } from 'uuid'
 import { Contract, ContractState } from '../../../common/models/dlc/Contract'
-import { Outcome } from '../../../common/models/dlc/Outcome'
 import { isSuccessful } from '../../../common/utils/failable'
 import { ErrorCode } from '../../storage/ErrorCode'
 import {
@@ -13,20 +11,12 @@ import {
   fromOfferMessage,
   InitialContract,
   MaturedContract,
-  MutualClosedContract,
-  MutualCloseProposedContract,
   OfferedContract,
   RejectedContract,
   SignedContract,
-  UnilateralClosedByOtherContract,
-  UnilateralClosedContract,
+  ClosedContract,
 } from '../models/contract'
-import {
-  AcceptMessage,
-  MutualClosingMessage,
-  OfferMessage,
-  SignMessage,
-} from '../models/messages'
+import { AcceptMessage, OfferMessage, SignMessage } from '../models/messages'
 import { DlcService } from '../service/DlcService'
 import { ContractUpdater } from './ContractUpdater'
 
@@ -161,7 +151,7 @@ export class DlcEventHandler {
         utxos: acceptMessage.remotePartyInputs.utxos,
       },
       acceptMessage.refundSignature,
-      acceptMessage.cetSignatures
+      acceptMessage.cetAdaptorPairs
     )
 
     await this._dlcService.updateContract(acceptedContract)
@@ -194,7 +184,7 @@ export class DlcEventHandler {
       signMessage.fundTxSignatures,
       signMessage.utxoPublicKeys,
       signMessage.refundSignature,
-      signMessage.cetSignatures
+      signMessage.cetAdaptorPairs
     )
 
     if (!this._contractUpdater.verifySignedContract(signedContract)) {
@@ -210,104 +200,23 @@ export class DlcEventHandler {
     return broadcastContract
   }
 
-  async onSendMutualCloseOffer(
-    contractId: string,
-    outcome: Outcome
-  ): Promise<MutualCloseProposedContract> {
+  async onClosed(contractId: string): Promise<ClosedContract> {
     const contract = (await this.tryGetContractOrThrow(contractId, [
       ContractState.Mature,
     ])) as MaturedContract
 
-    const mutualCloseProposedContract = await this._contractUpdater.ToMutualClosedProposed(
-      contract,
-      outcome
-    )
+    const closed = await this._contractUpdater.toClosed(contract)
 
-    await this._dlcService.updateContract(mutualCloseProposedContract)
-
-    return mutualCloseProposedContract
+    await this._dlcService.updateContract(closed)
+    return closed
   }
 
-  async onMutualCloseOffer(
-    from: string,
-    mutualClosingMessage: MutualClosingMessage,
-    getOracleValue: (
-      assetId: string,
-      maturityTime: DateTime
-    ) => Promise<{ value: string; signature: string }>
-  ): Promise<MutualClosedContract> {
-    let contract = await this.tryGetContractOrThrow(
-      mutualClosingMessage.contractId,
-      [
-        ContractState.Mature,
-        ContractState.Confirmed,
-        ContractState.MutualCloseProposed,
-      ],
-      from
-    )
-
-    if (contract.state === ContractState.Confirmed) {
-      const contractOutcome = await getOracleValue(
-        contract.oracleInfo.assetId,
-        DateTime.fromMillis(contract.maturityTime)
-      )
-      contract = await this.onContractMature(
-        contract.id,
-        contractOutcome.value,
-        contractOutcome.signature
-      )
-    }
-
-    const mutualClosed = await this._contractUpdater.toMutualClosed(
-      contract as MaturedContract,
-      mutualClosingMessage
-    )
-
-    await this._dlcService.updateContract(mutualClosed)
-    return mutualClosed
-  }
-
-  async onMutualCloseConfirmed(
-    contractId: string
-  ): Promise<MutualClosedContract> {
-    const contract = (await this.tryGetContractOrThrow(contractId, [
-      ContractState.MutualCloseProposed,
-    ])) as MutualCloseProposedContract
-
-    const mutualClosedContract = this._contractUpdater.toMutualClosedConfirmed(
-      contract
-    )
-
-    await this._dlcService.updateContract(mutualClosedContract)
-
-    return mutualClosedContract
-  }
-
-  async onUnilateralClose(
-    contractId: string
-  ): Promise<UnilateralClosedContract> {
+  async onClosedByOther(contractId: string): Promise<ClosedContract> {
     const contract = (await this.tryGetContractOrThrow(contractId, [
       ContractState.Mature,
-      ContractState.MutualCloseProposed,
     ])) as MaturedContract
 
-    const unilateralClosed = await this._contractUpdater.toUnilateralClosed(
-      contract
-    )
-
-    await this._dlcService.updateContract(unilateralClosed)
-    return unilateralClosed
-  }
-
-  async onUnilateralClosedByOther(
-    contractId: string
-  ): Promise<UnilateralClosedByOtherContract> {
-    const contract = (await this.tryGetContractOrThrow(contractId, [
-      ContractState.Mature,
-      ContractState.MutualCloseProposed,
-    ])) as MaturedContract | MutualCloseProposedContract
-
-    const updatedContract = await this._contractUpdater.toUnilateralClosedByOther(
+    const updatedContract = await this._contractUpdater.toClosedByOther(
       contract
     )
 

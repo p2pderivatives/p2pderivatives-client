@@ -1,11 +1,19 @@
 import * as cfdjs from 'cfd-js'
 import { Utxo } from '../models/Utxo'
 
-export function createKeyPair(): cfdjs.CreateKeyPairResponse {
+export function createSchnorrKeyPair(): {
+  privkey: string
+  pubkey: string
+} {
   const reqJson: cfdjs.CreateKeyPairRequest = {
     wif: false,
   }
-  return cfdjs.CreateKeyPair(reqJson)
+  const keyPair = cfdjs.CreateKeyPair(reqJson)
+  const pubkey = cfdjs.GetSchnorrPubkeyFromPrivkey({
+    privkey: keyPair.privkey,
+  }).pubkey
+
+  return { privkey: keyPair.privkey, pubkey }
 }
 
 export function getPubkeyFromPrivkey(privkey: string): string {
@@ -85,4 +93,9 @@ export function selectUtxosForAmount(
   })
 
   return utxoResult
+}
+
+export function getScriptForAddress(address: string): string {
+  const req = { address }
+  return cfdjs.GetAddressInfo(req).lockingScript
 }

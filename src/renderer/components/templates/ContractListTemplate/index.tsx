@@ -41,11 +41,7 @@ const tabItems: TabItem[] = [
 const tabStatuses: Array<Array<ContractState>> = [
   [],
   [ContractState.Offered],
-  [
-    ContractState.MutualClosed,
-    ContractState.Refunded,
-    ContractState.UnilateralClosed,
-  ],
+  [ContractState.Refunded, ContractState.Closed],
 ]
 
 const ContractListTemplate: FC<ContractListTemplateProps> = (
