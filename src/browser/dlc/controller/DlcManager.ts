@@ -32,6 +32,8 @@ import {
 import { DlcService } from '../service/DlcService'
 import { DlcError, DlcEventHandler } from '../utils/DlcEventHandler'
 
+const MaxDelayMs = 5000
+
 export class DlcManager {
   private readonly timeoutHandle: NodeJS.Timeout
   private readonly mutex: Mutex
@@ -64,18 +66,34 @@ export class DlcManager {
     this.dlcMessageStream.cancel()
   }
 
+  private sleep(delay: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, delay))
+  }
+
   private async listenToStream(): Promise<void> {
+    let delay = 20
     while (!this.isFinalized) {
       try {
         for await (const message of this.dlcMessageStream.listen()) {
+          delay = 20
           this.onDlcMessage(message)
         }
       } catch (error) {
+        // TODO(tibo): should check if refresh token is still valid, if not,
+        // need to redirect to login screen.
         this.logger.error('Stream stopped with error', { error })
-        if (!this.isFinalized) {
-          // TODO(tibo): Better handling. If this throws, server might be
-          // unreachable, need to propagate error to user.
-          this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
+        let isConnected = false
+        while (!isConnected) {
+          this.logger.info('Retrying in ' + delay + 'ms')
+          await this.sleep(delay)
+          delay = Math.min(MaxDelayMs, delay * 2)
+          try {
+            this.dlcMessageService.refreshAuth()
+            this.dlcMessageStream = this.dlcMessageService.getDlcMessageStream()
+            isConnected = true
+          } catch {
+            this.logger.error('Could not get dlc message stream.')
+          }
         }
       }
     }
