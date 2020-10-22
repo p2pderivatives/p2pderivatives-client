@@ -84,11 +84,13 @@ describe('dlc-manager', () => {
         getDlcMessageStream: () => getDlcMessageStreamMock(localStream),
         sendDlcMessage: (message: DlcTypedMessage, dest: string) =>
           sendDlcMessageMock(message, dest, localParty, remoteStream),
+        refreshAuth: () => Promise.resolve(),
       }
       const remoteDlcMessageService: DlcMessageServiceApi = {
         getDlcMessageStream: () => getDlcMessageStreamMock(remoteStream),
         sendDlcMessage: (message: DlcTypedMessage, dest: string) =>
           sendDlcMessageMock(message, dest, remoteParty, localStream),
+        refreshAuth: () => Promise.resolve(),
       }
       const logger = winston.createLogger({
         level: 'debug',

@@ -11,6 +11,7 @@ import { AuthenticationService } from './AuthenticationService'
 export interface DlcMessageServiceApi {
   sendDlcMessage(message: DlcTypedMessage, dest: string): Promise<void>
   getDlcMessageStream(): DlcMessageStream
+  refreshAuth(): Promise<void>
 }
 
 export class DlcMessageStream {
@@ -102,5 +103,9 @@ export class DlcMessageService implements DlcMessageService {
     return new DlcMessageStream(grpcStream, this._authService, () =>
       grpcStream.cancel()
     )
+  }
+
+  public refreshAuth(): Promise<void> {
+    return this._authService.refresh()
   }
 }
