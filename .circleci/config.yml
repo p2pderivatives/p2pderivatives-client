@@ -56,6 +56,11 @@ workflows:
       - integration-tests-separate:
           requires:
             - build
+      - consolidate-coverage:
+          requires:
+            - jest-tests
+            - integration-tests-separate
+            - integration-tests
 
   tagged:
     jobs:
@@ -204,6 +209,9 @@ jobs:
           path: ./reports/jest
       - store_artifacts:
           path: ./reports/jest
+      - persist_to_workspace:
+          root: .
+          paths: ./reports
 
   mocha-tests:
     executor: client-browsers-runner
@@ -235,6 +243,7 @@ jobs:
       - run:
           name: Configure and start services
           command: |
+            COMPOSE_PROJECT_NAME=integration
             docker create \
               -v oracle-key:/oracle-key \
               -v oracle-config:/oracle-config \
@@ -283,6 +292,9 @@ jobs:
           when: always
       - store_test_results:
           path: ./reports
+      - persist_to_workspace:
+          root: .
+          paths: ./reports
 
   integration-tests-separate:
     executor: client-runner
@@ -316,6 +328,33 @@ jobs:
           when: always
       - store_test_results:
           path: ./reports
+      - persist_to_workspace:
+          root: .
+          paths: ./reports
+
+  consolidate-coverage:
+    executor: client-runner
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Merge integration-separate coverage reports
+          command: |
+            npx istanbul-merge --out reports/coverage/integration-separate/coverage-final.json \
+              reports/coverage/integration-separate/**.json
+            npx istanbul report --include reports/coverage/integration-separate/coverage-final.json \
+              --dir reports/coverage/integration-separate/ html
+      - run:
+          name: Merge all coverage reports
+          command: |
+            npx istanbul-merge --out reports/coverage/coverage-all.json \
+              reports/coverage/integration-separate/coverage-final.json \
+              reports/coverage/integration/coverage-final.json \
+              reports/coverage/node/coverage-final.json \
+              reports/coverage/browser/coverage-final.json
+            npx istanbul report --include reports/coverage/coverage-all.json --dir reports/coverage/ html
+      - store_artifacts:
+          path: ./reports
 
   packaging:
     parameters:
@@ -342,7 +381,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-             - pkg
+            - pkg
 
   release:
     docker:
@@ -350,7 +389,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: 
+      - run:
           name: Install ghr command
           command: go get github.com/tcnksm/ghr
       - run:
@@ -361,4 +400,3 @@ jobs:
             -r p2pderivatives-client \
             -replace \
             ${CIRCLE_TAG} pkg/
- 

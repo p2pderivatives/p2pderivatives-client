@@ -33,16 +33,17 @@
     "build:browser": "tsc -p src/browser",
     "build": "npm run build:react && npm run build:browser",
     "test": "npm run test:node && npm run test:renderer",
-    "test:node": " jest  --reporters=default",
+    "test:node": " jest --reporters=default",
     "test:renderer": "jest --reporters=default --config jest.config.renderer.js",
     "test:ci": "npm run test:node:ci && npm run test:renderer:ci",
-    "test:node:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/jest/node jest  --reporters=default --reporters=jest-junit --ci --runInBand",
-    "test:renderer:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/jest/renderer jest --config jest.config.renderer.js --reporters=default --reporters=jest-junit --ci --runInBand",
+    "test:node:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/jest/node jest  --coverage --reporters=default --reporters=jest-junit --ci --runInBand --coverageDirectory=./reports/coverage/node/",
+    "test:renderer:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/jest/renderer jest --coverage --config jest.config.renderer.js --reporters=default --reporters=jest-junit --ci --runInBand --coverageDirectory=./reports/coverage/browser/",
     "integration": "jest --config jest.config.integration.js --reporters=default --runInBand",
-    "integration:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/integration jest --config jest.config.integration.js --reporters=default --reporters=jest-junit --ci --runInBand",
+    "integration:ci": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/integration jest --config jest.config.integration.js --reporters=default --reporters=jest-junit --coverage --ci --runInBand --coverageDirectory=./reports/coverage/integration/",
     "integration-separate": "./integration-test/run-separate/run.sh",
-    "integration-separate:ci": "./integration-test/run-separate/run-ci.sh",
-    "integration-separate:ci:test": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/separate BITCOIND_HOST=$BITCOIND_HOST jest --config jest.config.integration-separate.js --reporters=default --reporters=jest-junit --ci --runInBand",
+    "integration-separate:ci": "cross-env ISCI=1 ./integration-test/run-separate/run.sh",
+    "integration-separate:test": "jest --config jest.config.integration-separate.js --reporters=default --coverage --runInBand",
+    "integration-separate:ci:test": "cross-env JEST_JUNIT_OUTPUT_DIR=./reports/separate BITCOIND_HOST=$BITCOIND_HOST jest --config jest.config.integration-separate.js --reporters=default --reporters=jest-junit --coverage --ci --runInBand",
     "electron-dev": "concurrently \"cross-env BROWSER=none PORT=9000 npm start\" \"wait-on http://localhost:9000 && npm run build:browser && electron .\"",
     "electron-dev-simple": "npm run build:browser && electron .",
     "build-native-cfd": "npm rebuild cfd-js cfd-dlc-js",
@@ -52,7 +53,8 @@
     "lint:ci": "eslint --max-warnings=0 --format junit --output-file ./reports/linter/eslint.xml src test integration-test --ext .ts,.tsx ",
     "mocha": "electron-mocha ./test/*.ts",
     "mocha:ci": "cross-env MOCHA_FILE=./reports/mocha/mocha.xml electron-mocha ./test/*.ts --reporter mocha-junit-reporter",
-    "storybook": "start-storybook"
+    "storybook": "start-storybook",
+    "view:coverage": "npx serve coverage/lcov-report"
   },
   "browserslist": {
     "production": [
