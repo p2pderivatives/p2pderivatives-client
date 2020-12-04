@@ -29,9 +29,11 @@ function generateContract(
     remoteCollateral: 100000000,
     outcomes: [
       {
-        local: 200000000,
-        remote: 0,
-        message: '1',
+        payout: {
+          local: 200000000,
+          remote: 0,
+        },
+        outcome: '1',
       },
     ],
     maturityTime: maturityDate.toMillis(),

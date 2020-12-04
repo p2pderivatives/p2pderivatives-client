@@ -22,7 +22,7 @@ export class FileEvents extends IPCEventsBase {
     outcomeCall: OutcomeCall
   ): Promise<OutcomeAnswer> {
     try {
-      const outcomesList = await this._client.readOutcomes(
+      const outcomesList = await this._client.readRangeOutcomes(
         outcomeCall.outcomesPath
       )
       return new OutcomeAnswer(true, outcomesList)

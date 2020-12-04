@@ -40,27 +40,35 @@ const oneBtc = 100000000
 
 const baseOutcomes = [
   {
-    message: 'bull',
-    local: 2 * oneBtc,
-    remote: 0,
+    outcome: 'bull',
+    payout: {
+      local: 2 * oneBtc,
+      remote: 0,
+    },
   },
   {
-    message: 'bear',
-    local: 0,
-    remote: 2 * oneBtc,
+    outcome: 'bear',
+    payout: {
+      local: 0,
+      remote: 2 * oneBtc,
+    },
   },
 ]
 
 const outcomesWithDust = [
   {
-    message: 'bull',
-    local: 1 * oneBtc - 100,
-    remote: 100,
+    outcome: 'bull',
+    payout: {
+      local: 1 * oneBtc - 100,
+      remote: 100,
+    },
   },
   {
-    message: 'bear',
-    local: 100,
-    remote: 1 * oneBtc - 100,
+    outcome: 'bear',
+    payout: {
+      local: 100,
+      remote: 1 * oneBtc - 100,
+    },
   },
 ]
 
@@ -71,7 +79,7 @@ describe('dlc-event-handler', () => {
       localPartyContext = await getNewPartyContext(localParty)
       remotePartyContext = await getNewPartyContext(remoteParty)
       noBtcPartyContext = await getNewPartyContext(noBtcParty, false)
-      oracleContext = getNewMockedOracleContext(baseOutcomes[0].message)
+      oracleContext = getNewMockedOracleContext(baseOutcomes[0].outcome)
     } catch (error) {
       fail(error)
     }
@@ -149,13 +157,13 @@ describe('dlc-event-handler', () => {
       offerMessage.contractId
     )
 
-    expect(localContract.finalOutcome.remote).toEqual(0)
+    expect(localContract.finalOutcome.payout.remote).toEqual(0)
 
     const remoteContract = await remotePartyContext.eventHandler.onClosedByOther(
       offerMessage.contractId
     )
 
-    expect(remoteContract.finalOutcome.remote).toEqual(0)
+    expect(remoteContract.finalOutcome.payout.remote).toEqual(0)
   })
 
   test('7-with-dust-payout-unilateral-remote-closed-dust-is-discarded', async () => {
@@ -170,13 +178,13 @@ describe('dlc-event-handler', () => {
       offerMessage.contractId
     )
 
-    expect(remoteContract.finalOutcome.remote).toEqual(0)
+    expect(remoteContract.finalOutcome.payout.remote).toEqual(0)
 
     const localContract = await localPartyContext.eventHandler.onClosedByOther(
       offerMessage.contractId
     )
 
-    expect(localContract.finalOutcome.remote).toEqual(0)
+    expect(localContract.finalOutcome.payout.remote).toEqual(0)
   })
 
   test('8-process-two-contracts-both-succeed', async () => {
@@ -451,14 +459,14 @@ describe('dlc-event-handler', () => {
     await testOnContractMature(
       localContext,
       offeredContract.id,
-      finalOutcome.message,
+      finalOutcome.outcome,
       oracleContext.signature
     )
 
     await testOnContractMature(
       remotePartyContext,
       offeredContract.id,
-      finalOutcome.message,
+      finalOutcome.outcome,
       oracleContext.signature
     )
   }

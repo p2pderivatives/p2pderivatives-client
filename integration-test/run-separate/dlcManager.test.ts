@@ -40,14 +40,18 @@ const remotePartyIpcMock: jest.Mocked<DlcBrowserAPI> = {
 
 const outcomes = [
   {
-    message: 'bull',
-    local: 200000000,
-    remote: 0,
+    outcome: 'bull',
+    payout: {
+      local: 200000000,
+      remote: 0,
+    },
   },
   {
-    message: 'bear',
-    local: 0,
-    remote: 200000000,
+    outcome: 'bear',
+    payout: {
+      local: 0,
+      remote: 200000000,
+    },
   },
 ]
 
@@ -60,7 +64,7 @@ const now = DateTime.fromObject({
   second: 0,
 })
 
-const oracleContext = getNewMockedOracleContext(outcomes[0].message)
+const oracleContext = getNewMockedOracleContext(outcomes[0].outcome)
 
 let throwOnSend = false
 
@@ -130,7 +134,7 @@ describe('dlc-manager', () => {
             signature: oracleContext.signature,
             publishDate: publishDate,
             assetID: assetId,
-            value: outcomes[0].message,
+            value: outcomes[0].outcome,
             rvalue: oracleContext.oracleRValue,
             oraclePublicKey: oracleContext.oraclePublicKey,
           },

@@ -6,7 +6,6 @@ import Tabs, { TabItem } from '../../molecules/Tabs'
 import OutcomesGrid from '../../organisms/OutcomesGrid'
 import { Contract } from '../../../../common/models/dlc/Contract'
 import ContractView from '../../organisms/ContractView'
-import { merge } from '../../../util/outcome-merger'
 
 type ContractDetailTemplateProps = {
   data: Contract
@@ -113,7 +112,7 @@ const ContractDetailTemplate: FC<ContractDetailTemplateProps> = (
             <Box display="inline">
               <OutcomesGrid
                 title={'Contract Outcomes'}
-                data={merge([...contract.outcomes])}
+                data={[...contract.outcomes]}
               />
             </Box>
           )}

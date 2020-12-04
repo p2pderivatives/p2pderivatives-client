@@ -237,7 +237,9 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
     validateLength = true
   ): boolean => {
     const firstPayout =
-      outcomes.length > 0 ? outcomes[0].local + outcomes[0].remote : 0
+      outcomes.length > 0
+        ? outcomes[0].payout.local + outcomes[0].payout.remote
+        : 0
     const validations: (() => boolean)[] = [
       (): boolean =>
         validationBase(
@@ -248,7 +250,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
         ),
       (): boolean =>
         validationBase(
-          outcomes.every(x => x.local + x.remote === firstPayout),
+          outcomes.every(x => x.payout.local + x.payout.remote === firstPayout),
           setOutcomesError,
           setOutcomesMessage,
           'The sum of all outcomes payout need to be the same'

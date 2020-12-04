@@ -10,17 +10,13 @@ export const ContractTest: Contract = {
   remoteCollateral: 100000000,
   outcomes: [
     {
-      message: '10000',
-      local: 200000000,
-      remote: 0,
+      outcome: '10000',
+      payout: {
+        local: 200000000,
+        remote: 0,
+      },
     },
   ],
-  oracleInfo: {
-    name: '1',
-    rValue: '1',
-    publicKey: '1',
-    assetId: 'btcusd',
-  },
   maturityTime: DateTime.fromObject({
     year: 2020,
     month: 7,

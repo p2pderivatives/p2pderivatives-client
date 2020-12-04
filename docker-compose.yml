@@ -61,7 +61,7 @@ services:
 
   ### BITCOIND
   bitcoind:
-    image: ruimarinho/bitcoin-core:0.19.1
+    image: ruimarinho/bitcoin-core:0.20.0
     command: |
       -conf=/config/default.conf
       -printtoconsole

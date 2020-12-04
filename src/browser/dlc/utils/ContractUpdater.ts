@@ -3,7 +3,12 @@ import * as CfdUtils from './CfdUtils'
 import { AdaptorPair } from '../models/AdaptorPair'
 import { CfdError, DecodeRawTransactionResponse } from 'cfd-js'
 import { ContractState } from '../../../common/models/dlc/Contract'
-import { Outcome } from '../../../common/models/dlc/Outcome'
+import {
+  areEnumerationOutcomes,
+  areRangeOutcomes,
+  isEnumerationOutcome,
+  Outcome,
+} from '../../../common/models/dlc/Outcome'
 import BitcoinDClient from '../../api/bitcoind'
 import {
   AcceptedContract,
@@ -159,13 +164,23 @@ export class ContractUpdater {
     }
 
     const payouts: { local: number; remote: number }[] = []
-    const messages = []
+    const messages: string[] = []
     contract.outcomes.forEach(outcome => {
+      if (!isEnumerationOutcome(outcome)) {
+        for (let i = outcome.start; i < outcome.start + outcome.count; i++) {
+          payouts.push({
+            local: outcome.payout.local,
+            remote: outcome.payout.remote,
+          })
+          messages.push(i.toString())
+        }
+        return
+      }
       payouts.push({
-        local: outcome.local,
-        remote: outcome.remote,
+        local: outcome.payout.local,
+        remote: outcome.payout.remote,
       })
-      messages.push(outcome.message)
+      messages.push(outcome.outcome)
     })
 
     const dlcTxRequest: cfddlcjs.CreateDlcTransactionsRequest = {
@@ -256,6 +271,39 @@ export class ContractUpdater {
     }
   }
 
+  private getMessagesForOutcomes(
+    outcomes: Outcome[] | ReadonlyArray<Outcome>
+  ): string[] {
+    if (areEnumerationOutcomes(outcomes)) {
+      return outcomes.map(x => x.outcome)
+    } else if (areRangeOutcomes(outcomes)) {
+      const messages: string[] = []
+      outcomes.forEach(x => {
+        for (let i = x.start; i < x.start + x.count; i++) {
+          messages.push(i.toString())
+        }
+      })
+      return messages
+    }
+
+    throw Error('Invalid outcome type')
+  }
+
+  private getOutcomeIndex(
+    outcomes: Outcome[] | ReadonlyArray<Outcome>,
+    value: string
+  ): number {
+    const outcomeIndex = this.getMessagesForOutcomes(outcomes).findIndex(
+      x => x === value
+    )
+
+    if (outcomeIndex === -1) {
+      throw Error('Outcome value not found')
+    }
+
+    return outcomeIndex
+  }
+
   private getCetAdaptorSignatures(
     contract: AcceptedContract | OfferedContract | SignedContract,
     privateParams: PrivateParams,
@@ -264,6 +312,7 @@ export class ContractUpdater {
     fundTxOutAmount: number,
     remotePartyInputs: PartyInputs
   ): AdaptorPair[] {
+    const messages = this.getMessagesForOutcomes(contract.outcomes)
     const cetSignRequest: cfddlcjs.CreateCetAdaptorSignaturesRequest = {
       cetsHex: [...cetsHex],
       privkey: privateParams.fundPrivateKey,
@@ -273,7 +322,7 @@ export class ContractUpdater {
       fundInputAmount: fundTxOutAmount,
       oraclePubkey: contract.oracleInfo.publicKey,
       oracleRValue: contract.oracleInfo.rValue,
-      messages: contract.outcomes.map(x => x.message),
+      messages,
     }
 
     return cfddlcjs.CreateCetAdaptorSignatures(cetSignRequest).adaptorPairs
@@ -350,7 +399,7 @@ export class ContractUpdater {
     const verifyCetSignaturesRequest: cfddlcjs.VerifyCetAdaptorSignaturesRequest = {
       cetsHex: [...cets],
       adaptorPairs,
-      messages: contract.outcomes.map(x => x.message),
+      messages: this.getMessagesForOutcomes(contract.outcomes),
       oracleRValue: contract.oracleInfo.rValue,
       oraclePubkey: contract.oracleInfo.publicKey,
       localFundPubkey: contract.localPartyInputs.fundPublicKey,
@@ -468,8 +517,9 @@ export class ContractUpdater {
   async toClosed(contract: MaturedContract): Promise<ClosedContract> {
     const cets = contract.cetsHex
 
-    const outcomeIndex = contract.outcomes.findIndex(
-      outcome => outcome.message === contract.finalOutcome.message
+    const outcomeIndex = this.getOutcomeIndex(
+      contract.outcomes,
+      contract.outcomeValue
     )
 
     let cetHex = cets[outcomeIndex]
@@ -536,14 +586,10 @@ export class ContractUpdater {
     outcomeValue: string,
     oracleSignature: string
   ): MaturedContract {
-    const finalOutcomeIndex = contract.outcomes.findIndex(
-      x => x.message === outcomeValue
+    const finalOutcomeIndex = this.getOutcomeIndex(
+      contract.outcomes,
+      outcomeValue
     )
-    if (finalOutcomeIndex < 0) {
-      throw new Error(
-        "Could not find final outcome in the list of contract's outcomes."
-      )
-    }
 
     // Keep track of other party CET if necessary to be able to watch it through the
     // bitcoind wallet
@@ -559,6 +605,7 @@ export class ContractUpdater {
       finalOutcome: contract.outcomes[finalOutcomeIndex],
       oracleSignature,
       finalCetId: finalCet.txid,
+      outcomeValue,
     }
   }
 
@@ -681,12 +728,18 @@ export class ContractUpdater {
       case DustDiscardedParty.local:
         return {
           ...contract.finalOutcome,
-          local: 0,
+          payout: {
+            ...contract.finalOutcome.payout,
+            local: 0,
+          },
         }
       case DustDiscardedParty.remote:
         return {
           ...contract.finalOutcome,
-          remote: 0,
+          payout: {
+            ...contract.finalOutcome.payout,
+            remote: 0,
+          },
         }
       default:
         return contract.finalOutcome
