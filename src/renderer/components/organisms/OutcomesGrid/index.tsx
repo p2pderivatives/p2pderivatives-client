@@ -2,7 +2,10 @@ import React, { FC, ReactElement, useState, useEffect } from 'react'
 import MUIDataTable, { MUIDataTableProps } from 'mui-datatables'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import BtcDisplay from '../../atoms/BtcDisplay'
-import { Outcome } from '../../../../common/models/dlc/Outcome'
+import {
+  isEnumerationOutcome,
+  Outcome,
+} from '../../../../common/models/dlc/Outcome'
 
 export type DataGridProps = Omit<
   MUIDataTableProps,
@@ -68,16 +71,53 @@ const theme = createMuiTheme({
   },
 })
 
+interface DisplayOutcome {
+  outcome: string
+  local: number
+  remote: number
+}
+
+const parseOutcomes = (data: ReadonlyArray<Outcome>): DisplayOutcome[] => {
+  const len = data.length
+  return data.map((x, i) => parseOutcome(x, i, len - 1))
+}
+
+const parseOutcome = (
+  data: Outcome,
+  index: number,
+  lastIndex: number
+): DisplayOutcome => {
+  if (isEnumerationOutcome(data)) {
+    return {
+      outcome: data.outcome,
+      local: data.payout.local,
+      remote: data.payout.remote,
+    }
+  }
+
+  const start = index === 0 ? 0 : data.start
+  const outcome =
+    index === lastIndex
+      ? `${start}+`
+      : `${start}-${data.start + data.count - 1}`
+  return {
+    outcome,
+    local: data.payout.local,
+    remote: data.payout.remote,
+  }
+}
+
 const OutcomesGrid: FC<DataGridProps> = (props: DataGridProps) => {
-  const [data, setData] = useState(props.data)
+  const [data, setData] = useState(parseOutcomes(props.data))
 
   useEffect(() => {
-    setData(props.data)
+    const parsedData = parseOutcomes(props.data)
+    setData(parsedData)
   }, [setData, props.data])
 
   const columns = [
     {
-      name: 'message',
+      name: 'outcome',
       label: 'Fixing price',
       options: {
         sort: true,

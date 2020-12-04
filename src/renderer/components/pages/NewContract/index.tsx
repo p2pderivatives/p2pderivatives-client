@@ -12,7 +12,6 @@ import { userListRequest } from '../../../store/user/actions'
 import FileIPC from '../../../ipc/FileIPC'
 import { Outcome } from '../../../../common/models/dlc/Outcome'
 import OracleIPC from '../../../ipc/OracleIPC'
-import { merge } from '../../../util/outcome-merger'
 import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
 import { push } from 'connected-react-router'
 import { offerRequest } from '../../../store/dlc/actions'
@@ -39,7 +38,7 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
     selectedContract ? [...selectedContract.outcomes] : []
   )
   const [outcomesList, setOutcomesList] = useState<Outcome[]>(
-    selectedContract ? merge([...selectedContract.outcomes]) : []
+    selectedContract ? [...selectedContract.outcomes] : []
   )
 
   const [utxoAmount, setUtxoAmount] = useState(0)
@@ -49,9 +48,8 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
       if (files !== undefined) {
         const filepath = files.filePaths[0]
         const parsedOutcomes = await new FileIPC().parseOutcomes(filepath)
-        const outcomes = merge(parsedOutcomes)
         setActualOutcomes(parsedOutcomes)
-        setOutcomesList(outcomes)
+        setOutcomesList(parsedOutcomes)
         setTab(1)
       }
     })

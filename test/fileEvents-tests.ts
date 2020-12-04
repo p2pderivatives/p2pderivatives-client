@@ -6,13 +6,15 @@ import OutcomeCall from '../src/common/models/ipc/OutcomeCall'
 import OutcomeAnswer, {
   OutcomeAnswerProps,
 } from '../src/common/models/ipc/OutcomeAnswer'
+import { isRangeOutcome } from '../src/common/models/dlc/Outcome'
 
 @suite('IPC-Auth')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Main {
   @test async ipcOutcomeParseShouldSucceed(): Promise<void> {
     const outcomeCall: OutcomeCall = {
-      outcomesPath: './src/browser/api/io/test.csv',
+      outcomesPath:
+        './src/browser/api/io/__tests__/testRangeOutcomesSimple.csv',
     }
     const result = (await ipc.callMain(
       PARSE_OUTCOME,
@@ -22,6 +24,11 @@ class Main {
 
     expect(answer.isSuccess()).eq(true)
     expect(answer.getError()).eq(null)
-    expect(answer.getOutcomes()[0].message).eq('3.000')
+    const firstOutcome = answer.getOutcomes()[0]
+    if (isRangeOutcome(firstOutcome)) {
+      expect(firstOutcome.start).eq(2000)
+    } else {
+      fail()
+    }
   }
 }

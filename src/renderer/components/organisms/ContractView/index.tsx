@@ -171,22 +171,22 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
     ])
   }
 
-  if (contract.finalOutcome) {
+  if (contract.finalOutcome && contract.outcomeValue) {
     const pnl = contract.isLocalParty
-      ? contract.finalOutcome.local - contract.localCollateral
-      : contract.finalOutcome.remote - contract.remoteCollateral
+      ? contract.finalOutcome.payout.local - contract.localCollateral
+      : contract.finalOutcome.payout.remote - contract.remoteCollateral
 
     content = content.concat([
-      { title: 'Outcome Value', value: contract.finalOutcome.message },
+      { title: 'Outcome Value', value: contract.outcomeValue },
       {
         title: 'Local Payout',
-        value: contract.finalOutcome.local,
+        value: contract.finalOutcome.payout.local,
         btc: true,
         addOwn: contract.isLocalParty,
       },
       {
         title: 'Remote Payout',
-        value: contract.finalOutcome.remote,
+        value: contract.finalOutcome.payout.remote,
         btc: true,
         addOwn: !contract.isLocalParty,
       },

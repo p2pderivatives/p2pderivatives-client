@@ -28,4 +28,5 @@ export interface Contract {
   readonly premiumAmount?: number
   readonly isLocalParty?: boolean
   readonly finalOutcome?: Outcome
+  readonly outcomeValue?: string
 }

@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 import { Logger } from 'winston'
 import { Contract } from '../../../common/models/dlc/Contract'
 import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
+import { findOutcome } from '../../../common/models/dlc/Outcome'
 import { isSuccessful } from '../../../common/utils/failable'
 import BitcoinDClient from '../../api/bitcoind'
 import {
@@ -248,7 +249,7 @@ export class DlcManager {
 
         if (isSuccessful(result)) {
           const value = result.value
-          const outcome = contract.outcomes.find(x => x.message === value.value)
+          const outcome = findOutcome(contract.outcomes, value.value)
           if (!outcome) {
             this.logger.error(
               `Contract outcome ${value.value} not in the outcome list.`

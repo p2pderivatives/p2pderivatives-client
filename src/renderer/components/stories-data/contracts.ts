@@ -7,32 +7,38 @@ export const contracts: Contract[] = [
     state: ContractState.Offered,
     counterPartyName: 'UserB',
     feeRate: 2,
-    localCollateral: 201000000,
-    maturityTime: DateTime.utc().toMillis(),
-    remoteCollateral: 299000000,
-    outcomes: [
-      {
-        local: 500000000,
-        remote: 0,
-        message: 'yes',
-      },
-      {
-        local: 0,
-        remote: 500000000,
-        message: 'no',
-      },
-      {
-        local: 250000000,
-        remote: 250000000,
-        message: 'maybe',
-      },
-    ],
     oracleInfo: {
       name: 'Olivia',
       rValue: '1',
       publicKey: '1',
       assetId: 'btcusd',
     },
+    localCollateral: 201000000,
+    maturityTime: DateTime.utc().toMillis(),
+    remoteCollateral: 299000000,
+    outcomes: [
+      {
+        payout: {
+          local: 500000000,
+          remote: 0,
+        },
+        outcome: 'yes',
+      },
+      {
+        payout: {
+          local: 0,
+          remote: 500000000,
+        },
+        outcome: 'no',
+      },
+      {
+        payout: {
+          local: 250000000,
+          remote: 250000000,
+        },
+        outcome: 'maybe',
+      },
+    ],
   },
   {
     id: 'testid2',
@@ -46,19 +52,25 @@ export const contracts: Contract[] = [
     remoteCollateral: 299000000,
     outcomes: [
       {
-        local: 500000000,
-        remote: 0,
-        message: 'yes',
+        payout: {
+          local: 500000000,
+          remote: 0,
+        },
+        outcome: 'yes',
       },
       {
-        local: 0,
-        remote: 500000000,
-        message: 'no',
+        payout: {
+          local: 0,
+          remote: 500000000,
+        },
+        outcome: 'no',
       },
       {
-        local: 250000000,
-        remote: 250000000,
-        message: 'maybe',
+        payout: {
+          local: 250000000,
+          remote: 250000000,
+        },
+        outcome: 'maybe',
       },
     ],
     oracleInfo: {
@@ -80,19 +92,25 @@ export const contracts: Contract[] = [
     remoteCollateral: 299000000,
     outcomes: [
       {
-        local: 500000000,
-        remote: 0,
-        message: 'yes',
+        payout: {
+          local: 500000000,
+          remote: 0,
+        },
+        outcome: 'yes',
       },
       {
-        local: 0,
-        remote: 500000000,
-        message: 'no',
+        payout: {
+          local: 0,
+          remote: 500000000,
+        },
+        outcome: 'no',
       },
       {
-        local: 250000000,
-        remote: 250000000,
-        message: 'maybe',
+        payout: {
+          local: 250000000,
+          remote: 250000000,
+        },
+        outcome: 'maybe',
       },
     ],
     oracleInfo: {
@@ -114,19 +132,25 @@ export const contracts: Contract[] = [
     remoteCollateral: 299000000,
     outcomes: [
       {
-        local: 500000000,
-        remote: 0,
-        message: 'yes',
+        payout: {
+          local: 500000000,
+          remote: 0,
+        },
+        outcome: 'yes',
       },
       {
-        local: 0,
-        remote: 500000000,
-        message: 'no',
+        payout: {
+          local: 0,
+          remote: 500000000,
+        },
+        outcome: 'no',
       },
       {
-        local: 250000000,
-        remote: 250000000,
-        message: 'maybe',
+        payout: {
+          local: 250000000,
+          remote: 250000000,
+        },
+        outcome: 'maybe',
       },
     ],
     oracleInfo: {
@@ -148,19 +172,25 @@ export const contracts: Contract[] = [
     remoteCollateral: 299000000,
     outcomes: [
       {
-        local: 500000000,
-        remote: 0,
-        message: 'yes',
+        payout: {
+          local: 500000000,
+          remote: 0,
+        },
+        outcome: 'yes',
       },
       {
-        local: 0,
-        remote: 500000000,
-        message: 'no',
+        payout: {
+          local: 0,
+          remote: 500000000,
+        },
+        outcome: 'no',
       },
       {
-        local: 250000000,
-        remote: 250000000,
-        message: 'maybe',
+        payout: {
+          local: 250000000,
+          remote: 250000000,
+        },
+        outcome: 'maybe',
       },
     ],
     oracleInfo: {
@@ -182,19 +212,25 @@ export const contracts: Contract[] = [
     remoteCollateral: 299000000,
     outcomes: [
       {
-        local: 500000000,
-        remote: 0,
-        message: 'yes',
+        payout: {
+          local: 500000000,
+          remote: 0,
+        },
+        outcome: 'yes',
       },
       {
-        local: 0,
-        remote: 500000000,
-        message: 'no',
+        payout: {
+          local: 0,
+          remote: 500000000,
+        },
+        outcome: 'no',
       },
       {
-        local: 250000000,
-        remote: 250000000,
-        message: 'maybe',
+        payout: {
+          local: 250000000,
+          remote: 250000000,
+        },
+        outcome: 'maybe',
       },
     ],
     oracleInfo: {
