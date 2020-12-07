@@ -156,8 +156,9 @@ export default class BitcoinDClient {
   }
 
   public async getNewPrivateKey(): Promise<string> {
-    if (this.walletPassphrase)
+    if (this.walletPassphrase) {
       await this.getClient().walletPassphrase(this.walletPassphrase, 10)
+    }
     const address = await this.getClient().getNewAddress()
     return this.dumpPrivHex(address)
   }

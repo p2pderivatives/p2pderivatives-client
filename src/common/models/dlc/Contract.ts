@@ -1,5 +1,5 @@
 import { Outcome } from './Outcome'
-import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
+import { OracleInfo } from '../../oracle/oracleInfo'
 
 export enum ContractState {
   Initial = 1,
@@ -24,9 +24,10 @@ export interface Contract {
   readonly outcomes: ReadonlyArray<Outcome>
   readonly maturityTime: number
   readonly feeRate: number
-  readonly oracleInfo?: OracleInfo
+  readonly oracleInfo: OracleInfo
+  readonly assetId: string
   readonly premiumAmount?: number
   readonly isLocalParty?: boolean
   readonly finalOutcome?: Outcome
-  readonly outcomeValue?: string
+  readonly outcomeValues?: string[]
 }

@@ -67,7 +67,9 @@ export class LevelContractRepository implements ContractRepository {
             contracts.push(contract)
           }
         })
-        .on('end', () => resolve(contracts))
+        .on('end', () => {
+          return resolve(contracts)
+        })
     })
   }
 

@@ -1,3 +1,5 @@
+import { OracleInfo } from '../../../common/oracle/oracleInfo'
+
 export interface OracleConfig {
-  baseUrl: string
+  initialOracles: OracleInfo[]
 }

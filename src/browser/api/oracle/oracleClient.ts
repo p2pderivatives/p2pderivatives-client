@@ -1,20 +1,18 @@
 import axios, { AxiosError, AxiosInstance } from 'axios'
 import { DateTime, Duration, ToISOTimeOptions } from 'luxon'
-import {
-  OracleAssetConfiguration,
-  OracleRvalue,
-  OracleSignature,
-} from '../../../common/oracle/oracle'
+import { OracleAssetConfiguration } from '../../../common/oracle/oracle'
+import { OracleInfo } from '../../../common/oracle/oracleInfo'
 import { Failable, isSuccessful } from '../../../common/utils/failable'
+import { OracleAnnouncement } from '../../dlc/models/oracle/oracleAnnouncement'
+import { OracleAttestation } from '../../dlc/models/oracle/oracleAttestation'
 import {
+  APIAnnouncement,
   APIAssetConfig,
   APIAssets,
+  APIAttestation,
   APIError,
   APIOraclePublicKey,
-  APIRvalue,
-  APISignature,
 } from './apitypes'
-import { OracleConfig } from './oracleConfig'
 import { UnknownServerError } from './unknownServerError'
 
 export const HeaderRequestIDTag = 'Request-Id'
@@ -32,29 +30,29 @@ export interface OracleClientApi {
   getOracleConfig(
     assetID: string
   ): Promise<FailableOracle<OracleAssetConfiguration>>
-  getRvalue(
+  getAnnouncement(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleRvalue>>
-  getSignature(
+  ): Promise<FailableOracle<OracleAnnouncement>>
+  getAttestation(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleSignature>>
+  ): Promise<FailableOracle<OracleAttestation>>
 }
 
 export const ROUTE_ORACLE_PUBLIC_KEY = 'oracle/publickey'
 export const ROUTE_ASSET = 'asset'
 
-type APIDLCRoute<T extends APIRvalue | APISignature> = T extends APISignature
-  ? 'signature'
-  : 'rvalue'
+type APIDLCRoute<
+  T extends APIAnnouncement | APIAttestation
+> = T extends APIAttestation ? 'attestation' : 'announcement'
 
 export default class OracleClient implements OracleClientApi {
   private readonly _httpClient: AxiosInstance
 
-  constructor(config: OracleConfig) {
+  constructor(info: OracleInfo) {
     this._httpClient = axios.create({
-      baseURL: config.baseUrl,
+      baseURL: info.uri,
     })
   }
 
@@ -97,21 +95,29 @@ export default class OracleClient implements OracleClientApi {
     }
   }
 
-  async getRvalue(
+  async getAnnouncement(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleRvalue>> {
-    const resp = await this.getDLCData<APIRvalue>('rvalue', assetID, date)
+  ): Promise<FailableOracle<OracleAnnouncement>> {
+    const resp = await this.getDLCData<APIAnnouncement>(
+      'announcement',
+      assetID,
+      date
+    )
     if (isSuccessful(resp)) {
       // transform response data
       const apiResp = resp.value
       return {
         success: true,
         value: {
-          publishDate: DateTime.fromISO(apiResp.publishDate, { setZone: true }),
+          announcementSignature: apiResp.announcementSignature,
           oraclePublicKey: apiResp.oraclePublicKey,
-          rvalue: apiResp.rvalue,
-          assetID: apiResp.asset,
+          oracleEvent: {
+            nonces: apiResp.oracleEvent.nonces,
+            eventId: apiResp.oracleEvent.eventId,
+            eventDescriptor: apiResp.oracleEvent.eventDescriptor,
+            eventMaturity: apiResp.oracleEvent.eventMaturity,
+          },
         },
       }
     } else {
@@ -119,23 +125,24 @@ export default class OracleClient implements OracleClientApi {
     }
   }
 
-  async getSignature(
+  async getAttestation(
     assetID: string,
     date: DateTime
-  ): Promise<FailableOracle<OracleSignature>> {
-    const resp = await this.getDLCData<APISignature>('signature', assetID, date)
+  ): Promise<FailableOracle<OracleAttestation>> {
+    const resp = await this.getDLCData<APIAttestation>(
+      'attestation',
+      assetID,
+      date
+    )
     if (isSuccessful(resp)) {
       // transform response data
       const apiResp = resp.value
       return {
         success: true,
         value: {
-          publishDate: DateTime.fromISO(apiResp.publishDate, { setZone: true }),
-          oraclePublicKey: apiResp.oraclePublicKey,
-          rvalue: apiResp.rvalue,
-          assetID: apiResp.asset,
-          signature: apiResp.signature,
-          value: apiResp.value,
+          eventId: apiResp.eventId,
+          signatures: apiResp.signatures,
+          values: apiResp.values,
         },
       }
     } else {
@@ -143,7 +150,7 @@ export default class OracleClient implements OracleClientApi {
     }
   }
 
-  private getDLCData<T extends APIRvalue | APISignature>(
+  private getDLCData<T extends APIAnnouncement | APIAttestation>(
     route: APIDLCRoute<T>,
     assetID: string,
     date: DateTime

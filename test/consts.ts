@@ -17,6 +17,11 @@ export const ContractTest: Contract = {
       },
     },
   ],
+  assetId: 'btcusd',
+  oracleInfo: {
+    name: '1',
+    uri: '2',
+  },
   maturityTime: DateTime.fromObject({
     year: 2020,
     month: 7,

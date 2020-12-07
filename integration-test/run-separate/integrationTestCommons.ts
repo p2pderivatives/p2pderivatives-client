@@ -1,8 +1,10 @@
 import * as cfdjs from 'cfd-js'
 import level from 'level-test'
 import { LevelUp } from 'levelup'
+import { DateTime } from 'luxon'
 import { TEST_BITCOIND_CONFIG } from '../../services/bitcoind/env'
 import BitcoinDClient from '../../src/browser/api/bitcoind'
+import { OracleAnnouncement } from '../../src/browser/dlc/models/oracle/oracleAnnouncement'
 import { LevelContractRepository } from '../../src/browser/dlc/repository/LevelContractRepository'
 import { DlcService } from '../../src/browser/dlc/service/DlcService'
 import * as Utils from '../../src/browser/dlc/utils/CfdUtils'
@@ -27,9 +29,11 @@ export interface PartyContext {
 export interface OracleContext {
   readonly oraclePublicKey: string
   readonly oraclePrivateKey: string
-  readonly oracleKValue: string
-  readonly oracleRValue: string
-  readonly signature: string
+  readonly oracleKValues: string[]
+  readonly oracleRValues: string[]
+  readonly signatures: string[]
+  readonly outcomeValues: string[]
+  readonly announcement: OracleAnnouncement
 }
 
 export async function createWallets(): Promise<void> {
@@ -44,7 +48,61 @@ export async function createWallets(): Promise<void> {
   await client.createWallet(oneBtcParty, oneBtcParty)
 }
 
-export function getNewMockedOracleContext(message: string): OracleContext {
+export function getNewMockedDecompositionOracleContext(
+  nbDigits: number,
+  base: number,
+  outcomeValues: string[]
+): OracleContext {
+  const oracleKeyPair = Utils.createSchnorrKeyPair()
+  const oraclePrivateKey = oracleKeyPair.privkey
+  const oraclePublicKey = oracleKeyPair.pubkey
+  const oracleKValues = []
+  const oracleRValues = []
+  const signatures = []
+
+  for (let i = 0; i < nbDigits; i++) {
+    const krPair = Utils.createSchnorrKeyPair()
+    oracleKValues.push(krPair.privkey)
+    oracleRValues.push(krPair.pubkey)
+    signatures.push(
+      cfdjs.SchnorrSign({
+        privkey: oraclePrivateKey,
+        nonceOrAux: krPair.privkey,
+        isNonce: true,
+        message: outcomeValues[i],
+      }).hex
+    )
+  }
+
+  const announcement: OracleAnnouncement = {
+    announcementSignature: '',
+    oraclePublicKey: oraclePublicKey,
+    oracleEvent: {
+      nonces: oracleRValues,
+      eventMaturity: DateTime.utc().toISODate(),
+      eventId: 'id',
+      eventDescriptor: {
+        base,
+        isSigned: false,
+        unit: 'btcusd',
+        precision: 0,
+      },
+    },
+  }
+  return {
+    oraclePublicKey,
+    oraclePrivateKey,
+    oracleKValues: oracleKValues,
+    oracleRValues: oracleRValues,
+    outcomeValues,
+    signatures,
+    announcement,
+  }
+}
+
+export function getNewMockedEnumerationOracleContext(
+  outcomes: string[]
+): OracleContext {
   const oracleKeyPair = Utils.createSchnorrKeyPair()
   const oraclePrivateKey = oracleKeyPair.privkey
   const oraclePublicKey = oracleKeyPair.pubkey
@@ -55,14 +113,28 @@ export function getNewMockedOracleContext(message: string): OracleContext {
     privkey: oraclePrivateKey,
     nonceOrAux: oracleKValue,
     isNonce: true,
-    message,
+    message: outcomes[0],
   }).hex
+  const announcement: OracleAnnouncement = {
+    announcementSignature: '',
+    oraclePublicKey: oraclePublicKey,
+    oracleEvent: {
+      nonces: [oracleRValue],
+      eventMaturity: DateTime.utc().toISODate(),
+      eventId: 'id',
+      eventDescriptor: {
+        outcomes,
+      },
+    },
+  }
   return {
     oraclePublicKey,
     oraclePrivateKey,
-    oracleKValue,
-    oracleRValue,
-    signature,
+    oracleKValues: [oracleKValue],
+    oracleRValues: [oracleRValue],
+    outcomeValues: [outcomes[0]],
+    signatures: [signature],
+    announcement,
   }
 }
 

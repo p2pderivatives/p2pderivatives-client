@@ -3,24 +3,29 @@ import { Semaphore } from 'await-semaphore'
 import { DateTime, Settings } from 'luxon'
 import { Readable } from 'stream'
 import winston from 'winston'
+import { AuthenticationService } from '../../src/browser/api/grpc/AuthenticationService'
 import {
   DlcMessageServiceApi,
   DlcMessageStream,
 } from '../../src/browser/api/grpc/DlcMessageService'
-import { OracleClientApi } from '../../src/browser/api/oracle/oracleClient'
+import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
+import {
+  OracleClientApi,
+  OracleError,
+} from '../../src/browser/api/oracle/oracleClient'
 import { DlcManager } from '../../src/browser/dlc/controller/DlcManager'
 import { DlcTypedMessage } from '../../src/browser/dlc/models/messages'
+import { OracleAnnouncement } from '../../src/browser/dlc/models/oracle/oracleAnnouncement'
 import { DlcBrowserAPI } from '../../src/browser/ipc/DlcBrowserAPI'
 import { Contract, ContractState } from '../../src/common/models/dlc/Contract'
+import { Failable } from '../../src/common/utils/failable'
 import {
   assertContractState,
   createWallets,
-  getNewMockedOracleContext,
+  getNewMockedEnumerationOracleContext,
   getNewPartyContext,
   PartyContext,
 } from './integrationTestCommons'
-import { AuthenticationService } from '../../src/browser/api/grpc/AuthenticationService'
-import { GrpcAuth } from '../../src/browser/api/grpc/GrpcAuth'
 
 const localParty = 'alice'
 const remoteParty = 'bob'
@@ -64,9 +69,28 @@ const now = DateTime.fromObject({
   second: 0,
 })
 
-const oracleContext = getNewMockedOracleContext(outcomes[0].outcome)
+const oracleContext = getNewMockedEnumerationOracleContext(
+  outcomes.map(x => x.outcome)
+)
 
 let throwOnSend = false
+const mockGetAttestation = jest.fn()
+
+const contract: Contract = {
+  state: ContractState.Initial,
+  id: undefined,
+  assetId: 'btcusd',
+  oracleInfo: {
+    name: 'olivia',
+    uri: '',
+  },
+  counterPartyName: 'bob',
+  localCollateral: 100000000,
+  remoteCollateral: 100000000,
+  maturityTime: now.minus({ hours: 1 }).toMillis(),
+  outcomes: outcomes,
+  feeRate: 2,
+}
 
 describe('dlc-manager', () => {
   beforeEach(async () => {
@@ -103,19 +127,11 @@ describe('dlc-manager', () => {
         transports: [new winston.transports.Console()],
       })
 
-      const publishDate = now.plus({ minutes: 1 })
-      const assetId = 'btcusd'
-
-      const mockGetRValue = jest.fn()
-      mockGetRValue.mockReturnValue(
-        Promise.resolve({
+      const mockGetAnnouncement = jest.fn()
+      mockGetAnnouncement.mockReturnValue(
+        Promise.resolve<Failable<OracleAnnouncement, OracleError>>({
           success: true,
-          value: {
-            oraclePublicKey: oracleContext.oraclePublicKey,
-            publishDate: publishDate,
-            assetID: assetId,
-            rvalue: oracleContext.oracleRValue,
-          },
+          value: oracleContext.announcement,
         })
       )
       const mockGetPublicKey = jest.fn()
@@ -126,27 +142,23 @@ describe('dlc-manager', () => {
         })
       )
 
-      const mockGetSignature = jest.fn()
-      mockGetSignature.mockReturnValue(
+      mockGetAttestation.mockReturnValue(
         Promise.resolve({
           success: true,
           value: {
-            signature: oracleContext.signature,
-            publishDate: publishDate,
-            assetID: assetId,
-            value: outcomes[0].outcome,
-            rvalue: oracleContext.oracleRValue,
-            oraclePublicKey: oracleContext.oraclePublicKey,
+            eventId: '',
+            signatures: oracleContext.signatures,
+            values: oracleContext.outcomeValues,
           },
         })
       )
 
       const oracleClient: OracleClientApi = {
-        getRvalue: mockGetRValue,
+        getAnnouncement: mockGetAnnouncement,
         getOraclePublicKey: mockGetPublicKey,
         getAssets: jest.fn(),
         getOracleConfig: jest.fn(),
-        getSignature: mockGetSignature,
+        getAttestation: mockGetAttestation,
       }
       localPartyManager = new DlcManager(
         localPartyContext.eventHandler,
@@ -178,31 +190,133 @@ describe('dlc-manager', () => {
     remotePartyManager.finalize()
   })
 
-  test('18-closed-by-local', async () => {
+  test('19-closed-by-local', async () => {
     const contractId = await commonTests()
     await closedByLocal(contractId)
   })
 
+  test('20-send-offer-fails', async () => {
+    throwOnSend = true
+    await expect(
+      localPartyManager.sendContractOffer(contract)
+    ).rejects.toBeDefined()
+
+    const contracts = await localPartyContext.dlcService.getAllContracts()
+    expect(contracts.length).toBe(1)
+    expect(contracts[0].state).toBe(ContractState.Failed)
+  })
+
+  test('21-send-accept-fails', async () => {
+    const semaphore = new Semaphore(1)
+    let release = await semaphore.acquire()
+    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+    const offeredContract = await localPartyManager.sendContractOffer(contract)
+    release = await semaphore.acquire()
+    throwOnSend = true
+    await expect(
+      remotePartyManager.acceptContractOffer(offeredContract.id)
+    ).rejects.toBeDefined()
+    assertContractState(
+      remotePartyContext.dlcService,
+      offeredContract.id,
+      ContractState.Offered
+    )
+  })
+
+  test('22-refund-succeeds', async () => {
+    const semaphore = new Semaphore(1)
+    const contractId = await commonTests()
+    Settings.now = (): number => now.plus({ days: 7, hours: 1 }).valueOf()
+
+    mockGetAttestation.mockRejectedValue({
+      success: false,
+      error: {
+        requestID: 'id',
+        httpStatusCode: 500,
+        code: 0,
+        message: 'InternalError',
+      },
+    })
+
+    let release = await semaphore.acquire()
+    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+
+    jest.advanceTimersByTime(10000)
+
+    release = await semaphore.acquire()
+    await assertContractState(
+      localPartyContext.dlcService,
+      contractId,
+      ContractState.Refunded
+    )
+    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+
+    await localPartyContext.client.generateBlocksToWallet(10)
+
+    jest.advanceTimersByTime(1000)
+    release = await semaphore.acquire()
+    await assertContractState(
+      remotePartyContext.dlcService,
+      contractId,
+      ContractState.Refunded
+    )
+  })
+
+  test('23-rejects-works', async () => {
+    const semaphore = new Semaphore(1)
+    let release = await semaphore.acquire()
+    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+    const offeredContract = await localPartyManager.sendContractOffer(contract)
+    release = await semaphore.acquire()
+    await remotePartyManager.rejectContractOffer(offeredContract.id)
+    localPartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+    release = await semaphore.acquire()
+    await assertContractState(
+      localPartyContext.dlcService,
+      offeredContract.id,
+      ContractState.Rejected
+    )
+    await assertContractState(
+      remotePartyContext.dlcService,
+      offeredContract.id,
+      ContractState.Rejected
+    )
+  })
+
+  test('24-rejects-error-stay-offer', async () => {
+    const semaphore = new Semaphore(1)
+    let release = await semaphore.acquire()
+    remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
+      Promise.resolve(release())
+    )
+    const offeredContract = await localPartyManager.sendContractOffer(contract)
+    release = await semaphore.acquire()
+    throwOnSend = true
+    await expect(
+      remotePartyManager.rejectContractOffer(offeredContract.id)
+    ).rejects.toBeDefined()
+    await assertContractState(
+      localPartyContext.dlcService,
+      offeredContract.id,
+      ContractState.Offered
+    )
+  })
+
   async function commonTests(): Promise<string> {
     const semaphore = new Semaphore(1)
-    const contract: Contract = {
-      state: ContractState.Initial,
-      id: undefined,
-      oracleInfo: {
-        name: 'olivia',
-        rValue: oracleContext.oracleRValue,
-        publicKey: oracleContext.oraclePublicKey,
-        assetId: 'btcusd',
-      },
-      counterPartyName: 'bob',
-      localCollateral: 100000000,
-      remoteCollateral: 100000000,
-      maturityTime: DateTime.utc()
-        .minus({ hours: 1 })
-        .toMillis(),
-      outcomes: outcomes,
-      feeRate: 2,
-    }
 
     let release = await semaphore.acquire()
     remotePartyIpcMock.dlcUpdate.mockImplementation(() =>
@@ -270,7 +384,6 @@ describe('dlc-manager', () => {
 
   async function closedByLocal(contractId: string): Promise<void> {
     const semaphore = new Semaphore(1)
-    throwOnSend = true
     let release = await semaphore.acquire()
     localPartyIpcMock.dlcUpdate.mockImplementation(() =>
       Promise.resolve(release())

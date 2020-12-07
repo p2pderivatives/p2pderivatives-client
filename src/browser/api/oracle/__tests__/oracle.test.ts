@@ -1,18 +1,16 @@
 import axios, { AxiosError } from 'axios'
 import { DateTime, Duration } from 'luxon'
-import {
-  OracleAssetConfiguration,
-  OracleRvalue,
-  OracleSignature,
-} from '../../../../common/oracle/oracle'
+import { OracleAssetConfiguration } from '../../../../common/oracle/oracle'
 import { isFailed, isSuccessful } from '../../../../common/utils/failable'
+import { OracleAnnouncement } from '../../../dlc/models/oracle/oracleAnnouncement'
+import { OracleAttestation } from '../../../dlc/models/oracle/oracleAttestation'
 import {
+  APIAnnouncement,
   APIAssetConfig,
   APIAssets,
+  APIAttestation,
   APIError,
   APIOraclePublicKey,
-  APIRvalue,
-  APISignature,
 } from '../apitypes'
 import OracleClient, {
   FailableOracle,
@@ -31,7 +29,7 @@ describe('Oracle Client', () => {
   let client: OracleClient
   beforeEach(() => {
     mockedAxios.get.mockRestore()
-    client = new OracleClient({ baseUrl: 'http://try' })
+    client = new OracleClient({ name: 'olivia', uri: 'http://try' })
   })
 
   test('Get Oracle public key', async () => {
@@ -81,6 +79,8 @@ describe('Oracle Client', () => {
       startDate: startDate.toISO(),
       frequency: 'PT1H',
       range: 'P2MT',
+      base: 2,
+      nbDigits: 20,
     }
     const expected: OracleAssetConfiguration = {
       startDate: DateTime.fromISO(mockValue.startDate, { setZone: true }),
@@ -103,27 +103,47 @@ describe('Oracle Client', () => {
     }
   })
 
-  test('Get asset rvalue', async () => {
+  test('Get asset announcement', async () => {
     // arrange
     const testAsset = 'assetA'
-    const paramDate = DateTime.utc()
-    const mockValue: APIRvalue = {
+    const paramDate = DateTime.utc(2020, 10, 2, 1, 1, 1, 0)
+    const mockValue: APIAnnouncement = {
       oraclePublicKey: 'oracle',
-      publishDate: paramDate.toISO(),
-      rvalue: 'test-rvalue',
-      asset: testAsset,
+      announcementSignature: 'a',
+      oracleEvent: {
+        nonces: ['test'],
+        eventId: '1',
+        eventMaturity: DateTime.utc(2020, 10, 2, 1, 1, 1).toISO(),
+        eventDescriptor: {
+          base: 2,
+          isSigned: false,
+          unit: 'btcusd',
+          precision: 0,
+        },
+      },
     }
-    const expected: OracleRvalue = {
+    const expected: OracleAnnouncement = {
       oraclePublicKey: mockValue.oraclePublicKey,
-      publishDate: paramDate,
-      rvalue: mockValue.rvalue,
-      assetID: mockValue.asset,
+      announcementSignature: 'a',
+      oracleEvent: {
+        nonces: ['test'],
+        eventId: '1',
+        eventMaturity: DateTime.utc(2020, 10, 2, 1, 1, 1).toISO(),
+        eventDescriptor: {
+          base: 2,
+          isSigned: false,
+          unit: 'btcusd',
+          precision: 0,
+        },
+      },
     }
-    const expectedRoute = `asset/${testAsset}/rvalue/${paramDate.toISO()}`
+    const expectedRoute = `asset/${testAsset}/announcement/${paramDate.toISO({
+      suppressMilliseconds: true,
+    })}`
     mockedAxios.get.mockResolvedValueOnce({ data: mockValue })
 
     // act
-    const result = await client.getRvalue(testAsset, paramDate)
+    const result = await client.getAnnouncement(testAsset, paramDate)
 
     // assert
     expect(mockedAxios.get).toHaveBeenCalledWith(expectedRoute)
@@ -134,31 +154,25 @@ describe('Oracle Client', () => {
     }
   })
 
-  test('Get asset signature', async () => {
+  test('Get asset attestation', async () => {
     // arrange
     const testAsset = 'assetA'
     const paramDate = DateTime.utc()
-    const mockValue: APISignature = {
-      oraclePublicKey: 'oracle',
-      asset: testAsset,
-      publishDate: paramDate.toISO(),
-      rvalue: 'test-rvalue',
-      signature: 'test-signature',
-      value: 'test-value',
+    const mockValue: APIAttestation = {
+      signatures: ['test-signature'],
+      values: ['test-value'],
+      eventId: '1',
     }
-    const expected: OracleSignature = {
-      oraclePublicKey: mockValue.oraclePublicKey,
-      publishDate: paramDate,
-      assetID: mockValue.asset,
-      rvalue: mockValue.rvalue,
-      signature: mockValue.signature,
-      value: mockValue.value,
+    const expected: OracleAttestation = {
+      signatures: ['test-signature'],
+      values: ['test-value'],
+      eventId: '1',
     }
-    const expectedRoute = `asset/${testAsset}/signature/${paramDate.toISO()}`
+    const expectedRoute = `asset/${testAsset}/attestation/${paramDate.toISO()}`
     mockedAxios.get.mockResolvedValueOnce({ data: mockValue })
 
     // act
-    const result = await client.getSignature(testAsset, paramDate)
+    const result = await client.getAttestation(testAsset, paramDate)
 
     // assert
     expect(mockedAxios.get).toHaveBeenCalledWith(expectedRoute)
@@ -205,8 +219,8 @@ describe('Oracle Client', () => {
       await client.getOraclePublicKey(),
       await client.getAssets(),
       await client.getOracleConfig(''),
-      await client.getRvalue('', DateTime.utc()),
-      await client.getSignature('', DateTime.utc()),
+      await client.getAnnouncement('', DateTime.utc()),
+      await client.getAttestation('', DateTime.utc()),
     ]
 
     // assert

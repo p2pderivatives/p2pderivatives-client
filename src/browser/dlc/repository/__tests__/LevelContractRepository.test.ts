@@ -27,6 +27,19 @@ function generateContract(
     counterPartyName: name,
     localCollateral: 100000000,
     remoteCollateral: 100000000,
+    assetId: 'btcusd',
+    oracleAnnouncement: {
+      announcementSignature: '',
+      oraclePublicKey: 'pubkey',
+      oracleEvent: {
+        nonces: [''],
+        eventMaturity: DateTime.fromObject({ year: 2010 }).toISO(),
+        eventId: '',
+        eventDescriptor: {
+          outcomes: [''],
+        },
+      },
+    },
     outcomes: [
       {
         payout: {
@@ -40,9 +53,7 @@ function generateContract(
     feeRate: 2,
     oracleInfo: {
       name: 'oracle',
-      rValue: 'a',
-      publicKey: 'a',
-      assetId: 'btcusd',
+      uri: 'www.oracle.com',
     },
     isLocalParty: true,
   }

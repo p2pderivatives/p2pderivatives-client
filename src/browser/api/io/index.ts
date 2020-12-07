@@ -70,7 +70,7 @@ export default class IOAPI {
     return resultOutcomes
   }
 
-  private parseRowToRangeOutcome(unparsed: PayoutRow): RangeOutcome {
+  parseRowToRangeOutcome(unparsed: PayoutRow): RangeOutcome {
     const parts = unparsed.message.split('-')
 
     const start = parseInt(parts[0])

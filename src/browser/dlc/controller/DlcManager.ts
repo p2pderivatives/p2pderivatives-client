@@ -2,8 +2,6 @@ import { Mutex } from 'await-semaphore'
 import { DateTime } from 'luxon'
 import { Logger } from 'winston'
 import { Contract } from '../../../common/models/dlc/Contract'
-import { OracleInfo } from '../../../common/models/dlc/OracleInfo'
-import { findOutcome } from '../../../common/models/dlc/Outcome'
 import { isSuccessful } from '../../../common/utils/failable'
 import BitcoinDClient from '../../api/bitcoind'
 import {
@@ -14,6 +12,7 @@ import { OracleClientApi } from '../../api/oracle/oracleClient'
 import { DlcBrowserAPI } from '../../ipc/DlcBrowserAPI'
 import {
   AcceptedContract,
+  ConfirmedContract,
   MaturedContract,
   OfferedContract,
   RejectedContract,
@@ -31,6 +30,7 @@ import {
   SignMessage,
 } from '../models/messages'
 import { DlcService } from '../service/DlcService'
+import * as Utils from '../utils/CfdUtils'
 import { DlcError, DlcEventHandler } from '../utils/DlcEventHandler'
 
 const MaxDelayMs = 5000
@@ -107,21 +107,20 @@ export class DlcManager {
         const maturityTime = DateTime.fromMillis(contract.maturityTime, {
           zone: 'utc',
         })
-        const result = await this.oracleClient.getRvalue('btcusd', maturityTime)
+        const result = await this.oracleClient.getAnnouncement(
+          'btcusd',
+          maturityTime
+        )
         if (!isSuccessful(result)) {
           throw new DlcError(`Could not get rValue: ${result.error.message}`)
         }
-        const values = result.value
-        const oracleInfo: OracleInfo = {
-          name: 'unused for now',
-          publicKey: values.oraclePublicKey,
-          rValue: values.rvalue,
-          assetId: values.assetID,
-        }
-        const initialContract = await this.eventHandler.onInitialize({
-          ...contract,
-          oracleInfo,
-        })
+        const initialContract = await this.eventHandler.onInitialize(
+          {
+            ...contract,
+            oracleInfo: { name: 'not used', uri: 'not used' },
+          },
+          result.value
+        )
         contractId = initialContract.id
         const offeredContract = await this.eventHandler.onSendOffer(
           initialContract
@@ -242,25 +241,18 @@ export class DlcManager {
     const confirmedContracts = await this.dlcService.getConfirmedContractsToMature()
     for (const contract of confirmedContracts) {
       try {
-        const result = await this.oracleClient.getSignature(
-          contract.oracleInfo.assetId,
+        const result = await this.oracleClient.getAttestation(
+          contract.assetId,
           DateTime.fromMillis(contract.maturityTime, { zone: 'utc' })
         )
 
+        // TODO: Check if counter party closed even if request to oracle was
+        // not successful.
         if (isSuccessful(result)) {
-          const value = result.value
-          const outcome = findOutcome(contract.outcomes, value.value)
-          if (!outcome) {
-            this.logger.error(
-              `Contract outcome ${value.value} not in the outcome list.`
-            )
-            // Not much to do, contract will need to be closed with refund
-            continue
-          }
           const maturedContract = await this.eventHandler.onContractMature(
             contract.id,
-            value.value,
-            value.signature
+            result.value.signatures,
+            result.value.values
           )
 
           const closedByOther = await this.checkAndUpdateClosedByOther(
@@ -272,6 +264,10 @@ export class DlcManager {
             const closed = await this.eventHandler.onClosed(contract.id)
             await this.ipcClient.dlcUpdate(closed)
           }
+        } else {
+          this.logger.error(
+            `Could not retrieve outcome from oracle for contract ${contract.id}: ${result.error}`
+          )
         }
       } catch (error) {
         this.logger.error(
@@ -305,11 +301,26 @@ export class DlcManager {
   }
 
   private async checkForRefundableContracts(): Promise<void> {
-    const contracts = await this.dlcService.getRefundableContracts()
+    const contracts = (await this.dlcService.getRefundableContracts()) as ConfirmedContract[]
 
     for (const contract of contracts) {
       try {
-        await this.eventHandler.onContractRefund(contract.id)
+        const refundTx = Utils.decodeRawTransaction(
+          contract.refundTxHex,
+          this.bitcoindClient.getNetwork()
+        )
+        const confs = await this.getTxConfirmations(refundTx.txid)
+        if (confs > 0) {
+          const refundedContract = await this.eventHandler.onContractRefundByOther(
+            contract.id
+          )
+          await this.ipcClient.dlcUpdate(refundedContract)
+        } else {
+          const refundedContract = await this.eventHandler.onContractRefund(
+            contract.id
+          )
+          await this.ipcClient.dlcUpdate(refundedContract)
+        }
       } catch (error) {
         this.logger.error(
           `Error processing refund for contract ${contract.id}`,

@@ -5,6 +5,7 @@ import { OfferedContract } from './OfferedContract'
 import { StatelessContract } from './StatelessContract'
 import { PrivateParams } from './PrivateParams'
 import { AdaptorPair } from '../AdaptorPair'
+import { OutcomeInfo } from '../../utils/OutcomeInfo'
 
 export interface AcceptedContract extends StatelessContract<OfferedContract> {
   readonly state: ContractState.Accepted
@@ -17,6 +18,7 @@ export interface AcceptedContract extends StatelessContract<OfferedContract> {
   readonly refundRemoteSignature: string
   readonly cetsHex: ReadonlyArray<string>
   readonly remoteCetAdaptorPairs: ReadonlyArray<AdaptorPair>
+  readonly outcomeInfo: OutcomeInfo
 }
 
 export function toAcceptMessage(contract: AcceptedContract): AcceptMessage {

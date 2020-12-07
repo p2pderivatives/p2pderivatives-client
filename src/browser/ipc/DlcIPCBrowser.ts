@@ -5,17 +5,17 @@ import {
 import { ipcMain as ipc } from 'electron-better-ipc'
 import { DlcBrowserAPI } from './DlcBrowserAPI'
 import { DLC_UPDATE } from '../../common/constants/IPC'
-import { Contract } from '../../common/models/dlc/Contract'
 import electron from 'electron'
+import { AnyContract, toSimpleContract } from '../dlc/models/contract'
 
 export class DlcIPCBrowser implements DlcBrowserAPI {
   constructor(private readonly window: electron.BrowserWindow) {}
 
-  async dlcUpdate(contract: Contract): Promise<void> {
+  async dlcUpdate(contract: AnyContract): Promise<void> {
     const answerProps = (await ipc.callRenderer(
       this.window,
       DLC_UPDATE,
-      contract
+      toSimpleContract(contract)
     )) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(answerProps)
 

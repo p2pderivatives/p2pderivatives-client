@@ -47,41 +47,38 @@ describe('Oracle Client', () => {
     }
   })
 
-  test('Get asset rvalue', async () => {
+  test('Get asset announcement', async () => {
     // arrange
     const paramDate = DateTime.utc()
 
     // act
-    const result = await client.getRvalue(TEST_ASSET_ID, paramDate)
+    const result = await client.getAnnouncement(TEST_ASSET_ID, paramDate)
 
     // assert
     expect(isSuccessful(result)).toBeTruthy()
     if (isSuccessful(result)) {
       const actual = result.value
-      expect(actual.assetID).toEqual(TEST_ASSET_ID)
       expect(actual.oraclePublicKey).toBeDefined()
-      expect(actual.publishDate).toBeDefined()
-      expect(actual.rvalue).toBeDefined()
+      expect(actual.oracleEvent.eventMaturity).toBeDefined()
+      expect(actual.oracleEvent.eventDescriptor).toBeDefined()
+      expect(actual.oracleEvent.nonces).toBeDefined()
     }
   })
 
-  test('Get asset signature', async () => {
+  test('Get asset attestation', async () => {
     // arrange
     const paramDate = DateTime.utc().minus(Duration.fromISO('P1DT'))
 
     // act
-    const result = await client.getSignature(TEST_ASSET_ID, paramDate)
+    const result = await client.getAttestation(TEST_ASSET_ID, paramDate)
 
     // assert
     expect(isSuccessful(result)).toBeTruthy()
     if (isSuccessful(result)) {
       const actual = result.value
-      expect(actual.assetID).toEqual(TEST_ASSET_ID)
-      expect(actual.oraclePublicKey).toBeDefined()
-      expect(actual.publishDate).toBeDefined()
-      expect(actual.rvalue).toBeDefined()
-      expect(actual.signature).toBeDefined()
-      expect(actual.value).toBeDefined()
+      expect(actual.signatures).toBeDefined()
+      expect(actual.values).toBeDefined()
+      expect(actual.eventId).toBeDefined()
     }
   })
 })
