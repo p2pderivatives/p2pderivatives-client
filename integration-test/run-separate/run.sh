@@ -12,6 +12,8 @@ then
   rundev="docker-compose ${dcparam} run dev"
   dirpref="./reports/"
   ci=":ci"
+  # Make sure everything is down before starting
+  docker-compose ${dcparam} down -v
 fi
 
 mergeParam=()

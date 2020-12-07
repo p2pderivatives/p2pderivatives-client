@@ -1,7 +1,8 @@
-import { OracleConfig } from '../../src/browser/api/oracle'
+import { OracleInfo } from '../../src/common/oracle/oracleInfo'
 
-export const TEST_ORACLE_CONFIG: Readonly<OracleConfig> = {
-  baseUrl: `http://${process.env.ORACLE_HOST || 'localhost'}:${process.env
+export const TEST_ORACLE_CONFIG: Readonly<OracleInfo> = {
+  name: 'testoracle',
+  uri: `http://${process.env.ORACLE_HOST || 'localhost'}:${process.env
     .ORACLE_PORT || '8080'}`,
 }
 

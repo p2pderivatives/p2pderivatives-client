@@ -23,5 +23,7 @@ export function toOfferMessage(contract: OfferedContract): OfferMessage {
     feeRate: contract.feeRate,
     localPartyInputs: contract.localPartyInputs,
     premiumAmount: contract.premiumAmount,
+    assetId: contract.assetId,
+    oracleAnnouncement: contract.oracleAnnouncement,
   }
 }

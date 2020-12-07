@@ -5,15 +5,3 @@ export interface OracleAssetConfiguration {
   frequency: Duration
   range: Duration
 }
-
-export interface OracleRvalue {
-  oraclePublicKey: string
-  publishDate: DateTime
-  assetID: string
-  rvalue: string
-}
-
-export interface OracleSignature extends OracleRvalue {
-  signature: string
-  value: string
-}

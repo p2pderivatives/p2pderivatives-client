@@ -1,35 +1,44 @@
 import * as cfddlcjs from 'cfd-dlc-js'
-import * as CfdUtils from './CfdUtils'
-import { AdaptorPair } from '../models/AdaptorPair'
 import { CfdError, DecodeRawTransactionResponse } from 'cfd-js'
 import { ContractState } from '../../../common/models/dlc/Contract'
 import {
-  areEnumerationOutcomes,
-  areRangeOutcomes,
   isEnumerationOutcome,
+  isRangeOutcome,
   Outcome,
 } from '../../../common/models/dlc/Outcome'
 import BitcoinDClient from '../../api/bitcoind'
+import { AdaptorPair } from '../models/AdaptorPair'
 import {
   AcceptedContract,
   BroadcastContract,
+  ClosedContract,
   ConfirmedContract,
   FailedContract,
   InitialContract,
   isContractOfState,
   MaturedContract,
-  ClosedContract,
   OfferedContract,
   PrivateParams,
   RefundedContract,
   RejectedContract,
   SignedContract,
 } from '../models/contract'
+import { DecompositionDescriptor } from '../models/oracle/decompositionDescriptor'
+import {
+  EventDescriptor,
+  isDecompositionDescriptor,
+  isEnumerationDescriptor,
+} from '../models/oracle/descriptor'
 import { PartyInputs } from '../models/PartyInputs'
+import { RangeInfo } from '../models/RangeInfo'
 import { Utxo } from '../models/Utxo'
+import { groupByIgnoringDigits } from '../utils/Decomposition'
+import * as CfdUtils from './CfdUtils'
 import * as Utils from './CfdUtils'
+import { DigitTrie, trieExplore, trieInsert } from './DigitTrie'
 import { DlcError } from './DlcEventHandler'
 import { getCommonFee } from './FeeEstimator'
+import { getOutcomeIndexes, isDigitTrie } from './OutcomeInfo'
 
 const witnessV0KeyHash = 'witness_v0_keyhash'
 const witnessV0ScriptHash = 'witness_v0_scripthash'
@@ -49,13 +58,8 @@ export class ContractUpdater {
     this.walletClient = walletClient
   }
 
-  private getTotalInputAmount(partyInputs: PartyInputs): number {
-    return partyInputs.utxos.reduce<number>((prev, cur) => prev + cur.amount, 0)
-  }
-
   private async getNewPrivateParams(utxos: Utxo[]): Promise<PrivateParams> {
     const fundPrivateKey = await this.walletClient.getNewPrivateKey()
-    const sweepPrivateKey = await this.walletClient.getNewPrivateKey()
     const inputPrivateKeys = await Promise.all(
       utxos.map(
         async input => await this.walletClient.dumpPrivHex(input.address)
@@ -64,7 +68,6 @@ export class ContractUpdater {
 
     return {
       fundPrivateKey,
-      sweepPrivateKey,
       inputPrivateKeys,
     }
   }
@@ -77,9 +80,6 @@ export class ContractUpdater {
     const fundPublicKey = Utils.getPubkeyFromPrivkey(
       privateParams.fundPrivateKey
     )
-    const sweepPublicKey = Utils.getPubkeyFromPrivkey(
-      privateParams.sweepPrivateKey
-    )
     const changeAddress = await this.walletClient.getNewAddress()
     const finalAddress = await this.walletClient.getNewAddress()
     const premiumDest = premiumDestAddress
@@ -88,7 +88,6 @@ export class ContractUpdater {
 
     return {
       fundPublicKey,
-      sweepPublicKey,
       changeAddress,
       finalAddress,
       utxos,
@@ -163,56 +162,16 @@ export class ContractUpdater {
       }
     }
 
-    const payouts: { local: number; remote: number }[] = []
-    const messages: string[] = []
-    contract.outcomes.forEach(outcome => {
-      if (!isEnumerationOutcome(outcome)) {
-        for (let i = outcome.start; i < outcome.start + outcome.count; i++) {
-          payouts.push({
-            local: outcome.payout.local,
-            remote: outcome.payout.remote,
-          })
-          messages.push(i.toString())
-        }
-        return
-      }
-      payouts.push({
-        local: outcome.payout.local,
-        remote: outcome.payout.remote,
-      })
-      messages.push(outcome.outcome)
-    })
+    const payouts: { local: number; remote: number }[] = contract.outcomes.map(
+      x => x.payout
+    )
 
-    const dlcTxRequest: cfddlcjs.CreateDlcTransactionsRequest = {
+    const dlcTransactions = createDlcTransactions(
       payouts,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      localFinalScriptPubkey: CfdUtils.getScriptForAddress(
-        contract.localPartyInputs.finalAddress
-      ),
-      remoteFundPubkey: remotePartyInputs.fundPublicKey,
-      remoteFinalScriptPubkey: CfdUtils.getScriptForAddress(
-        remotePartyInputs.finalAddress
-      ),
-      localInputAmount: this.getTotalInputAmount(contract.localPartyInputs),
-      localCollateralAmount: contract.localCollateral,
-      remoteInputAmount: this.getTotalInputAmount(remotePartyInputs),
-      remoteCollateralAmount: contract.remoteCollateral,
-      localInputs: [...contract.localPartyInputs.utxos],
-      remoteInputs: [...remotePartyInputs.utxos],
-      localChangeScriptPubkey: CfdUtils.getScriptForAddress(
-        contract.localPartyInputs.changeAddress
-      ),
-      remoteChangeScriptPubkey: CfdUtils.getScriptForAddress(
-        remotePartyInputs.changeAddress
-      ),
-      feeRate: contract.feeRate,
-      // TODO(tibo): set refund time as parameter
-      refundLocktime: Math.floor(contract.maturityTime / 1000) + 86400 * 7,
-      optionDest: remotePartyInputs.premiumDest,
-      optionPremium: contract.premiumAmount,
-    }
+      contract,
+      remotePartyInputs
+    )
 
-    const dlcTransactions = cfddlcjs.CreateDlcTransactions(dlcTxRequest)
     const fundTxHex = dlcTransactions.fundTxHex
     const fundTransaction = Utils.decodeRawTransaction(
       fundTxHex,
@@ -226,6 +185,24 @@ export class ContractUpdater {
     const refundTxHex = dlcTransactions.refundTxHex
     const cetsHex = dlcTransactions.cetsHex
 
+    const descriptor = contract.oracleAnnouncement.oracleEvent.eventDescriptor
+    const sigParams = remoteCetAdaptorPairs
+      ? undefined
+      : {
+          fundTxId,
+          fundTxOutAmount,
+          cetsHex,
+          privateParams,
+          remotePartyInputs,
+        }
+    const [outcomeInfo, adaptorPairs] = getOutcomesInfo(
+      descriptor,
+      contract,
+      sigParams
+    )
+
+    remoteCetAdaptorPairs = remoteCetAdaptorPairs || adaptorPairs
+
     if (
       fundTransaction.vout[0].scriptPubKey &&
       fundTransaction.vout[0].scriptPubKey.addresses
@@ -235,19 +212,9 @@ export class ContractUpdater {
       )
     }
 
-    remoteCetAdaptorPairs =
-      remoteCetAdaptorPairs ||
-      this.getCetAdaptorSignatures(
-        contract,
-        privateParams,
-        cetsHex,
-        fundTxId,
-        fundTxOutAmount,
-        remotePartyInputs
-      )
     refundRemoteSignature =
       refundRemoteSignature ||
-      this.getRefundTxSignature(
+      getRefundTxSignature(
         contract,
         privateParams,
         refundTxHex,
@@ -268,175 +235,14 @@ export class ContractUpdater {
       refundRemoteSignature,
       cetsHex,
       remoteCetAdaptorPairs,
+      outcomeInfo,
     }
   }
 
-  private getMessagesForOutcomes(
-    outcomes: Outcome[] | ReadonlyArray<Outcome>
-  ): string[] {
-    if (areEnumerationOutcomes(outcomes)) {
-      return outcomes.map(x => x.outcome)
-    } else if (areRangeOutcomes(outcomes)) {
-      const messages: string[] = []
-      outcomes.forEach(x => {
-        for (let i = x.start; i < x.start + x.count; i++) {
-          messages.push(i.toString())
-        }
-      })
-      return messages
-    }
-
-    throw Error('Invalid outcome type')
-  }
-
-  private getOutcomeIndex(
-    outcomes: Outcome[] | ReadonlyArray<Outcome>,
-    value: string
-  ): number {
-    const outcomeIndex = this.getMessagesForOutcomes(outcomes).findIndex(
-      x => x === value
-    )
-
-    if (outcomeIndex === -1) {
-      throw Error('Outcome value not found')
-    }
-
-    return outcomeIndex
-  }
-
-  private getCetAdaptorSignatures(
-    contract: AcceptedContract | OfferedContract | SignedContract,
-    privateParams: PrivateParams,
-    cetsHex: ReadonlyArray<string>,
-    fundTxId: string,
-    fundTxOutAmount: number,
-    remotePartyInputs: PartyInputs
-  ): AdaptorPair[] {
-    const messages = this.getMessagesForOutcomes(contract.outcomes)
-    const cetSignRequest: cfddlcjs.CreateCetAdaptorSignaturesRequest = {
-      cetsHex: [...cetsHex],
-      privkey: privateParams.fundPrivateKey,
-      fundTxId: fundTxId,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: remotePartyInputs.fundPublicKey,
-      fundInputAmount: fundTxOutAmount,
-      oraclePubkey: contract.oracleInfo.publicKey,
-      oracleRValue: contract.oracleInfo.rValue,
-      messages,
-    }
-
-    return cfddlcjs.CreateCetAdaptorSignatures(cetSignRequest).adaptorPairs
-  }
-
-  getRefundTxSignature(
-    contract: AcceptedContract | OfferedContract,
-    privateParams: PrivateParams,
-    refundTxHex: string,
-    fundTxId: string,
-    fundTxOutAmount: number,
-    remotePartyInputs: PartyInputs
-  ): string {
-    const refundSignRequest: cfddlcjs.GetRawRefundTxSignatureRequest = {
-      refundTxHex: refundTxHex,
-      privkey: privateParams.fundPrivateKey,
-      fundTxId: fundTxId,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: remotePartyInputs.fundPublicKey,
-      fundInputAmount: fundTxOutAmount,
-    }
-
-    return cfddlcjs.GetRawRefundTxSignature(refundSignRequest).hex
-  }
-
-  getFundTxSignatures(contract: AcceptedContract): string[] {
-    const utxos = contract.isLocalParty
-      ? contract.localPartyInputs.utxos
-      : contract.remotePartyInputs.utxos
-    const fundTxSigs = utxos.map((input, index) => {
-      const fundTxSignRequest: cfddlcjs.GetRawFundTxSignatureRequest = {
-        fundTxHex: contract.fundTxHex,
-        privkey: contract.privateParams.inputPrivateKeys[index],
-        prevTxId: input.txid,
-        prevVout: input.vout,
-        amount: input.amount,
-      }
-
-      return cfddlcjs.GetRawFundTxSignature(fundTxSignRequest).hex
-    })
-
-    return fundTxSigs
-  }
-
-  getFundTxPubkeys(contract: AcceptedContract): string[] {
-    return contract.privateParams.inputPrivateKeys.map(x =>
-      Utils.getPubkeyFromPrivkey(x)
-    )
-  }
-
-  verifySignedContract(contract: SignedContract): boolean {
-    return this.verifyContractSignatures(contract, false)
-  }
-
-  verifyAcceptedContract(contract: AcceptedContract): boolean {
-    return this.verifyContractSignatures(contract, true)
-  }
-
-  private verifyContractSignatures(
-    contract: AcceptedContract | SignedContract,
-    verifyRemote: boolean
+  verifyContractSignatures(
+    contract: SignedContract | AcceptedContract
   ): boolean {
-    const cets = contract.cetsHex
-    let adaptorPairs: AdaptorPair[] = []
-
-    if (!verifyRemote && 'localCetAdaptorPairs' in contract) {
-      adaptorPairs = [...contract.localCetAdaptorPairs]
-    } else if (verifyRemote) {
-      adaptorPairs = [...contract.remoteCetAdaptorPairs]
-    } else {
-      throw Error('Invalid State')
-    }
-
-    const verifyCetSignaturesRequest: cfddlcjs.VerifyCetAdaptorSignaturesRequest = {
-      cetsHex: [...cets],
-      adaptorPairs,
-      messages: this.getMessagesForOutcomes(contract.outcomes),
-      oracleRValue: contract.oracleInfo.rValue,
-      oraclePubkey: contract.oracleInfo.publicKey,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-      fundTxId: contract.fundTxId,
-      fundInputAmount: contract.fundTxOutAmount,
-      verifyRemote,
-    }
-
-    const hasValidCetSigs = cfddlcjs.VerifyCetAdaptorSignatures(
-      verifyCetSignaturesRequest
-    ).valid
-
-    let refundSignature = ''
-
-    if (!verifyRemote && 'refundLocalSignature' in contract) {
-      refundSignature = contract.refundLocalSignature
-    } else if (verifyRemote) {
-      refundSignature = contract.refundRemoteSignature
-    } else {
-      throw Error('Invalid state')
-    }
-
-    const verifyRefundSigRequest: cfddlcjs.VerifyRefundTxSignatureRequest = {
-      refundTxHex: contract.refundTxHex,
-      signature: refundSignature,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-      fundTxId: contract.fundTxId,
-      fundInputAmount: contract.fundTxOutAmount,
-      verifyRemote,
-    }
-
-    return (
-      hasValidCetSigs &&
-      cfddlcjs.VerifyRefundTxSignature(verifyRefundSigRequest).valid
-    )
+    return verifyContractSignatures(contract)
   }
 
   async toSignedContract(
@@ -447,13 +253,13 @@ export class ContractUpdater {
     localCetAdaptorSignatures?: ReadonlyArray<AdaptorPair>
   ): Promise<SignedContract> {
     localFundTxSignatures =
-      localFundTxSignatures || this.getFundTxSignatures(contract)
+      localFundTxSignatures || getFundTxSignatures(contract)
 
-    localFundTxPubkeys = localFundTxPubkeys || this.getFundTxPubkeys(contract)
+    localFundTxPubkeys = localFundTxPubkeys || getFundTxPubkeys(contract)
 
     localRefundSignature =
       localRefundSignature ||
-      this.getRefundTxSignature(
+      getRefundTxSignature(
         contract,
         contract.privateParams,
         contract.refundTxHex,
@@ -463,15 +269,7 @@ export class ContractUpdater {
       )
 
     localCetAdaptorSignatures =
-      localCetAdaptorSignatures ||
-      this.getCetAdaptorSignatures(
-        contract,
-        contract.privateParams,
-        [...contract.cetsHex],
-        contract.fundTxId,
-        contract.fundTxOutAmount,
-        contract.remotePartyInputs
-      )
+      localCetAdaptorSignatures || getAdaptorSignatures(contract)
 
     return {
       ...contract,
@@ -515,32 +313,8 @@ export class ContractUpdater {
   }
 
   async toClosed(contract: MaturedContract): Promise<ClosedContract> {
-    const cets = contract.cetsHex
-
-    const outcomeIndex = this.getOutcomeIndex(
-      contract.outcomes,
-      contract.outcomeValue
-    )
-
-    let cetHex = cets[outcomeIndex]
-
-    const signRequest: cfddlcjs.SignCetRequest = {
-      cetHex,
-      fundPrivkey: contract.privateParams.fundPrivateKey,
-      fundTxId: contract.fundTxId,
-      localFundPubkey: contract.localPartyInputs.fundPublicKey,
-      remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
-      fundInputAmount: contract.fundTxOutAmount,
-      adaptorSignature: contract.isLocalParty
-        ? contract.remoteCetAdaptorPairs[outcomeIndex].signature
-        : contract.localCetAdaptorPairs[outcomeIndex].signature,
-      oracleSignature: contract.oracleSignature,
-    }
-
-    cetHex = cfddlcjs.SignCet(signRequest).hex
-
     const cet = Utils.decodeRawTransaction(
-      cetHex,
+      contract.finalSignedCetHex,
       this.walletClient.getNetwork()
     )
 
@@ -548,9 +322,9 @@ export class ContractUpdater {
       throw new Error('CET has no vout.')
     }
 
-    const finalOutcome = this.getFinalOutcomeWithDiscardedDust(cet, contract)
+    const finalOutcome = getFinalOutcomeWithDiscardedDust(cet, contract)
 
-    await this.walletClient.sendRawTransaction(cetHex)
+    await this.walletClient.sendRawTransaction(contract.finalSignedCetHex)
     return {
       ...contract,
       finalOutcome,
@@ -568,7 +342,7 @@ export class ContractUpdater {
       this.walletClient.getNetwork()
     )
 
-    const finalOutcome = this.getFinalOutcomeWithDiscardedDust(
+    const finalOutcome = getFinalOutcomeWithDiscardedDust(
       finalCetTx,
       contract,
       false
@@ -583,29 +357,51 @@ export class ContractUpdater {
 
   toMatureContract(
     contract: ConfirmedContract,
-    outcomeValue: string,
-    oracleSignature: string
+    oracleSignatures: string[],
+    outcomeValues: string[]
   ): MaturedContract {
-    const finalOutcomeIndex = this.getOutcomeIndex(
-      contract.outcomes,
-      outcomeValue
-    )
+    try {
+      const [cetIndex, adaptorPairIndex, nbUsedSigs] = getOutcomeIndexes(
+        contract.outcomeInfo,
+        outcomeValues
+      )
+      // TODO: check this below:
+      // Keep track of other party CET if necessary to be able to watch it through the
+      // bitcoind wallet
+      const finalCetHex = contract.cetsHex[cetIndex]
+      const finalCet = Utils.decodeRawTransaction(
+        finalCetHex,
+        this.walletClient.getNetwork()
+      )
 
-    // Keep track of other party CET if necessary to be able to watch it through the
-    // bitcoind wallet
-    const finalCetHex = contract.cetsHex[finalOutcomeIndex]
-    const finalCet = Utils.decodeRawTransaction(
-      finalCetHex,
-      this.walletClient.getNetwork()
-    )
+      const finalAdaptorPair = contract.isLocalParty
+        ? contract.remoteCetAdaptorPairs[adaptorPairIndex]
+        : contract.localCetAdaptorPairs[adaptorPairIndex]
 
-    return {
-      ...contract,
-      state: ContractState.Mature,
-      finalOutcome: contract.outcomes[finalOutcomeIndex],
-      oracleSignature,
-      finalCetId: finalCet.txid,
-      outcomeValue,
+      const signRequest: cfddlcjs.SignCetRequest = {
+        cetHex: finalCetHex,
+        fundPrivkey: contract.privateParams.fundPrivateKey,
+        fundTxId: contract.fundTxId,
+        localFundPubkey: contract.localPartyInputs.fundPublicKey,
+        remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
+        fundInputAmount: contract.fundTxOutAmount,
+        adaptorSignature: finalAdaptorPair.signature,
+        oracleSignatures: oracleSignatures.slice(0, nbUsedSigs),
+      }
+
+      const finalSignedCetHex = cfddlcjs.SignCet(signRequest).hex
+
+      return {
+        ...contract,
+        state: ContractState.Mature,
+        finalOutcome: contract.outcomes[cetIndex],
+        oracleSignatures,
+        finalCetId: finalCet.txid,
+        finalSignedCetHex,
+        outcomeValues,
+      }
+    } catch (error) {
+      throw Error('Unexpected outcome values')
     }
   }
 
@@ -616,13 +412,15 @@ export class ContractUpdater {
   async toRefundedContract(
     contract: ConfirmedContract
   ): Promise<RefundedContract> {
+    const signatures =
+      contract.localPartyInputs.fundPublicKey <
+      contract.remotePartyInputs.fundPublicKey
+        ? [contract.refundLocalSignature, contract.refundRemoteSignature]
+        : [contract.refundRemoteSignature, contract.refundLocalSignature]
     const reqJson: cfddlcjs.AddSignaturesToRefundTxRequest = {
       refundTxHex: contract.refundTxHex,
       fundTxId: contract.fundTxId,
-      signatures: [
-        contract.refundLocalSignature,
-        contract.refundRemoteSignature,
-      ],
+      signatures,
       localFundPubkey: contract.localPartyInputs.fundPublicKey,
       remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
     }
@@ -669,105 +467,474 @@ export class ContractUpdater {
 
     await this.walletClient.lockUtxos([...utxos], true)
   }
+}
 
-  private getDustDiscardedParty(
-    tx: DecodeRawTransactionResponse,
-    contract: ConfirmedContract | MaturedContract,
-    ownTransaction = true
-  ): DustDiscardedParty {
-    if (tx.vout && tx.vout.length === 1) {
-      const vout = tx.vout[0]
-      if (
-        vout.scriptPubKey &&
-        vout.scriptPubKey.type === witnessV0KeyHash &&
-        vout.scriptPubKey.addresses
-      ) {
-        if (
-          vout.scriptPubKey.addresses.includes(
-            contract.localPartyInputs.finalAddress
-          )
-        ) {
-          return DustDiscardedParty.remote
-        } else if (
-          vout.scriptPubKey.addresses.includes(
-            contract.remotePartyInputs.finalAddress
-          )
-        ) {
-          return DustDiscardedParty.local
-        }
-      } else if (
-        vout.scriptPubKey &&
-        vout.scriptPubKey.type === witnessV0ScriptHash
-      ) {
-        if (
-          (contract.isLocalParty && ownTransaction) ||
-          (!contract.isLocalParty && !ownTransaction)
-        ) {
-          return DustDiscardedParty.remote
-        } else {
-          return DustDiscardedParty.local
-        }
+function getTotalInputAmount(partyInputs: PartyInputs): number {
+  return partyInputs.utxos.reduce<number>((prev, cur) => prev + cur.amount, 0)
+}
+
+function getFinalOutcomeWithDiscardedDust(
+  tx: DecodeRawTransactionResponse,
+  contract: MaturedContract,
+  ownTransaction = true
+): Outcome {
+  const discardedParty = getDustDiscardedParty(tx, contract, ownTransaction)
+
+  switch (discardedParty) {
+    case DustDiscardedParty.local:
+      return {
+        ...contract.finalOutcome,
+        payout: {
+          local: 0,
+          remote: contract.finalOutcome.payout.remote,
+        },
       }
-    }
-
-    return DustDiscardedParty.none
+    case DustDiscardedParty.remote:
+      return {
+        ...contract.finalOutcome,
+        payout: {
+          local: contract.finalOutcome.payout.local,
+          remote: 0,
+        },
+      }
+    default:
+      return contract.finalOutcome
   }
+}
 
-  private getFinalOutcomeWithDiscardedDust(
-    tx: DecodeRawTransactionResponse,
-    contract: MaturedContract,
-    ownTransaction = true
-  ): Outcome {
-    const discardedParty = this.getDustDiscardedParty(
-      tx,
-      contract,
-      ownTransaction
-    )
-
-    switch (discardedParty) {
-      case DustDiscardedParty.local:
-        return {
-          ...contract.finalOutcome,
-          payout: {
-            ...contract.finalOutcome.payout,
-            local: 0,
-          },
-        }
-      case DustDiscardedParty.remote:
-        return {
-          ...contract.finalOutcome,
-          payout: {
-            ...contract.finalOutcome.payout,
-            remote: 0,
-          },
-        }
-      default:
-        return contract.finalOutcome
-    }
-  }
-
-  private async importTxIfRequired(
-    tx: DecodeRawTransactionResponse,
-    contract: MaturedContract | ConfirmedContract,
-    pubkey?: string
-  ): Promise<void> {
-    const discardedParty = this.getDustDiscardedParty(tx, contract, false)
-
+function getDustDiscardedParty(
+  tx: DecodeRawTransactionResponse,
+  contract: ConfirmedContract | MaturedContract,
+  ownTransaction = true
+): DustDiscardedParty {
+  if (tx.vout && tx.vout.length === 1) {
+    const vout = tx.vout[0]
     if (
-      (discardedParty === DustDiscardedParty.local && contract.isLocalParty) ||
-      (discardedParty === DustDiscardedParty.remote && !contract.isLocalParty)
+      vout.scriptPubKey &&
+      vout.scriptPubKey.type === witnessV0KeyHash &&
+      vout.scriptPubKey.addresses
     ) {
-      if (pubkey) {
-        await this.walletClient.importPublicKey(pubkey)
-      } else if (
-        tx.vout &&
-        tx.vout[0].scriptPubKey &&
-        tx.vout[0].scriptPubKey.addresses
-      ) {
-        await this.walletClient.importAddress(
-          tx.vout[0].scriptPubKey.addresses[0]
+      if (
+        vout.scriptPubKey.addresses.includes(
+          contract.localPartyInputs.finalAddress
         )
+      ) {
+        return DustDiscardedParty.remote
+      } else if (
+        vout.scriptPubKey.addresses.includes(
+          contract.remotePartyInputs.finalAddress
+        )
+      ) {
+        return DustDiscardedParty.local
+      }
+    } else if (
+      vout.scriptPubKey &&
+      vout.scriptPubKey.type === witnessV0ScriptHash
+    ) {
+      if (
+        (contract.isLocalParty && ownTransaction) ||
+        (!contract.isLocalParty && !ownTransaction)
+      ) {
+        return DustDiscardedParty.remote
+      } else {
+        return DustDiscardedParty.local
       }
     }
   }
+
+  return DustDiscardedParty.none
+}
+
+function verifyContractSignatures(
+  contract: AcceptedContract | SignedContract
+): boolean {
+  let verifyRemote = true
+  let refundSignature = ''
+  let adaptorPairs: ReadonlyArray<AdaptorPair>
+
+  if (isContractOfState(contract, ContractState.Signed)) {
+    refundSignature = contract.refundLocalSignature
+    adaptorPairs = contract.localCetAdaptorPairs
+    verifyRemote = false
+  } else {
+    refundSignature = contract.refundRemoteSignature
+    refundSignature = contract.refundRemoteSignature
+    adaptorPairs = contract.remoteCetAdaptorPairs
+    verifyRemote = true
+  }
+  const isValid = verifyCetAdaptorSignatures(
+    contract,
+    adaptorPairs,
+    verifyRemote
+  )
+  if (!isValid) {
+    return false
+  }
+
+  const verifyRefundSigRequest: cfddlcjs.VerifyRefundTxSignatureRequest = {
+    refundTxHex: contract.refundTxHex,
+    signature: refundSignature,
+    localFundPubkey: contract.localPartyInputs.fundPublicKey,
+    remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
+    fundTxId: contract.fundTxId,
+    fundInputAmount: contract.fundTxOutAmount,
+    verifyRemote,
+  }
+
+  return cfddlcjs.VerifyRefundTxSignature(verifyRefundSigRequest).valid
+}
+
+function getFundTxSignatures(contract: AcceptedContract): string[] {
+  const utxos = contract.isLocalParty
+    ? contract.localPartyInputs.utxos
+    : contract.remotePartyInputs.utxos
+  const fundTxSigs = utxos.map((input, index) => {
+    const fundTxSignRequest: cfddlcjs.GetRawFundTxSignatureRequest = {
+      fundTxHex: contract.fundTxHex,
+      privkey: contract.privateParams.inputPrivateKeys[index],
+      prevTxId: input.txid,
+      prevVout: input.vout,
+      amount: input.amount,
+    }
+
+    return cfddlcjs.GetRawFundTxSignature(fundTxSignRequest).hex
+  })
+
+  return fundTxSigs
+}
+
+function getFundTxPubkeys(contract: AcceptedContract): string[] {
+  return contract.privateParams.inputPrivateKeys.map(x =>
+    Utils.getPubkeyFromPrivkey(x)
+  )
+}
+
+function getRefundTxSignature(
+  contract: AcceptedContract | OfferedContract,
+  privateParams: PrivateParams,
+  refundTxHex: string,
+  fundTxId: string,
+  fundTxOutAmount: number,
+  remotePartyInputs: PartyInputs
+): string {
+  const refundSignRequest: cfddlcjs.GetRawRefundTxSignatureRequest = {
+    refundTxHex: refundTxHex,
+    privkey: privateParams.fundPrivateKey,
+    fundTxId: fundTxId,
+    localFundPubkey: contract.localPartyInputs.fundPublicKey,
+    remoteFundPubkey: remotePartyInputs.fundPublicKey,
+    fundInputAmount: fundTxOutAmount,
+  }
+
+  return cfddlcjs.GetRawRefundTxSignature(refundSignRequest).hex
+}
+
+function getAdaptorSignature(
+  contract: AcceptedContract | OfferedContract | SignedContract,
+  privateParams: PrivateParams,
+  outcomeValues: string[],
+  cetHex: string,
+  fundTxId: string,
+  fundTxOutAmount: number,
+  remotePartyInputs: PartyInputs
+): AdaptorPair {
+  const cetSignRequest: cfddlcjs.CreateCetAdaptorSignatureRequest = {
+    cetHex,
+    privkey: privateParams.fundPrivateKey,
+    fundTxId,
+    localFundPubkey: contract.localPartyInputs.fundPublicKey,
+    remoteFundPubkey: remotePartyInputs.fundPublicKey,
+    fundInputAmount: fundTxOutAmount,
+    oraclePubkey: contract.oracleAnnouncement.oraclePublicKey,
+    oracleRValues: contract.oracleAnnouncement.oracleEvent.nonces.slice(
+      0,
+      outcomeValues.length
+    ),
+    messages: outcomeValues,
+  }
+  return cfddlcjs.CreateCetAdaptorSignature(cetSignRequest)
+}
+
+function createDlcTransactions(
+  payouts: cfddlcjs.PayoutRequest[],
+  contract: OfferedContract,
+  remotePartyInputs: PartyInputs
+): cfddlcjs.CreateDlcTransactionsResponse {
+  const dlcTxRequest: cfddlcjs.CreateDlcTransactionsRequest = {
+    payouts,
+    localFundPubkey: contract.localPartyInputs.fundPublicKey,
+    localFinalScriptPubkey: CfdUtils.getScriptForAddress(
+      contract.localPartyInputs.finalAddress
+    ),
+    remoteFundPubkey: remotePartyInputs.fundPublicKey,
+    remoteFinalScriptPubkey: CfdUtils.getScriptForAddress(
+      remotePartyInputs.finalAddress
+    ),
+    localInputAmount: getTotalInputAmount(contract.localPartyInputs),
+    localCollateralAmount: contract.localCollateral,
+    remoteInputAmount: getTotalInputAmount(remotePartyInputs),
+    remoteCollateralAmount: contract.remoteCollateral,
+    localInputs: [...contract.localPartyInputs.utxos],
+    remoteInputs: [...remotePartyInputs.utxos],
+    localChangeScriptPubkey: CfdUtils.getScriptForAddress(
+      contract.localPartyInputs.changeAddress
+    ),
+    remoteChangeScriptPubkey: CfdUtils.getScriptForAddress(
+      remotePartyInputs.changeAddress
+    ),
+    feeRate: contract.feeRate,
+    // TODO(tibo): set refund time as parameter
+    refundLocktime: Math.floor(contract.maturityTime / 1000) + 86400 * 7,
+    optionDest: remotePartyInputs.premiumDest,
+    optionPremium: contract.premiumAmount,
+  }
+  return cfddlcjs.CreateDlcTransactions(dlcTxRequest)
+}
+
+function getDecompositionOutcomeInfo(
+  descriptor: DecompositionDescriptor,
+  contract: OfferedContract,
+  sigParams?: {
+    fundTxId: string
+    fundTxOutAmount: number
+    cetsHex: string[]
+    privateParams: PrivateParams
+    remotePartyInputs: PartyInputs
+  }
+): [DigitTrie<RangeInfo>, AdaptorPair[]] {
+  const outcomeTrie: DigitTrie<RangeInfo> = { root: { edges: [] } }
+  const adaptorPairs: AdaptorPair[] = []
+  let adaptorCounter = 0
+  for (let i = 0; i < contract.outcomes.length; i++) {
+    const outcome = contract.outcomes[i]
+    if (!isRangeOutcome(outcome)) {
+      throw Error('Invalid outcome type for decomposition event')
+    }
+    const groups = groupByIgnoringDigits(
+      outcome.start,
+      outcome.start + outcome.count - 1,
+      descriptor.base,
+      contract.oracleAnnouncement.oracleEvent.nonces.length
+    )
+    for (let j = 0; j < groups.length; j++) {
+      if (sigParams) {
+        const cetHex = sigParams.cetsHex[i]
+        const adaptorPair = getAdaptorSignature(
+          contract,
+          sigParams.privateParams,
+          groups[j].map(x => x.toString()),
+          cetHex,
+          sigParams.fundTxId,
+          sigParams.fundTxOutAmount,
+          sigParams.remotePartyInputs
+        )
+        adaptorPairs.push(adaptorPair)
+      }
+      const rangeInfo: RangeInfo = {
+        cetIndex: i,
+        adaptorSignatureIndex: adaptorCounter++,
+      }
+      trieInsert(outcomeTrie, groups[j], rangeInfo)
+    }
+  }
+  return [outcomeTrie, adaptorPairs]
+}
+
+function getEnumerationOutcomeInfo(
+  contract: OfferedContract,
+  sigParams?: {
+    fundTxId: string
+    fundTxOutAmount: number
+    cetsHex: string[]
+    privateParams: PrivateParams
+    remotePartyInputs: PartyInputs
+  }
+): [string[], AdaptorPair[]] {
+  const adaptorPairs: AdaptorPair[] = []
+  const outcomes: string[] = []
+  for (let i = 0; i < contract.outcomes.length; i++) {
+    const outcome = contract.outcomes[i]
+    if (!isEnumerationOutcome(outcome)) {
+      throw Error('Invalid outcome type for enumeration event')
+    }
+    outcomes.push(outcome.outcome)
+    if (sigParams) {
+      const cetHex = sigParams.cetsHex[i]
+      const adaptorPair = getAdaptorSignature(
+        contract,
+        sigParams.privateParams,
+        [outcome.outcome],
+        cetHex,
+        sigParams.fundTxId,
+        sigParams.fundTxOutAmount,
+        sigParams.remotePartyInputs
+      )
+      adaptorPairs.push(adaptorPair)
+    }
+  }
+  return [outcomes, adaptorPairs]
+}
+
+function getOutcomesInfo(
+  descriptor: EventDescriptor,
+  contract: OfferedContract,
+  sigParams?: {
+    fundTxId: string
+    fundTxOutAmount: number
+    cetsHex: string[]
+    privateParams: PrivateParams
+    remotePartyInputs: PartyInputs
+  }
+): [DigitTrie<RangeInfo> | string[], AdaptorPair[]] {
+  if (isEnumerationDescriptor(descriptor)) {
+    return getEnumerationOutcomeInfo(contract, sigParams)
+  } else if (isDecompositionDescriptor(descriptor)) {
+    return getDecompositionOutcomeInfo(descriptor, contract, sigParams)
+  } else {
+    throw Error('Unsupported descriptor')
+  }
+}
+
+function getAdaptorSignaturesForDecomposition(
+  contract: AcceptedContract,
+  trie: DigitTrie<RangeInfo>
+): AdaptorPair[] {
+  const adaptorSigs = []
+  for (const trieVal of trieExplore(trie)) {
+    const adaptorPair = getAdaptorSignature(
+      contract,
+      contract.privateParams,
+      trieVal.path.map(x => x.toString()),
+      contract.cetsHex[trieVal.data.cetIndex],
+      contract.fundTxId,
+      contract.fundTxOutAmount,
+      contract.remotePartyInputs
+    )
+    adaptorSigs.push(adaptorPair)
+  }
+  return adaptorSigs
+}
+
+function getAdaptorSignaturesForEnumeration(
+  contract: AcceptedContract,
+  outcomes: string[]
+): AdaptorPair[] {
+  return outcomes.map((x, i) =>
+    getAdaptorSignature(
+      contract,
+      contract.privateParams,
+      [x],
+      contract.cetsHex[i],
+      contract.fundTxId,
+      contract.fundTxOutAmount,
+      contract.remotePartyInputs
+    )
+  )
+}
+
+function getAdaptorSignatures(contract: AcceptedContract): AdaptorPair[] {
+  const descriptor = contract.oracleAnnouncement.oracleEvent.eventDescriptor
+  if (isEnumerationDescriptor(descriptor)) {
+    return getAdaptorSignaturesForEnumeration(contract, descriptor.outcomes)
+  } else if (
+    isDecompositionDescriptor(descriptor) &&
+    isDigitTrie(contract.outcomeInfo)
+  ) {
+    return getAdaptorSignaturesForDecomposition(contract, contract.outcomeInfo)
+  }
+  throw Error('Unknown descriptor or invalid state')
+}
+
+function verifyCetAdaptorSignaturesForDecomposition(
+  contract: AcceptedContract | SignedContract,
+  digitTrie: DigitTrie<RangeInfo>,
+  adaptorPairs: ReadonlyArray<AdaptorPair>,
+  verifyRemote: boolean
+): boolean {
+  for (const trieVal of trieExplore(digitTrie)) {
+    const adaptorPair = adaptorPairs[trieVal.data.adaptorSignatureIndex]
+    const isValid = verifyCetAdaptorSignature(
+      adaptorPair,
+      contract.cetsHex[trieVal.data.cetIndex],
+      trieVal.path.map(x => x.toString()),
+      contract,
+      verifyRemote
+    )
+    if (!isValid) {
+      return false
+    }
+  }
+
+  return true
+}
+
+function verifyCetAdaptorSignaturesForEnumeration(
+  contract: AcceptedContract | SignedContract,
+  outcomes: string[],
+  adaptorPairs: ReadonlyArray<AdaptorPair>,
+  verifyRemote: boolean
+): boolean {
+  return outcomes.every((x, i) =>
+    verifyCetAdaptorSignature(
+      adaptorPairs[i],
+      contract.cetsHex[i],
+      [x],
+      contract,
+      verifyRemote
+    )
+  )
+}
+
+function verifyCetAdaptorSignatures(
+  contract: AcceptedContract | SignedContract,
+  adaptorPairs: ReadonlyArray<AdaptorPair>,
+  verifyRemote: boolean
+): boolean {
+  const descriptor = contract.oracleAnnouncement.oracleEvent.eventDescriptor
+  if (isEnumerationDescriptor(descriptor)) {
+    return verifyCetAdaptorSignaturesForEnumeration(
+      contract,
+      descriptor.outcomes,
+      adaptorPairs,
+      verifyRemote
+    )
+  } else if (
+    isDecompositionDescriptor(descriptor) &&
+    isDigitTrie(contract.outcomeInfo)
+  ) {
+    return verifyCetAdaptorSignaturesForDecomposition(
+      contract,
+      contract.outcomeInfo,
+      adaptorPairs,
+      verifyRemote
+    )
+  }
+
+  throw Error('Unknown descriptor or invalid state')
+}
+
+function verifyCetAdaptorSignature(
+  adaptorPair: AdaptorPair,
+  cetHex: string,
+  messages: string[],
+  contract: AcceptedContract | SignedContract,
+  verifyRemote: boolean
+): boolean {
+  const verifyCetSignatureRequest: cfddlcjs.VerifyCetAdaptorSignatureRequest = {
+    cetHex: cetHex,
+    adaptorSignature: adaptorPair.signature,
+    adaptorProof: adaptorPair.proof,
+    messages,
+    oracleRValues: contract.oracleAnnouncement.oracleEvent.nonces.slice(
+      0,
+      messages.length
+    ),
+    oraclePubkey: contract.oracleAnnouncement.oraclePublicKey,
+    localFundPubkey: contract.localPartyInputs.fundPublicKey,
+    remoteFundPubkey: contract.remotePartyInputs.fundPublicKey,
+    fundTxId: contract.fundTxId,
+    fundInputAmount: contract.fundTxOutAmount,
+    verifyRemote,
+  }
+  return cfddlcjs.VerifyCetAdaptorSignature(verifyCetSignatureRequest).valid
 }

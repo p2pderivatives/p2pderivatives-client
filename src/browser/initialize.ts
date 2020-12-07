@@ -158,7 +158,7 @@ export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
   const dlcIPCBrowser = new DlcIPCBrowser(browserWindow)
 
   const oracleConfig = appConfig.parse<OracleConfig>('oracle')
-  const oracleClient = new OracleClient(oracleConfig)
+  const oracleClient = new OracleClient(oracleConfig.initialOracles[0])
 
   const authLoginCallback = (
     userName: string

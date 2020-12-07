@@ -1,11 +1,13 @@
 import { Contract, ContractState } from '../../../../common/models/dlc/Contract'
-import { OracleInfo } from '../../../../common/models/dlc/OracleInfo'
+import { OracleInfo } from '../../../../common/oracle/oracleInfo'
 import { OfferMessage } from '../messages'
+import { OracleAnnouncement } from '../oracle/oracleAnnouncement'
 
 export interface InitialContract extends Contract {
   readonly state: ContractState.Initial
   readonly id: string
   readonly oracleInfo: OracleInfo
+  readonly oracleAnnouncement: OracleAnnouncement
   readonly isLocalParty: boolean
 }
 
@@ -23,6 +25,8 @@ export function fromOfferMessage(
     maturityTime: offerMessage.maturityTime,
     feeRate: offerMessage.feeRate,
     oracleInfo: offerMessage.oracleInfo,
+    assetId: offerMessage.assetId,
+    oracleAnnouncement: offerMessage.oracleAnnouncement,
     isLocalParty: false,
     premiumAmount: offerMessage.premiumAmount,
   }

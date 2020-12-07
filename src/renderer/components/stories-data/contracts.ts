@@ -7,12 +7,8 @@ export const contracts: Contract[] = [
     state: ContractState.Offered,
     counterPartyName: 'UserB',
     feeRate: 2,
-    oracleInfo: {
-      name: 'Olivia',
-      rValue: '1',
-      publicKey: '1',
-      assetId: 'btcusd',
-    },
+    oracleInfo: { name: 'Oracle', uri: 'www.ooracle.com' },
+    assetId: 'btcusd',
     localCollateral: 201000000,
     maturityTime: DateTime.utc().toMillis(),
     remoteCollateral: 299000000,
@@ -73,11 +69,10 @@ export const contracts: Contract[] = [
         outcome: 'maybe',
       },
     ],
+    assetId: 'btcusd',
     oracleInfo: {
       name: 'Olivia',
-      rValue: '1',
-      publicKey: '1',
-      assetId: 'btcusd',
+      uri: 'www.oracle.com',
     },
   },
   {
@@ -113,11 +108,10 @@ export const contracts: Contract[] = [
         outcome: 'maybe',
       },
     ],
+    assetId: 'btcusd',
     oracleInfo: {
       name: 'Olivia',
-      rValue: '1',
-      publicKey: '1',
-      assetId: 'btcusd',
+      uri: 'www.oracle.com',
     },
   },
   {
@@ -153,11 +147,10 @@ export const contracts: Contract[] = [
         outcome: 'maybe',
       },
     ],
+    assetId: 'btcusd',
     oracleInfo: {
       name: 'Olivia',
-      rValue: '1',
-      publicKey: '1',
-      assetId: 'btcusd',
+      uri: 'www.oracle.com',
     },
   },
   {
@@ -193,11 +186,10 @@ export const contracts: Contract[] = [
         outcome: 'maybe',
       },
     ],
+    assetId: 'btcusd',
     oracleInfo: {
       name: 'Olivia',
-      rValue: '1',
-      publicKey: '1',
-      assetId: 'btcusd',
+      uri: 'www.oracle.com',
     },
   },
   {
@@ -233,11 +225,10 @@ export const contracts: Contract[] = [
         outcome: 'maybe',
       },
     ],
+    assetId: 'btcusd',
     oracleInfo: {
       name: 'Olivia',
-      rValue: '1',
-      publicKey: '1',
-      assetId: 'btcusd',
+      uri: 'www.oracle.com',
     },
   },
 ]

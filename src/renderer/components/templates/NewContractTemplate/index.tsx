@@ -76,6 +76,12 @@ const blankContract: Contract = {
   outcomes: [],
   maturityTime: 0,
   counterPartyName: '',
+  // TODO change these defaults
+  assetId: 'btcusd',
+  oracleInfo: {
+    name: 'Olivia',
+    uri: 'www.oracle.com',
+  },
 }
 
 function validationBase(
@@ -321,6 +327,11 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
       state: ContractState.Initial,
       maturityTime: maturityDate.toMillis(),
       premiumAmount: optionPremium.value,
+      assetId: 'btcusd',
+      oracleInfo: {
+        name: 'olivia',
+        uri: 'www.oracle.com',
+      },
     }
     props.onPublish(publishContract)
   }

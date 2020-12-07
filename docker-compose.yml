@@ -2,7 +2,7 @@ version: '3.4'
 services:
   ### ORACLE
   oracle:
-    image: docker.pkg.github.com/p2pderivatives/p2pderivatives-oracle/oracle:v0.0.4
+    image: docker.pkg.github.com/p2pderivatives/p2pderivatives-oracle/oracle:v0.1.0-pre4
     environment:
       P2PDORACLE_DATABASE_HOST: oracle-db
       P2PDORACLE_DATABASE_DBPASSWORD: 1234

@@ -10,6 +10,7 @@ import { DlcCall } from '../../common/models/ipc/DlcCall'
 import { GetContractsAnswer } from '../../common/models/ipc/GetContractsAnswer'
 import { IPCError } from '../../common/models/ipc/IPCError'
 import { DlcManager } from '../dlc/controller/DlcManager'
+import { toSimpleContract } from '../dlc/models/contract'
 import { DlcService } from '../dlc/service/DlcService'
 import { DlcError } from '../dlc/utils/DlcEventHandler'
 import { IPCEventsBase } from './IPCEventsBase'
@@ -92,6 +93,11 @@ export class DlcEvents extends IPCEventsBase {
 
   private async getContractsCallback(): Promise<GetContractsAnswer> {
     const contracts = await this._dlcService.getAllContracts()
-    return Promise.resolve(new GetContractsAnswer(true, contracts))
+    return Promise.resolve(
+      new GetContractsAnswer(
+        true,
+        contracts.map(x => toSimpleContract(x))
+      )
+    )
   }
 }

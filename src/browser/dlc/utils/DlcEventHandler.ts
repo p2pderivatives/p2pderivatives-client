@@ -1,24 +1,29 @@
 import { v4 } from 'uuid'
 import { Contract, ContractState } from '../../../common/models/dlc/Contract'
+import { areRangeOutcomes, Outcome } from '../../../common/models/dlc/Outcome'
 import { isSuccessful } from '../../../common/utils/failable'
 import { ErrorCode } from '../../storage/ErrorCode'
 import {
   AcceptedContract,
   AnyContract,
   BroadcastContract,
+  ClosedContract,
   ConfirmedContract,
   FailedContract,
   fromOfferMessage,
   InitialContract,
   MaturedContract,
   OfferedContract,
+  RefundedContract,
   RejectedContract,
   SignedContract,
-  ClosedContract,
 } from '../models/contract'
 import { AcceptMessage, OfferMessage, SignMessage } from '../models/messages'
+import { isDecompositionDescriptor } from '../models/oracle/descriptor'
+import { OracleAnnouncement } from '../models/oracle/oracleAnnouncement'
 import { DlcService } from '../service/DlcService'
 import { ContractUpdater } from './ContractUpdater'
+import { getMaxRanges } from './Decomposition'
 
 export class DlcEventHandler {
   private readonly _contractUpdater: ContractUpdater
@@ -29,14 +34,30 @@ export class DlcEventHandler {
     this._dlcService = dlcService
   }
 
-  async onInitialize(contract: Contract): Promise<InitialContract> {
+  async onInitialize(
+    contract: Contract,
+    oracleAnnouncement: OracleAnnouncement
+  ): Promise<InitialContract> {
     if (!contract.oracleInfo) {
       throw new Error('Invalid state')
+    }
+
+    let outcomes: ReadonlyArray<Outcome> | undefined = undefined
+    const eventDescriptor = oracleAnnouncement.oracleEvent.eventDescriptor
+    if (isDecompositionDescriptor(eventDescriptor)) {
+      if (areRangeOutcomes(contract.outcomes)) {
+        outcomes = getMaxRanges(
+          contract.outcomes,
+          eventDescriptor.base,
+          oracleAnnouncement.oracleEvent.nonces.length
+        )
+      }
     }
 
     const oracleInfo = contract.oracleInfo
     const initialContract: InitialContract = {
       ...contract,
+      outcomes: outcomes || contract.outcomes,
       id:
         contract.id ||
         v4()
@@ -45,6 +66,7 @@ export class DlcEventHandler {
       state: ContractState.Initial,
       isLocalParty: true,
       oracleInfo,
+      oracleAnnouncement,
     }
 
     if (contract.id) {
@@ -156,7 +178,7 @@ export class DlcEventHandler {
 
     await this._dlcService.updateContract(acceptedContract)
 
-    if (!this._contractUpdater.verifyAcceptedContract(acceptedContract)) {
+    if (!this._contractUpdater.verifyContractSignatures(acceptedContract)) {
       await this.handleInvalidContract(acceptedContract, 'Invalid signatures')
     }
 
@@ -187,7 +209,7 @@ export class DlcEventHandler {
       signMessage.cetAdaptorPairs
     )
 
-    if (!this._contractUpdater.verifySignedContract(signedContract)) {
+    if (!this._contractUpdater.verifyContractSignatures(signedContract)) {
       await this.handleInvalidContract(signedContract, 'Invalid signatures')
     }
 
@@ -244,8 +266,8 @@ export class DlcEventHandler {
   // oracle client here instead of passing parameters.
   async onContractMature(
     contractId: string,
-    outcomeValue: string,
-    oracleSignature: string
+    oracleSignatures: string[],
+    outcomeValues: string[]
   ): Promise<MaturedContract> {
     const contract = (await this.tryGetContractOrThrow(contractId, [
       ContractState.Confirmed,
@@ -253,8 +275,8 @@ export class DlcEventHandler {
 
     const matureContract = this._contractUpdater.toMatureContract(
       contract,
-      outcomeValue,
-      oracleSignature
+      oracleSignatures,
+      outcomeValues
     )
 
     await this._dlcService.updateContract(matureContract)
@@ -270,6 +292,19 @@ export class DlcEventHandler {
     const refundedContract = await this._contractUpdater.toRefundedContract(
       contract
     )
+    await this._dlcService.updateContract(refundedContract)
+    return refundedContract
+  }
+
+  async onContractRefundByOther(contractId: string): Promise<Contract> {
+    const contract = (await this.tryGetContractOrThrow(contractId, [
+      ContractState.Confirmed,
+    ])) as ConfirmedContract
+    const refundedContract: RefundedContract = {
+      ...contract,
+      state: ContractState.Refunded,
+    }
+
     await this._dlcService.updateContract(refundedContract)
     return refundedContract
   }

@@ -8,5 +8,6 @@ module.exports = {
     '\\.(css|less)$': '<rootDir>/__mocks__/fileMock.js',
   },
   setupFilesAfterEnv: ['./jest.setup.js'],
-  reporters: ['default', 'jest-unit'],
+  reporters: [],
+  coverageReporters: ['json', 'lcov']
 }

@@ -19,7 +19,8 @@ import { Outcome } from '../../src/common/models/dlc/Outcome'
 import {
   assertContractState,
   createWallets,
-  getNewMockedOracleContext,
+  getNewMockedDecompositionOracleContext,
+  getNewMockedEnumerationOracleContext,
   getNewPartyContext,
   OracleContext,
   PartyContext,
@@ -32,8 +33,8 @@ const noBtcParty = 'carol'
 let localPartyContext: PartyContext
 let remotePartyContext: PartyContext
 let noBtcPartyContext: PartyContext
-let oracleContext: OracleContext
-const assetId = 'btcusd'
+let enumerationOracleContext: OracleContext
+let decompositionOracleContext: OracleContext
 const oracleName = 'Olivia'
 
 const oneBtc = 100000000
@@ -79,7 +80,35 @@ describe('dlc-event-handler', () => {
       localPartyContext = await getNewPartyContext(localParty)
       remotePartyContext = await getNewPartyContext(remoteParty)
       noBtcPartyContext = await getNewPartyContext(noBtcParty, false)
-      oracleContext = getNewMockedOracleContext(baseOutcomes[0].outcome)
+      enumerationOracleContext = getNewMockedEnumerationOracleContext(
+        baseOutcomes.map(x => x.outcome)
+      )
+      decompositionOracleContext = getNewMockedDecompositionOracleContext(
+        20,
+        2,
+        [
+          '0',
+          '0',
+          '0',
+          '0',
+          '0',
+          '1',
+          '0',
+          '1',
+          '0',
+          '0',
+          '1',
+          '0',
+          '0',
+          '0',
+          '0',
+          '0',
+          '1',
+          '0',
+          '0',
+          '0',
+        ]
+      )
     } catch (error) {
       fail(error)
     }
@@ -256,7 +285,7 @@ describe('dlc-event-handler', () => {
       cetAdaptorPairs: badAdaptorCetPairs,
     }
 
-    expect(
+    await expect(
       remotePartyContext.eventHandler.onSignMessage(localParty, badSignMessage)
     ).rejects.toThrow(Error)
   })
@@ -318,7 +347,6 @@ describe('dlc-event-handler', () => {
       localContext: noBtcPartyContext,
     })
     await rejectOffer(offerMessage, noBtcPartyContext)
-
     const offerMessage2 = await sendOffer({ localContext: noBtcPartyContext })
     await acceptOffer(offerMessage2, noBtcPartyContext)
   })
@@ -400,6 +428,50 @@ describe('dlc-event-handler', () => {
     await acceptOffer(offerMessage)
   })
 
+  test('18-unilateral-closing-decomposition', async () => {
+    const offerMessage = await sendOffer({
+      outcomes: [
+        {
+          start: 0,
+          count: 20000,
+          payout: {
+            local: 2 * oneBtc,
+            remote: 0,
+          },
+        },
+        {
+          start: 20000,
+          count: 1028575,
+          payout: {
+            local: 0,
+            remote: 2 * oneBtc,
+          },
+        },
+      ],
+      oracleContext: decompositionOracleContext,
+    })
+    await acceptOffer(
+      offerMessage,
+      localPartyContext,
+      decompositionOracleContext
+    )
+    await localPartyContext.eventHandler.onClosed(offerMessage.contractId)
+
+    const contract = (await assertContractState(
+      localPartyContext.dlcService,
+      offerMessage.contractId,
+      ContractState.Closed
+    )) as ClosedContract
+
+    await remotePartyContext.eventHandler.onClosedByOther(contract.id)
+
+    await assertContractState(
+      remotePartyContext.dlcService,
+      contract.id,
+      ContractState.Closed
+    )
+  })
+
   async function sendOffer(
     params: {
       localContext?: PartyContext
@@ -408,6 +480,7 @@ describe('dlc-event-handler', () => {
       remoteCollateral?: number
       outcomes?: Outcome[]
       premiumAmount?: number
+      oracleContext?: OracleContext
     } = {}
   ): Promise<OfferMessage> {
     const localContext = params.localContext || localPartyContext
@@ -420,13 +493,13 @@ describe('dlc-event-handler', () => {
         : params.remoteCollateral
     const outcomes = params.outcomes || baseOutcomes
     const premiumAmount = params.premiumAmount || 0
+    const oracleContext = params.oracleContext || enumerationOracleContext
     const contract: Contract = {
       state: ContractState.Initial,
+      assetId: 'btcusd',
       oracleInfo: {
         name: oracleName,
-        rValue: oracleContext.oracleRValue,
-        publicKey: oracleContext.oraclePublicKey,
-        assetId: assetId,
+        uri: '',
       },
       counterPartyName: remoteContext.name,
       localCollateral,
@@ -438,20 +511,18 @@ describe('dlc-event-handler', () => {
       feeRate: 2,
       premiumAmount,
     }
-
-    return await testOnSendOffer(contract, localContext)
+    return await testOnSendOffer(contract, localContext, oracleContext)
   }
 
   async function acceptOffer(
     offerMessage: OfferMessage,
-    localContext = localPartyContext
+    localContext = localPartyContext,
+    oracleContext = enumerationOracleContext
   ): Promise<void> {
     const offeredContract = await testOnOfferMessage(offerMessage)
     const acceptMessage = await testOnOfferAccepted(offeredContract)
     const signMessage = await testOnAcceptMessage(acceptMessage, localContext)
     await testOnSignMessage(signMessage)
-
-    const finalOutcome = baseOutcomes[0]
 
     await testOnContractConfirmed(localContext, offeredContract.id)
     await testOnContractConfirmed(remotePartyContext, offeredContract.id)
@@ -459,15 +530,15 @@ describe('dlc-event-handler', () => {
     await testOnContractMature(
       localContext,
       offeredContract.id,
-      finalOutcome.outcome,
-      oracleContext.signature
+      oracleContext.signatures,
+      oracleContext.outcomeValues
     )
 
     await testOnContractMature(
       remotePartyContext,
       offeredContract.id,
-      finalOutcome.outcome,
-      oracleContext.signature
+      oracleContext.signatures,
+      oracleContext.outcomeValues
     )
   }
 
@@ -482,10 +553,12 @@ describe('dlc-event-handler', () => {
 
   async function testOnSendOffer(
     contract: Contract,
-    localContext = localPartyContext
+    localContext = localPartyContext,
+    oracleContext = enumerationOracleContext
   ): Promise<OfferMessage> {
     const initialContract = await localContext.eventHandler.onInitialize(
-      contract
+      contract,
+      oracleContext.announcement
     )
     let offeredContract = await localContext.eventHandler.onSendOffer(
       initialContract
@@ -616,13 +689,13 @@ describe('dlc-event-handler', () => {
   async function testOnContractMature(
     partyContext: PartyContext,
     contractId: string,
-    outcomeValue: string,
-    oracleSignature: string
+    oracleSignatures: string[],
+    outcomeValues: string[]
   ): Promise<void> {
     await partyContext.eventHandler.onContractMature(
       contractId,
-      outcomeValue,
-      oracleSignature
+      oracleSignatures,
+      outcomeValues
     )
 
     assertContractState(

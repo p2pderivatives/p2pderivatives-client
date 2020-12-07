@@ -3,4 +3,6 @@ grpc:
   secure: true
   certificatePath: ./p2pderivatives.io.crt
 oracle:
-  baseUrl: 'https://oracle.p2pderivatives.io'
+  initialOracles:
+    - name: 'P2PDerivatives'
+      uri: 'https://oracle.p2pderivatives.io'
