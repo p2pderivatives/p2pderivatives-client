@@ -26,17 +26,23 @@ import { FileEvents } from './ipc/FileEvents'
 import { OracleEvents } from './ipc/OracleEvents'
 import { UserEvents } from './ipc/UserEvents'
 
-const logger = createLogger({
+const appLogger = createLogger({
   level: 'info',
   format: format.json(),
   defaultMeta: { service: 'user-service' },
-  transports: [new transports.Console()],
+  transports: [
+    new transports.Console(),
+    new transports.DailyRotateFile({
+      filename: 'app-p2pd-%DATE%.log',
+      datePattern: 'YYYY-MM-DD-HH',
+      maxFiles: '7d',
+      level: 'info',
+      dirname: app.getPath('userData'),
+    }),
+  ],
 })
 
-async function initializeDB(userName: string): Promise<LevelUp> {
-  const userPath = app.getPath('userData')
-  const userDataPath = path.join(userPath, userName)
-
+async function initializeDB(userDataPath: string): Promise<LevelUp> {
   try {
     await fs.access(userDataPath)
   } catch {
@@ -48,16 +54,6 @@ async function initializeDB(userName: string): Promise<LevelUp> {
     valueEncoding: 'json',
   }
 
-  const rotateFileTransport = new transports.DailyRotateFile({
-    filename: 'p2pd-%DATE%.log',
-    datePattern: 'YYYY-MM-DD-HH',
-    maxFiles: '7d',
-    level: 'info',
-    dirname: path.join(userDataPath, 'log'),
-  })
-
-  logger.transports.push(rotateFileTransport)
-
   try {
     const levelupAsync: () => Promise<LevelUp> = () =>
       new Promise<LevelUp>((accept, reject) => {
@@ -65,6 +61,7 @@ async function initializeDB(userName: string): Promise<LevelUp> {
           encoding(leveldown(path.join(userDataPath, 'leveldb')), options),
           function(error: Error, db: LevelUp) {
             if (error) {
+              appLogger.error('Error opening db', error)
               reject(error)
             } else {
               accept(db)
@@ -75,6 +72,10 @@ async function initializeDB(userName: string): Promise<LevelUp> {
 
     return await levelupAsync()
   } catch (error) {
+    appLogger.error(
+      'Trying to open application with same user already running',
+      error
+    )
     throw new Error(
       'An instance of the application with this username is already running'
     )
@@ -91,7 +92,9 @@ async function loginCallBack(
   dlcIPCBrowser: DlcIPCBrowser,
   grpcClient: GrpcClient
 ): Promise<() => Promise<void>> {
-  const db = await initializeDB(userName)
+  const userPath = app.getPath('userData')
+  const userDataPath = path.join(userPath, userName)
+  const db = await initializeDB(userDataPath)
   const bitcoinEvents = new BitcoinDEvents(
     new LevelConfigRepository(db as LevelUp)
   )
@@ -103,6 +106,21 @@ async function loginCallBack(
 
   const eventHandler = new DlcEventHandler(contractUpdater, dlcService)
 
+  const rotateFileTransport = new transports.DailyRotateFile({
+    filename: 'p2pd-%DATE%.log',
+    datePattern: 'YYYY-MM-DD-HH',
+    maxFiles: '7d',
+    level: 'info',
+    dirname: path.join(userDataPath, 'log'),
+  })
+
+  const userLogger = createLogger({
+    level: 'info',
+    format: format.json(),
+    defaultMeta: { service: 'user-service' },
+    transports: [new transports.Console(), rotateFileTransport],
+  })
+
   const dlcManager = new DlcManager(
     eventHandler,
     dlcService,
@@ -110,7 +128,7 @@ async function loginCallBack(
     dlcIPCBrowser,
     oracleClient,
     grpcClient.getDlcService(),
-    logger,
+    userLogger,
     5
   )
 
@@ -178,8 +196,8 @@ export function initialize(browserWindow: BrowserWindow): () => Promise<void> {
   return async (): Promise<void> => {
     try {
       await authEvents.logout()
-    } catch {
-      // ignore errors
+    } catch (error) {
+      appLogger.error('Error logging out', error)
     }
   }
 }
