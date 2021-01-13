@@ -1,7 +1,6 @@
 grpc:
   host: 'server.p2pderivatives.io:443'
   secure: true
-  certificatePath: ./p2pderivatives.io.crt
 oracle:
   initialOracles:
     - name: 'P2PDerivatives'
