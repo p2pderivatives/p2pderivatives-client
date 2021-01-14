@@ -1,5 +1,6 @@
 import {
   AddressType,
+  BitcoinRpcError,
   Client,
   ClientOption,
   ListUnspentOptions,
@@ -85,6 +86,20 @@ export default class BitcoinDClient {
     if (options.walletPassphrase) {
       this.walletPassphrase = options.walletPassphrase
       await this.client.walletPassphrase(this.walletPassphrase, 1)
+    } else {
+      let isEncrypted = false
+      try {
+        await this.client.walletLock()
+        isEncrypted = true
+      } catch (error) {
+        if (!(error instanceof BitcoinRpcError) || error.code !== -15) {
+          throw new Error(`Unknown error: ${error}`)
+        }
+      }
+
+      if (isEncrypted) {
+        throw new Error('No passphrase was provided but wallet is encrypted.')
+      }
     }
     await this.client.getNetworkInfo()
   }
