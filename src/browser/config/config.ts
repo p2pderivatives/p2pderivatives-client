@@ -14,7 +14,10 @@ export class AppConfig {
 
   constructor(path: string) {
     this.path = path
-    this.config = yaml.safeLoad(fs.readFileSync(path, 'utf-8'))
+    this.config = yaml.safeLoad(fs.readFileSync(path, 'utf-8')) as Record<
+      string,
+      unknown
+    >
   }
 
   parse<T extends ConfigTypes>(subPath: ConfigPath<T>): T {

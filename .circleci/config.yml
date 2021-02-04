@@ -164,7 +164,7 @@ jobs:
           condition: << parameters.with-cache >>
           steps:
             - save_cache:
-                key: gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v7
+                key: gen-grpc-deps-{{checksum "gen-grpc/package-lock.json"}}-{{checksum "p2pd-proto-hash.txt"}}-v8
                 paths:
                   - gen-grpc
                   - gen-grpc/node_modules
