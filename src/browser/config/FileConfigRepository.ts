@@ -22,7 +22,7 @@ export default class FileConfigRepository implements ConfigRepository {
   > {
     try {
       const file = await fs.readFile(this.bitcoinDPath, 'utf-8')
-      const config: BitcoinDConfig = yaml.safeLoad(file)
+      const config: BitcoinDConfig = yaml.safeLoad(file) as BitcoinDConfig
       return {
         success: true,
         value: config,

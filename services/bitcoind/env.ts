@@ -14,18 +14,20 @@ export const TEST_BITCOIND_CONFIG: Readonly<Required<BitcoinDConfig>> = {
   walletPassphrase: 'alice',
 }
 
-export const TEST_VECTORS: {
+interface TestVector {
   testTx: {
     id: string
     amount: number
   }
-} = load()
+}
 
-function load() {
+export const TEST_VECTORS: TestVector = load()
+
+function load(): TestVector {
   try {
     return yaml.safeLoad(
       fs.readFileSync(path.resolve(__dirname, './vectors/vector.yml'), 'utf8')
-    )
+    ) as TestVector
   } catch {
     return {
       testTx: {
