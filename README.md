@@ -23,38 +23,97 @@ You will also need to connect the application to a running bitcoind instance.
 
 ### Through CryptoGarage server
 
-Download the latest release of the application [here](https://github.com/p2pderivatives/p2pderivatives-client/releases).
+The easiest way to try out the application is by using the CryptoGarage server.
+First download the latest release of the application [here](https://github.com/p2pderivatives/p2pderivatives-client/releases):
+- for Windows download the `.exe` file
+- for MacOS download the `.dmg` file (see [note](#note-for-macos-users))
+- for Linux users download the `.AppImage` file
+
+Then follow the [instructions to setup a bitcoind instance](#setting-up-bitcoind).
+
+#### Note for MacOS users
+
+To run a second instance of the application on MacOS:
+- Press `⌘ + space`, type "terminal" and press `return`
+- type `open -n /Applications/P2PD\ client.app/`
 
 ### Running your own servers
 
 For testing locally, you can use the docker images available in this repository.  
-The docker images are made available through github packages , which requires authentication to pull any image (even for public repository). You will thus need to log in first with your github account or use an authentication token to pull those images:
-```
-docker login https://docker.pkg.github.com -u USERNAME --password-stdin
-```   
-Simply run:
+If you do not wish to use docker, you can visit the repositories for [the communication server](https://github.com/p2pderivatives/p2pderivatives-server) and [the oracle server](https://github.com/p2pderivatives/p2pderivatives-oracle) to find out how to build their binaries locally.
+
+Assuming docker and docker-compose are installed, simply run:
 
 ```
 docker-compose up
 ```
 
-This will also spin a bitcoind instance on regtest.
-If you wish to use your own bitcoind instance, you can run:
+This will also spin a bitcoind instance on regtest with the following credentials:
+- rpcuser: `testuser`
+- rpcpass: `lq6zequb-gYTdF2_ZEUtr8ywTXzLYtknzWU4nV8uVoo=`
+
+You can then create two wallets and generate funds for them using the following command:
+```
+docker-compose exec --user bitcoin bitcoind /bin/sh /scripts/bitcoin-setup.sh
+```
+
+You can then use them in the application with the following info:
+First wallet:
+- username: `alice`
+- password: `alice`
+Second wallet:
+- username: `bob`
+- password: `bob`
+
+If you wish instead to use your own bitcoind instance, you can run:
 
 ```
-docker-compose server server-db oracle oracle-db
+docker-compose up server server-db oracle oracle-db
 ```
 
-Otherwise you can visit the repositories for [the communication server](https://github.com/p2pderivatives/p2pderivatives-server) and [the oracle server](https://github.com/p2pderivatives/p2pderivatives-oracle).
+and then follow the [instructions to setup a bitcoind instance](#setting-up-bitcoind).
 
-You can then update the `./setting.production.yml` file with the parameters fitting your configuration and run `npm run dist`.
+To use the application with a locally deployed server and oracle, you have three choices:
+- [use the distributed binaries](#using-distributed-binaries),
+- [build a binary yourself](#building-a-binary-by-yourself),
+- [run directly with electron](#run-with-electron-directly). 
 
-If you just want to quickly try it out, you can also just modify the `settings.default.yml` file and run `npm run electron-dev` (you can run a second instance of the application using `npm run electron-dev-simple`).
+#### Using distributed binaries
+
+_Unfortunately there is no easy way to follow this approach for Linux users._
+_Instead try [building a binary](#Building-a-binary-by-yourself) or [running with electron directly](#Run-with-electron-directly)._
+
+Follow [these instructions](#Through-CryptoGarage-server) to download the appropriate binary for your platform.
+Replace the configuration file `settings.default.yml` with [this one](./settings.default.yml).
+The configuration file is located at: 
+- `/Applications/P2PD\ client.app/settings.default.yml` on MacOS,
+- `C:\Users\USERNAME\AppData\Local\Programs\p2pderivatives-client\settings.default.yml` on Windows (replace `USERNAME` with your windows user name).
+
+#### Building a binary by yourself
+
+Building a binary by yourself requires having npm installed on your machine.
+
+Replace [`settings.production.yml`](./settings.production.yml) with [`settings.default.yml`](./settings.default.yml) (e.g. `cp settings.default.yml settings.production.yml`).
+
+Run `npm run dist`.
+
+#### Run with electron directly
+
+Run:
+```
+npm install
+npm run electron-dev
+```
+
+You can run a second instance of the application using (after having the first one running):
+```
+npm run electron-dev-simple
+```
 
 ### Setting up bitcoind
 
 You can download bitcoin core software [here](https://bitcoin.org/en/download).
-There are also other ways to install or download it depending on your operating system, which can be found easily on any search engine.
+There are other ways to install or download it depending on your operating system, which can be found easily on any search engine.
 
 Once bitcoin-core is installed, you can use the scripts on this repository to start a node and create some wallets for testing.
 
@@ -63,6 +122,10 @@ If using windows, you might be able to use them with git bash, but this is curre
 
 Start by creating a folder somewhere on your computer and call it `p2pderivatives` (or whatever you prefer), and a sub-folder `scripts`.
 Copy the content of the `./scripts` folder on this repository to the `scripts` folder you just created.
+
+Note that the scripts will start bitcoind with following credentials:
+- rpcuser: `user`
+- rpcpassword: `pass`
 
 #### Regtest
 
@@ -92,7 +155,7 @@ You can do so with the following command (assuming that you have created a walle
 bitcoin-cli -datadir=./bitcoind -conf=bitcoin.regtest.conf generatetoaddress 9 $(bitcoin-cli -datadir=./bitcoind -conf=bitcoin.regtest.conf -rpcwallet=alice getnewaddress)
 ```
 
-Replace the number `9` with the number of block you wish to generate.
+Replace the number `9` with the number of block you wish to generate (you need to generate at least 6 blocks for the contract to be considered published).
 
 ## Contributing
 
