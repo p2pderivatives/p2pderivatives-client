@@ -32,7 +32,10 @@ import {
 import { PartyInputs } from '../models/PartyInputs'
 import { RangeInfo } from '../models/RangeInfo'
 import { Utxo } from '../models/Utxo'
-import { groupByIgnoringDigits } from '../utils/Decomposition'
+import {
+  groupByIgnoringDigits,
+  composeOutcomeValue,
+} from '../utils/Decomposition'
 import * as CfdUtils from './CfdUtils'
 import * as Utils from './CfdUtils'
 import { DigitTrie, trieExplore, trieInsert } from './DigitTrie'
@@ -391,6 +394,20 @@ export class ContractUpdater {
 
       const finalSignedCetHex = cfddlcjs.SignCet(signRequest).hex
 
+      const descriptor = contract.oracleAnnouncement.oracleEvent.eventDescriptor
+
+      let displayOutcomeValue
+      if (isDecompositionDescriptor(descriptor)) {
+        displayOutcomeValue = composeOutcomeValue(
+          outcomeValues,
+          descriptor.base
+        )
+      } else {
+        displayOutcomeValue = outcomeValues.reduce(
+          (prev, cur) => prev + ' | ' + cur
+        )
+      }
+
       return {
         ...contract,
         state: ContractState.Mature,
@@ -399,6 +416,7 @@ export class ContractUpdater {
         finalCetId: finalCet.txid,
         finalSignedCetHex,
         outcomeValues,
+        displayOutcomeValue,
       }
     } catch (error) {
       throw Error('Unexpected outcome values')

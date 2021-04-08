@@ -30,4 +30,5 @@ export interface Contract {
   readonly isLocalParty?: boolean
   readonly finalOutcome?: Outcome
   readonly outcomeValues?: string[]
+  readonly displayOutcomeValue?: string
 }

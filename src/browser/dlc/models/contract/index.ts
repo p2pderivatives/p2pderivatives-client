@@ -65,6 +65,7 @@ export function toSimpleContract(contract: AnyContract): Contract {
     isLocalParty: contract.isLocalParty,
     finalOutcome: contract.finalOutcome,
     outcomeValues: contract.outcomeValues,
+    displayOutcomeValue: contract.displayOutcomeValue,
   }
 }
 
