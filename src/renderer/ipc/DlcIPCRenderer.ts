@@ -13,16 +13,15 @@ import {
 } from '../../common/models/ipc/GetContractsAnswer'
 import { GetContractsCall } from '../../common/models/ipc/GetContractsCall'
 import { DlcRendererAPI } from './DlcRendererAPI'
-const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class DlcIPCRenderer implements DlcRendererAPI {
   dlcCall(type: DlcEventType, contractId: string): Promise<DlcAnswer> {
     const dlcCall: DlcCall = { type: type, contractId: contractId }
-    return ipc.callMain(DLC_EVENT, dlcCall) as Promise<DlcAnswer> //TODO get answer instead of ContractSimple
+    return window.api.callMain(DLC_EVENT, dlcCall) as Promise<DlcAnswer> //TODO get answer instead of ContractSimple
   }
 
   async offerContract(contract: Contract): Promise<DlcAnswer> {
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       OFFER_CONTRACT,
       contract
     )) as DlcAnswerProps
@@ -31,7 +30,7 @@ export class DlcIPCRenderer implements DlcRendererAPI {
   }
 
   async getContracts(call: GetContractsCall = {}): Promise<Contract[]> {
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       GET_CONTRACTS,
       call
     )) as GetContractsAnswerProps

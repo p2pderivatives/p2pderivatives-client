@@ -1,4 +1,4 @@
-import grpc from 'grpc'
+import grpc from '@grpc/grpc-js'
 import { GrpcConfig } from './GrpcConfig'
 
 export abstract class ServiceBase {

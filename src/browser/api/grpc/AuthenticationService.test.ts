@@ -13,7 +13,7 @@ import {
   Empty,
   UpdatePasswordRequest,
 } from '@internal/gen-grpc/authentication_pb'
-import grpc, { Metadata, ServiceError } from 'grpc'
+import grpc, { Metadata, ServiceError } from '@grpc/grpc-js'
 import { GrpcAuth } from './GrpcAuth'
 
 const auth = new GrpcAuth()

@@ -1,5 +1,5 @@
 import { IUserClient } from '@internal/gen-grpc/user_grpc_pb'
-import { ClientReadableStream, Metadata } from 'grpc'
+import { ClientReadableStream, Metadata } from '@grpc/grpc-js'
 import {
   UserRegisterRequest,
   UserRegisterResponse,

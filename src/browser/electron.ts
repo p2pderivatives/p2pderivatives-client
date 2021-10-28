@@ -10,7 +10,9 @@ function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1366,
     height: 768,
-    webPreferences: { nodeIntegration: true },
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
   })
   finalize = initialize(mainWindow)
   let reactUrl = url.format({

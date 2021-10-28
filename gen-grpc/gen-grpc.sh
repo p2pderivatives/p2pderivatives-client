@@ -11,13 +11,12 @@ done
 
 $(npm bin)/grpc_tools_node_protoc \
 --js_out=import_style=commonjs,binary:$OUTPUT \
---grpc_out=$OUTPUT \
---plugin=protoc-gen-grpc=$(npm bin)/grpc_tools_node_protoc_plugin \
+--grpc_out=grpc_js:$OUTPUT \
 -I $OUTPUT \
 $OUTPUT/*.proto
 
-protoc \
+$(npm bin)/grpc_tools_node_protoc \
 --plugin=protoc-gen-ts=$(npm bin)/protoc-gen-ts \
---ts_out=$OUTPUT \
+--ts_out="grpc_js:$OUTPUT" \
 -I $OUTPUT \
 $OUTPUT/*.proto

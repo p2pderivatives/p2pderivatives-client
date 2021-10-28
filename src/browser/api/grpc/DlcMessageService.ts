@@ -1,6 +1,6 @@
 import { IUserClient } from '@internal/gen-grpc/user_grpc_pb'
 import { DlcMessage, Empty } from '@internal/gen-grpc/user_pb'
-import { Metadata } from 'grpc'
+import { Metadata } from '@grpc/grpc-js'
 import { DlcAbstractMessage } from '../../dlc/models/messages/DlcAbstractMessage'
 import { DlcTypedMessage } from '../../dlc/models/messages/DlcTypedMessage'
 import { GrpcAuth } from './GrpcAuth'

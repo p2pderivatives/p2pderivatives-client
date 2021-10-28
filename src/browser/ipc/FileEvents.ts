@@ -1,9 +1,9 @@
-import { PARSE_OUTCOME } from '../../common/constants/IPC'
+import { GET_OUTCOME } from '../../common/constants/IPC'
 import OutcomeAnswer from '../../common/models/ipc/OutcomeAnswer'
-import OutcomeCall from '../../common/models/ipc/OutcomeCall'
 import IOAPI from '../api/io'
 import { IPCEventsBase } from './IPCEventsBase'
 import { TaggedCallback } from './TaggedCallback'
+import { dialog } from 'electron'
 
 export class FileEvents extends IPCEventsBase {
   private _client = new IOAPI()
@@ -11,21 +11,21 @@ export class FileEvents extends IPCEventsBase {
   protected taggedCallbacks(): TaggedCallback[] {
     return [
       {
-        tag: PARSE_OUTCOME,
-        callback: (data): Promise<OutcomeAnswer> =>
-          this.parseOutcomeCallback(data as OutcomeCall),
+        tag: GET_OUTCOME,
+        callback: (): Promise<OutcomeAnswer> => this.getOutcomes(),
       },
     ]
   }
 
-  private async parseOutcomeCallback(
-    outcomeCall: OutcomeCall
-  ): Promise<OutcomeAnswer> {
+  private async getOutcomes(): Promise<OutcomeAnswer> {
     try {
-      const outcomesList = await this._client.readRangeOutcomes(
-        outcomeCall.outcomesPath
-      )
-      return new OutcomeAnswer(true, outcomesList)
+      const files = await dialog.showOpenDialog({ properties: ['openFile'] })
+      if (files !== undefined) {
+        const filepath = files.filePaths[0]
+        const outcomesList = await this._client.readRangeOutcomes(filepath)
+        return new OutcomeAnswer(true, outcomesList)
+      }
+      return new OutcomeAnswer(false, [], null)
     } catch (e) {
       return new OutcomeAnswer(false, [], e)
     }
