@@ -3,7 +3,7 @@ import {
   IAuthenticationClient,
 } from '@internal/gen-grpc/authentication_grpc_pb'
 import { IUserClient, UserClient } from '@internal/gen-grpc/user_grpc_pb'
-import * as grpc from 'grpc'
+import * as grpc from '@grpc/grpc-js'
 import { AuthenticationService } from './AuthenticationService'
 import { DlcMessageService } from './DlcMessageService'
 import { GrpcAuth } from './GrpcAuth'

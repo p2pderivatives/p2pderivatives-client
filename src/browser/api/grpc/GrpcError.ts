@@ -1,4 +1,4 @@
-import { ServiceError } from 'grpc'
+import { ServiceError } from '@grpc/grpc-js'
 import { GENERAL_ERROR } from '../../../common/constants/Errors'
 
 export class GrpcError {

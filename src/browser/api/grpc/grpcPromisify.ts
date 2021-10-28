@@ -1,4 +1,4 @@
-import { ServiceError, Metadata } from 'grpc'
+import { ServiceError, Metadata } from '@grpc/grpc-js'
 import { GrpcError } from './GrpcError'
 
 export function promisify<T1, TResult>(

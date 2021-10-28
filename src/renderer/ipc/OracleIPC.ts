@@ -4,13 +4,12 @@ import OracleConfigAnswer, {
   OracleConfigAnswerProps,
 } from '../../common/models/ipc/OracleConfigAnswer'
 import { OracleAssetConfiguration } from '../../common/oracle/oracle'
-const { ipcRenderer } = window.require('electron-better-ipc')
 
 export default class OracleIPC {
   static async getOracleConfig(
     assetID: string
   ): Promise<OracleAssetConfiguration> {
-    const answerProps = (await ipcRenderer.callMain(
+    const answerProps = (await window.api.callMain(
       GET_ORACLE_ASSET_CONFIG,
       assetID
     )) as OracleConfigAnswerProps

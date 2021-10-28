@@ -5,7 +5,6 @@ import { Store } from 'redux'
 import { ApplicationState } from '../store'
 import { Contract } from '../../common/models/dlc/Contract'
 import { dlcUpdate } from '../store/dlc/actions'
-const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class DlcEvents implements IPCEvents {
   private _store: Store<ApplicationState>
@@ -18,10 +17,13 @@ export class DlcEvents implements IPCEvents {
   }
 
   registerReplies(): void {
-    this._unregisterCall = ipc.answerMain(DLC_UPDATE, (contract: Contract) => {
-      this._store.dispatch(dlcUpdate(contract))
-      return new GeneralAnswer(true)
-    })
+    this._unregisterCall = window.api.answerMain(
+      DLC_UPDATE,
+      (contract: Contract) => {
+        this._store.dispatch(dlcUpdate(contract))
+        return new GeneralAnswer(true)
+      }
+    )
   }
 
   unregisterReplies(): void {

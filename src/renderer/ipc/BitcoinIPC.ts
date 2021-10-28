@@ -18,12 +18,10 @@ import {
   ConfigAnswerProps,
   ConfigAnswer,
 } from '../../common/models/ipc/ConfigAnswer'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class BitcoinIPC implements BitcoinAPI {
   public async checkConfig(config: BitcoinDConfig): Promise<void> {
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       CHECK_BITCOIND,
       config
     )) as GeneralAnswerProps
@@ -40,7 +38,9 @@ export class BitcoinIPC implements BitcoinAPI {
   }
 
   public async getConfig(): Promise<BitcoinDConfig> {
-    const answerProps = (await ipc.callMain(GET_CONFIG)) as ConfigAnswerProps
+    const answerProps = (await window.api.callMain(
+      GET_CONFIG
+    )) as ConfigAnswerProps
     const answer = ConfigAnswer.parse(answerProps)
 
     const config = answer.getConfig()
@@ -57,7 +57,7 @@ export class BitcoinIPC implements BitcoinAPI {
   }
 
   private static async getBalanceCommon(tag: string): Promise<number> {
-    const answerProps = (await ipc.callMain(tag)) as BalanceAnswerProps
+    const answerProps = (await window.api.callMain(tag)) as BalanceAnswerProps
     const answer = BalanceAnswer.parse(answerProps)
 
     if (answer.isSuccess()) {

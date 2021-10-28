@@ -19,8 +19,6 @@ import { User } from '../../common/models/user/User'
 import UserListAnswer, {
   UserListAnswerProps,
 } from '../../common/models/ipc/UserListAnswer'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class UserIPC implements UserAPI {
   private _unregisterUserList: (() => void) | null = null
@@ -30,7 +28,7 @@ export class UserIPC implements UserAPI {
   public async registerUser(password: string, name: string): Promise<string> {
     const call = new RegisterUserCall(password, name)
 
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       REGISTER_USER,
       call
     )) as RegisterUserProps
@@ -45,7 +43,7 @@ export class UserIPC implements UserAPI {
   }
 
   public async unregisterUser(): Promise<void> {
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       UNREGISTER_USER
     )) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(answerProps)
@@ -57,7 +55,9 @@ export class UserIPC implements UserAPI {
   }
 
   public async getUserList(): Promise<User[]> {
-    const result = (await ipc.callMain(GET_USERLIST)) as UserListAnswerProps
+    const result = (await window.api.callMain(
+      GET_USERLIST
+    )) as UserListAnswerProps
     const answer = UserListAnswer.parse(result)
 
     if (answer.isSuccess()) {

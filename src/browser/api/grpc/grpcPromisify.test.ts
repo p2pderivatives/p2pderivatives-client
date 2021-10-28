@@ -3,14 +3,14 @@ import {
   LoginResponse,
   TokenInfo,
 } from '@internal/gen-grpc/authentication_pb'
-import { Metadata, ServiceError } from 'grpc'
+import { Metadata, ServiceError } from '@grpc/grpc-js'
 import { promisify } from './grpcPromisify'
 import { GrpcError } from './GrpcError'
 
 class TestError implements ServiceError {
-  code?: import('grpc').status | undefined
-  metadata?: Metadata | undefined
-  details?: string | undefined
+  code: import('@grpc/grpc-js').status
+  metadata: Metadata
+  details: string
   name: string
   message = ''
   stack?: string | undefined
@@ -19,6 +19,7 @@ class TestError implements ServiceError {
     this.code = 1
     this.name = 'TestError'
     this.details = 'JustATest'
+    this.metadata = new Metadata()
   }
 }
 

@@ -8,7 +8,7 @@ import {
   RefreshResponse,
   UpdatePasswordRequest,
 } from '@internal/gen-grpc/authentication_pb'
-import { Metadata } from 'grpc'
+import { Metadata } from '@grpc/grpc-js'
 import AuthenticationError from './AuthenticationError'
 import { GrpcAuth } from './GrpcAuth'
 import { GrpcError } from './GrpcError'

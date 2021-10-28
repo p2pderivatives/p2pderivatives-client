@@ -19,8 +19,6 @@ import { Contract } from '../../../../common/models/dlc/Contract'
 import { RouteChildrenProps } from 'react-router'
 import { BitcoinIPC } from '../../../ipc/BitcoinIPC'
 
-const { dialog } = window.require('electron').remote
-
 const useSelector: TypedUseSelectorHook<ApplicationState> = useReduxSelector
 
 const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
@@ -43,16 +41,11 @@ const NewContractPage: FC<RouteChildrenProps<{ id: string }>> = (
 
   const [utxoAmount, setUtxoAmount] = useState(0)
 
-  const handleCSVImport = (): void => {
-    dialog.showOpenDialog({ properties: ['openFile'] }).then(async files => {
-      if (files !== undefined) {
-        const filepath = files.filePaths[0]
-        const parsedOutcomes = await new FileIPC().parseOutcomes(filepath)
-        setActualOutcomes(parsedOutcomes)
-        setOutcomesList(parsedOutcomes)
-        setTab(1)
-      }
-    })
+  const handleCSVImport = async (): Promise<void> => {
+    const parsedOutcomes = await new FileIPC().getOutcomes()
+    setActualOutcomes(parsedOutcomes)
+    setOutcomesList(parsedOutcomes)
+    setTab(1)
   }
 
   const handlePublish = (contract: Contract): void => {

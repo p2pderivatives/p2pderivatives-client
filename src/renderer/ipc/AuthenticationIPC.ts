@@ -16,12 +16,10 @@ import {
   UserAnswerProps,
   UserAnswer,
 } from '../../common/models/ipc/UserAnswerProps'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { ipcRenderer: ipc } = window.require('electron-better-ipc')
 
 export class AuthenticationIPC implements AuthenticationAPI {
   public async login(username: string, password: string): Promise<void> {
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       LOGIN,
       new LoginCall(username, password)
     )) as GeneralAnswerProps
@@ -34,7 +32,9 @@ export class AuthenticationIPC implements AuthenticationAPI {
   }
 
   public async logout(): Promise<void> {
-    const answerProps = (await ipc.callMain(LOGOUT)) as GeneralAnswerProps
+    const answerProps = (await window.api.callMain(
+      LOGOUT
+    )) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(answerProps)
 
     if (!answer.isSuccess()) {
@@ -44,7 +44,9 @@ export class AuthenticationIPC implements AuthenticationAPI {
   }
 
   public async refresh(): Promise<void> {
-    const answerProps = (await ipc.callMain(REFRESH)) as GeneralAnswerProps
+    const answerProps = (await window.api.callMain(
+      REFRESH
+    )) as GeneralAnswerProps
     const answer = GeneralAnswer.parse(answerProps)
 
     if (!answer.isSuccess()) {
@@ -58,7 +60,7 @@ export class AuthenticationIPC implements AuthenticationAPI {
     newPassword: string
   ): Promise<void> {
     const call: ChangePasswordCall = { oldPassword, newPassword }
-    const answerProps = (await ipc.callMain(
+    const answerProps = (await window.api.callMain(
       CHANGE_PASSWORD,
       call
     )) as GeneralAnswerProps
@@ -71,7 +73,7 @@ export class AuthenticationIPC implements AuthenticationAPI {
   }
 
   public async getUser(): Promise<string> {
-    const answerProps = (await ipc.callMain(GET_USER)) as UserAnswerProps
+    const answerProps = (await window.api.callMain(GET_USER)) as UserAnswerProps
     const answer = UserAnswer.parse(answerProps)
 
     if (answer.isSuccess()) {
