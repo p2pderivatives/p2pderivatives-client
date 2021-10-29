@@ -52,7 +52,7 @@ describe('dlc-message-service', () => {
       await client2.getDlcService().sendDlcMessage(sentMessage, user1.username)
       const generator = stream.listen()
       const message = (await generator.next()).value
-      stream.cancel()
+      setImmediate(() => stream.cancel())
       const endMessage = await generator.next()
 
       if (!message) {
@@ -113,7 +113,7 @@ describe('dlc-message-service', () => {
 
       expect(message).toBeUndefined()
 
-      stream.cancel()
+      setImmediate(() => stream.cancel())
       await getMessagePromise
     })
   })
