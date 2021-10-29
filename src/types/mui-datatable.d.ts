@@ -291,7 +291,7 @@ export interface MUIDataTableOptions {
     data: Array<{ index: number; dataIndex: number }>
   }) => void
   onRowsExpand?: (currentRowsExpanded: any[], allRowsExpanded: any[]) => void
-  onRowsSelect?: (currentRowsSelected: any[], rowsSelected: any[]) => void
+  onRowSelectionChange?: (currentRowsSelected: any[], rowsSelected: any[]) => void
   onSearchChange?: (searchText: string) => void
   onSearchOpen?: () => void
   onSearchClose?: () => void

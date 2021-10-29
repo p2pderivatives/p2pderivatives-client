@@ -67,7 +67,7 @@ const LoginForm: FC<LoginFormProps> = (props: LoginFormProps) => {
           onKeyPress={onEnterSubmit}
         />
       </Grid>
-      <Grid item container xs={12} justify="center">
+      <Grid item container xs={12} justifyContent="center">
         <Button
           variant="contained"
           disabled={username === '' || password === ''}

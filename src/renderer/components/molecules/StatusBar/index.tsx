@@ -1,12 +1,7 @@
 import React, { FC } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
-
-import {
-  makeStyles,
-  createMuiTheme,
-  MuiThemeProvider,
-  IconButton,
-} from '@material-ui/core'
+import { createTheme } from '@material-ui/core/styles'
+import { makeStyles, MuiThemeProvider, IconButton } from '@material-ui/core'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
 import Button from '@material-ui/core/Button'
@@ -27,7 +22,7 @@ type StatusBarProps = {
   refresh: () => void
 }
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       light: '#69F8C4',

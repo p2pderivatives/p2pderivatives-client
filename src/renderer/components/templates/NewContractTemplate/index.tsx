@@ -374,7 +374,7 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
               ></TextInput>
               <TextInput
                 type="number"
-                value={feeRate}
+                value={feeRate || ''}
                 error={feeRateError}
                 helperText={feeRateMessage}
                 onKeyPress={(event: React.KeyboardEvent): void => {
@@ -385,9 +385,15 @@ const NewContractListTemplate: FC<NewContractTemplateProps> = (
                 onChange={(
                   event: React.ChangeEvent<{ value: string }>
                 ): void => {
-                  const value = parseInt(event.target.value)
-                  setFeeRate(value)
-                  validateFeeRate(value)
+                  if (event.target.value === '') {
+                    setFeeRate(NaN)
+                  } else {
+                    const value = parseInt(event.target.value)
+                    if (value > 0) {
+                      setFeeRate(value)
+                      validateFeeRate(value)
+                    }
+                  }
                 }}
                 label={'Fee rate'}
               />

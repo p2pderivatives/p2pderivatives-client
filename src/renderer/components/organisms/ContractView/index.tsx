@@ -56,10 +56,11 @@ const useStyles = makeStyles({
 function getGridItem(
   title: string,
   content: ReactElement,
-  dataTitle: string
+  dataTitle: string,
+  key: number
 ): ReactElement {
   return (
-    <Grid item xs={4}>
+    <Grid key={key} item xs={4}>
       <div>
         <Typography className={dataTitle} variant="body2" color="textPrimary">
           {title}
@@ -73,7 +74,8 @@ function getGridItem(
 function getTypographyGridItem(
   title: string,
   content: string,
-  dataTitle: string
+  dataTitle: string,
+  key: number
 ): ReactElement {
   const reactElement = (
     <Typography variant="body2" color="textPrimary">
@@ -81,13 +83,14 @@ function getTypographyGridItem(
     </Typography>
   )
 
-  return getGridItem(title, reactElement, dataTitle)
+  return getGridItem(title, reactElement, dataTitle, key)
 }
 
 function getBtcDisplayGridItem(
   title: string,
   satValue: number,
   dataTitle: string,
+  key: number,
   addOwn?: boolean,
   pnlColors?: boolean
 ): ReactElement {
@@ -107,7 +110,7 @@ function getBtcDisplayGridItem(
     </>
   )
 
-  return getGridItem(title, reactElement, dataTitle)
+  return getGridItem(title, reactElement, dataTitle, key)
 }
 
 const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
@@ -207,6 +210,7 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
 
   const getDisplayContent = (): ReactElement[] => {
     const gridItems: ReactElement[] = []
+    let key = 0
     for (const element of content) {
       if (isBtc(element)) {
         gridItems.push(
@@ -214,15 +218,22 @@ const ContractView: FC<ContractViewProps> = (props: ContractViewProps) => {
             element.title,
             element.value,
             classes.dataTitle,
+            key,
             element.addOwn,
             element.pnlColors
           )
         )
       } else {
         gridItems.push(
-          getTypographyGridItem(element.title, element.value, classes.dataTitle)
+          getTypographyGridItem(
+            element.title,
+            element.value,
+            classes.dataTitle,
+            key
+          )
         )
       }
+      key++
     }
     return gridItems
   }
