@@ -11,8 +11,7 @@
   "env": {
     "browser": true,
     "jasmine": true,
-    "jest": true,
-    "mocha": true
+    "jest": true
   },
   "globals": {
     "BigInt": true
