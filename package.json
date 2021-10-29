@@ -1,6 +1,6 @@
 {
   "name": "p2pderivatives-client",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "main": "build/browser/electron.js",
   "author": "CryptoGarage Inc",
