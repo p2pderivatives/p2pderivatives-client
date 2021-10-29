@@ -46,9 +46,6 @@ workflows:
       - jest-tests:
           requires:
             - build
-      - mocha-tests:
-          requires:
-            - build
       - integration-tests:
           context: github-packages-docker-credentials
           requires:
@@ -212,22 +209,6 @@ jobs:
       - persist_to_workspace:
           root: .
           paths: ./reports
-
-  mocha-tests:
-    executor: client-browsers-runner
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Rebuild grpc for electron
-          command: npm rebuild grpc --runtime=electron --target=7.0.0
-      - run:
-          name: Run mocha test
-          command: npm run mocha:ci
-      - store_test_results:
-          path: ./reports/mocha
-      - store_artifacts:
-          path: ./reports/mocha
 
   integration-tests:
     executor: client-runner
