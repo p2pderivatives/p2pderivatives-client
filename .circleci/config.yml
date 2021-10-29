@@ -122,7 +122,7 @@ jobs:
             - restore_cache:
                 keys:
                   ## add vX-debug suffix when debugging cache
-                  - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v7
+                  - npm-deps-{{ .Branch }}-{{ checksum "package-lock.json" }}-v8
       - run:
           name: Install nodes modules
           command: |
