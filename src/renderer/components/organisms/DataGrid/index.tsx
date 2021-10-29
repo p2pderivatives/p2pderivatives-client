@@ -1,6 +1,6 @@
 import LuxonUtils from '@date-io/luxon'
 import { FormControl, FormGroup, FormLabel } from '@material-ui/core'
-import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles'
+import { createTheme, MuiThemeProvider } from '@material-ui/core/styles'
 import { DateTimePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date'
 import { DateTime } from 'luxon'
@@ -22,7 +22,7 @@ export type DataGridProps = Omit<
   onRowClick?: (rowData: string[]) => void
 }
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       light: '#E4E7EF',

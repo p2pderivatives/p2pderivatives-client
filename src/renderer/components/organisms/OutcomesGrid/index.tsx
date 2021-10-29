@@ -1,6 +1,6 @@
 import React, { FC, ReactElement, useState, useEffect } from 'react'
 import MUIDataTable, { MUIDataTableProps } from 'mui-datatables'
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import { MuiThemeProvider, createTheme } from '@material-ui/core/styles'
 import BtcDisplay from '../../atoms/BtcDisplay'
 import {
   isEnumerationOutcome,
@@ -14,7 +14,7 @@ export type DataGridProps = Omit<
   data: ReadonlyArray<Outcome>
 }
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       light: '#E4E7EF',

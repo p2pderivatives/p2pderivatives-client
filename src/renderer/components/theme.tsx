@@ -1,4 +1,4 @@
-import { createMuiTheme } from '@material-ui/core'
+import { createTheme } from '@material-ui/core/styles'
 
 const colorPrimary = '#3AF3B1'
 const colorPrimaryLight = '#69F8C4'
@@ -11,7 +11,7 @@ const fgPrimary = '#E4E7EF'
 const fgSecondary = '#A2A6B4'
 const iconColor = fgPrimary
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       light: colorPrimaryLight,
