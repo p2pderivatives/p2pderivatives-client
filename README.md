@@ -33,6 +33,9 @@ Then follow the [instructions to setup a bitcoind instance](#setting-up-bitcoind
 
 #### Note for MacOS users
 
+The app is not registered with Apple, so to open it follow the instructions here:
+https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
+
 To run a second instance of the application on MacOS:
 - Press `⌘ + space`, type "terminal" and press `return`
 - type `open -n /Applications/P2PD\ client.app/`
