@@ -64,7 +64,7 @@ export class DlcManager {
   finalize(): void {
     this.timeoutHandle.unref()
     this.isFinalized = true
-    this.dlcMessageStream.cancel()
+    setImmediate(() => this.dlcMessageStream.cancel())
   }
 
   private sleep(delay: number): Promise<void> {
