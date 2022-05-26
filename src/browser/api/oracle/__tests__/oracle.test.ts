@@ -111,14 +111,16 @@ describe('Oracle Client', () => {
       oraclePublicKey: 'oracle',
       announcementSignature: 'a',
       oracleEvent: {
-        nonces: ['test'],
+        oracleNonces: ['test'],
         eventId: '1',
-        eventMaturity: DateTime.utc(2020, 10, 2, 1, 1, 1).toISO(),
+        eventMaturityEpoch: DateTime.utc(2020, 10, 2, 1, 1, 1).toSeconds(),
         eventDescriptor: {
-          base: 2,
-          isSigned: false,
-          unit: 'btcusd',
-          precision: 0,
+          digitDecompositionEvent: {
+            base: 2,
+            isSigned: false,
+            unit: 'btcusd',
+            precision: 0,
+          },
         },
       },
     }
@@ -130,10 +132,12 @@ describe('Oracle Client', () => {
         eventId: '1',
         eventMaturity: DateTime.utc(2020, 10, 2, 1, 1, 1).toISO(),
         eventDescriptor: {
-          base: 2,
-          isSigned: false,
-          unit: 'btcusd',
-          precision: 0,
+          digitDecompositionEvent: {
+            base: 2,
+            isSigned: false,
+            unit: 'btcusd',
+            precision: 0,
+          },
         },
       },
     }

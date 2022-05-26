@@ -113,10 +113,13 @@ export default class OracleClient implements OracleClientApi {
           announcementSignature: apiResp.announcementSignature,
           oraclePublicKey: apiResp.oraclePublicKey,
           oracleEvent: {
-            nonces: apiResp.oracleEvent.nonces,
+            nonces: apiResp.oracleEvent.oracleNonces,
             eventId: apiResp.oracleEvent.eventId,
             eventDescriptor: apiResp.oracleEvent.eventDescriptor,
-            eventMaturity: apiResp.oracleEvent.eventMaturity,
+            eventMaturity: DateTime.fromSeconds(
+              apiResp.oracleEvent.eventMaturityEpoch,
+              { zone: 'utc' }
+            ).toISO(),
           },
         },
       }

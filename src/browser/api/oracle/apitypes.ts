@@ -27,8 +27,8 @@ export type APIError = {
   cause?: string
 }
 export type APIOracleEvent = {
-  nonces: string[]
-  eventMaturity: string
+  oracleNonces: string[]
+  eventMaturityEpoch: number
   eventDescriptor: DecompositionDescriptor | EnumerationDescriptor
   eventId: string
 }
