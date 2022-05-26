@@ -48,7 +48,7 @@ export class DlcEventHandler {
       if (areRangeOutcomes(contract.outcomes)) {
         outcomes = getMaxRanges(
           contract.outcomes,
-          eventDescriptor.base,
+          eventDescriptor.digitDecompositionEvent.base,
           oracleAnnouncement.oracleEvent.nonces.length
         )
       }

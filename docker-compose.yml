@@ -2,7 +2,7 @@ version: '3.4'
 services:
   ### ORACLE
   oracle:
-    image: ghcr.io/p2pderivatives/oracle:v0.1.1
+    image: ghcr.io/p2pderivatives/oracle:v0.2.0
     environment:
       P2PDORACLE_DATABASE_HOST: oracle-db
       P2PDORACLE_DATABASE_DBPASSWORD: 1234

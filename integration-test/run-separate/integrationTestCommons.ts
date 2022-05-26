@@ -82,10 +82,12 @@ export function getNewMockedDecompositionOracleContext(
       eventMaturity: DateTime.utc().toISODate(),
       eventId: 'id',
       eventDescriptor: {
-        base,
-        isSigned: false,
-        unit: 'btcusd',
-        precision: 0,
+        digitDecompositionEvent: {
+          base,
+          isSigned: false,
+          unit: 'btcusd',
+          precision: 0,
+        },
       },
     },
   }
@@ -123,7 +125,9 @@ export function getNewMockedEnumerationOracleContext(
       eventMaturity: DateTime.utc().toISODate(),
       eventId: 'id',
       eventDescriptor: {
-        outcomes,
+        enumEvent: {
+          outcomes,
+        },
       },
     },
   }

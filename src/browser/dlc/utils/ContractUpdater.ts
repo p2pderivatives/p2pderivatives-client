@@ -400,7 +400,7 @@ export class ContractUpdater {
       if (isDecompositionDescriptor(descriptor)) {
         displayOutcomeValue = composeOutcomeValue(
           outcomeValues,
-          descriptor.base
+          descriptor.digitDecompositionEvent.base
         )
       } else {
         displayOutcomeValue = outcomeValues.reduce(
@@ -731,7 +731,7 @@ function getDecompositionOutcomeInfo(
     const groups = groupByIgnoringDigits(
       outcome.start,
       outcome.start + outcome.count - 1,
-      descriptor.base,
+      descriptor.digitDecompositionEvent.base,
       contract.oracleAnnouncement.oracleEvent.nonces.length
     )
     for (let j = 0; j < groups.length; j++) {
@@ -853,7 +853,10 @@ function getAdaptorSignaturesForEnumeration(
 function getAdaptorSignatures(contract: AcceptedContract): AdaptorPair[] {
   const descriptor = contract.oracleAnnouncement.oracleEvent.eventDescriptor
   if (isEnumerationDescriptor(descriptor)) {
-    return getAdaptorSignaturesForEnumeration(contract, descriptor.outcomes)
+    return getAdaptorSignaturesForEnumeration(
+      contract,
+      descriptor.enumEvent.outcomes
+    )
   } else if (
     isDecompositionDescriptor(descriptor) &&
     isDigitTrie(contract.outcomeInfo)
@@ -912,7 +915,7 @@ function verifyCetAdaptorSignatures(
   if (isEnumerationDescriptor(descriptor)) {
     return verifyCetAdaptorSignaturesForEnumeration(
       contract,
-      descriptor.outcomes,
+      descriptor.enumEvent.outcomes,
       adaptorPairs,
       verifyRemote
     )

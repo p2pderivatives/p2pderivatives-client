@@ -36,7 +36,9 @@ function generateContract(
         eventMaturity: DateTime.fromObject({ year: 2010 }).toISO(),
         eventId: '',
         eventDescriptor: {
-          outcomes: [''],
+          enumEvent: {
+            outcomes: [''],
+          },
         },
       },
     },
